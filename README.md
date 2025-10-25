@@ -24,6 +24,18 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - **Azure Document Intelligence** - Microsoft Azure 기반 문서 파싱
 - **Google Document AI** - Google Cloud 기반 문서 파싱
 
+### 💾 Storage (결과 저장 및 관리)
+- 파싱 결과 및 분할 결과를 MySQL에 저장
+- Parse Results와 Split Results를 탭으로 분리하여 표시
+- 저장된 결과 조회, 상세보기, 삭제 기능
+- 페이지네이션 지원
+- Full-height 테이블 레이아웃
+
+### 🗄️ Vector Database
+- PostgreSQL 벡터 데이터베이스 연결 및 조회
+- 스키마 및 테이블 탐색
+- 벡터 데이터 시각화
+
 ### 🔐 API 키 관리
 - MySQL 데이터베이스에 암호화된 API 키 저장
 - 사용자별 안전한 키 관리
@@ -76,12 +88,19 @@ npm install
 # OpenAI API Key (for embeddings)
 OPENAI_API_KEY=your_openai_api_key
 
-# Database Configuration
-DB_HOST=your_database_host
+# MySQL Database Configuration (API keys, Parse/Split Results)
+DB_HOST=your_mysql_host
 DB_PORT=3306
-DB_NAME=your_database_name
-DB_USER=your_database_user
-DB_PASSWORD=your_database_password
+DB_NAME=your_mysql_database
+DB_USER=your_mysql_user
+DB_PASSWORD=your_mysql_password
+
+# PostgreSQL Configuration (Vector Database - optional)
+POSTGRES_HOST=your_postgres_host
+POSTGRES_PORT=5432
+POSTGRES_DB=your_postgres_database
+POSTGRES_USER=your_postgres_user
+POSTGRES_PASSWORD=your_postgres_password
 
 # Encryption Key (32 bytes)
 ENCRYPTION_KEY=your_32_byte_encryption_key
@@ -89,26 +108,32 @@ ENCRYPTION_KEY=your_32_byte_encryption_key
 
 ### 데이터베이스 설정
 
-MySQL 데이터베이스에 다음 테이블을 생성합니다:
+MySQL 데이터베이스에 필요한 테이블을 생성합니다.
 
-```sql
-CREATE TABLE IF NOT EXISTS user_api_keys (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_email VARCHAR(255) NOT NULL,
-  key_name VARCHAR(50) NOT NULL,
-  encrypted_key TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY unique_user_key (user_email, key_name),
-  INDEX idx_user_email (user_email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-```
-
-또는 제공된 SQL 스크립트를 실행합니다:
+제공된 SQL 스크립트를 실행합니다:
 
 ```bash
+# API 키 관리 테이블
 mysql -h your_host -P 3306 -u your_user -p your_database < scripts/schema.sql
+
+# Parse Results 저장 테이블
+mysql -h your_host -P 3306 -u your_user -p your_database < scripts/parse_results_schema.sql
+
+# Split Results 저장 테이블
+mysql -h your_host -P 3306 -u your_user -p your_database < scripts/split_results_schema.sql
 ```
+
+또는 Node.js 스크립트로 테이블 생성:
+
+```bash
+# Split Results 테이블 생성
+node scripts/create-split-results-table.js
+```
+
+**주요 테이블:**
+- `user_api_keys` - 암호화된 API 키 저장
+- `parse_results` - 문서 파싱 결과 저장
+- `split_results` - 텍스트 분할 결과 저장
 
 ### 개발 서버 실행
 
@@ -134,7 +159,7 @@ npm start
 - `/login` 페이지에서 이메일과 비밀번호로 로그인
 - JWT 토큰이 localStorage에 저장됨
 
-### 2. API 키 설정 (APIs 탭)
+### 2. API 키 설정 (Connect 탭)
 - 각 파서의 API 키를 입력
 - **Save** 버튼 클릭으로 데이터베이스에 암호화하여 저장
 - 페이지 새로고침 시 자동으로 불러옴
@@ -144,25 +169,49 @@ npm start
 2. **스플리터 선택**: 원하는 분할 방식 선택
 3. **파라미터 설정**: Chunk Size, Overlap 등 조정
 4. **Split Text 실행**: 결과를 카드 뷰 또는 JSON 뷰로 확인
+5. **결과 저장**: Save 버튼으로 분할 결과를 데이터베이스에 저장
 
 ### 4. Document Parser 사용
 1. **파서 선택**: 사용할 AI 파서 선택
 2. **API 키 입력**: 해당 파서의 API 키 입력 (저장된 키 자동 로드)
 3. **파일 업로드**: PDF, 이미지 등 문서 파일 선택
 4. **Parse Document 실행**: 파싱 결과를 Preview, HTML, JSON으로 확인
+5. **결과 저장**: Save 버튼으로 파싱 결과를 데이터베이스에 저장
+
+### 5. Storage (저장된 결과 관리)
+1. **Storage 탭**: 저장된 결과 목록 확인
+2. **Parse Results / Split Results**: 탭 전환으로 결과 유형 선택
+3. **View**: 저장된 결과의 상세 내용 확인
+4. **Delete**: 불필요한 결과 삭제
+5. **Pagination**: 페이지 단위로 결과 탐색
+
+### 6. Vector Database
+1. **VDB 탭**: PostgreSQL 벡터 데이터베이스 연결
+2. **Schema 선택**: 조회할 스키마 선택
+3. **Table 선택**: 테이블 데이터 확인
+4. **벡터 데이터**: 임베딩 벡터 시각화
 
 ## 프로젝트 구조
 
 ```
 text_spliter/
-├── app/
+├── app/                       # Next.js App Router
 │   ├── api/
 │   │   ├── keys/              # API 키 관리
 │   │   │   └── route.ts
 │   │   ├── parse/             # 문서 파싱
 │   │   │   └── route.ts
-│   │   └── split/             # 텍스트 분할
-│   │       └── route.ts
+│   │   ├── parse-results/     # Parse Results CRUD
+│   │   │   └── route.ts
+│   │   ├── split/             # 텍스트 분할
+│   │   │   └── route.ts
+│   │   ├── split-results/     # Split Results CRUD
+│   │   │   └── route.ts
+│   │   └── vectorstore/       # Vector Database
+│   │       ├── schemas/
+│   │       │   └── route.ts
+│   │       └── table-data/
+│   │           └── route.ts
 │   ├── login/                 # 로그인 페이지
 │   │   └── page.tsx
 │   ├── layout.tsx
@@ -173,10 +222,12 @@ text_spliter/
 │   ├── RightPanel.tsx         # Text Splitter 결과 패널
 │   ├── ParserLeftPanel.tsx    # Document Parser 입력 패널
 │   ├── ParserRightPanel.tsx   # Document Parser 결과 패널
+│   ├── StoragePanel.tsx       # Storage 관리 패널
+│   ├── VectorStoreLeftPanel.tsx   # VDB 조회 패널
+│   ├── VectorStoreRightPanel.tsx  # VDB 데이터 패널
 │   ├── LicensesPanel.tsx      # API 키 관리 패널
-│   ├── TextInput.tsx
-│   ├── SplitterSelector.tsx
-│   ├── SplitterConfig.tsx
+│   ├── Sidebar.tsx            # 네비게이션
+│   ├── Header.tsx             # 페이지 헤더
 │   └── ...
 ├── lib/
 │   ├── types.ts               # TypeScript 타입
@@ -185,8 +236,14 @@ text_spliter/
 │   ├── encryption.ts          # 암호화 유틸리티
 │   └── auth.ts                # 인증 유틸리티
 ├── scripts/
-│   ├── schema.sql             # 데이터베이스 스키마
-│   └── create-table.ts        # 테이블 생성 스크립트
+│   ├── schema.sql             # API 키 테이블 스키마
+│   ├── parse_results_schema.sql   # Parse Results 스키마
+│   ├── split_results_schema.sql   # Split Results 스키마
+│   └── create-split-results-table.js  # 테이블 생성 스크립트
+├── docs/                      # 문서
+│   ├── PRD.md
+│   ├── IMPLEMENTATION_PLAN.md
+│   └── design-system.json
 └── public/
     └── logos/                 # 파서 로고 이미지
 ```
@@ -220,6 +277,57 @@ text_spliter/
 - `parserType`: 사용할 파서 (Upstage, LlamaIndex, Azure, Google)
 - `apiKey`: 파서 API 키
 - 추가 파서별 파라미터
+
+### Parse Results (Storage)
+
+#### GET /api/parse-results
+저장된 파싱 결과를 조회합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+**Query:** `?limit=20&offset=0` 또는 `?id=123`
+
+#### POST /api/parse-results
+파싱 결과를 저장합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+#### DELETE /api/parse-results
+파싱 결과를 삭제합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+**Query:** `?id=123`
+
+### Split Results (Storage)
+
+#### GET /api/split-results
+저장된 분할 결과를 조회합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+**Query:** `?limit=20&offset=0` 또는 `?id=123`
+
+#### POST /api/split-results
+분할 결과를 저장합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+#### DELETE /api/split-results
+분할 결과를 삭제합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+**Query:** `?id=123`
+
+### Vector Database
+
+#### GET /api/vectorstore/schemas
+PostgreSQL 스키마 목록을 조회합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+#### GET /api/vectorstore/table-data
+테이블 데이터를 조회합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+**Query:** `?table=<table_name>&schema=<schema_name>`
 
 ### API 키 관리
 
