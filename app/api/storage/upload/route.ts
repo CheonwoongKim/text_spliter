@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Add key as query parameter (file path/name in the bucket)
     const key = file.name;
-    const url = `${STORAGE_API_BASE}/v1/storage/${DEFAULT_BUCKET}/upload?key=${encodeURIComponent(key)}`;
+    const url = `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/objects?key=${encodeURIComponent(key)}`;
     console.log('[Storage API] Upload URL:', url);
 
     const response = await fetch(url, {

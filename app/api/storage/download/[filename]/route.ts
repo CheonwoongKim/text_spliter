@@ -28,7 +28,7 @@ export async function GET(
     const authHeader = request.headers.get('authorization');
 
     const response = await fetch(
-      `${STORAGE_API_BASE}/v1/storage/${DEFAULT_BUCKET}/download?filename=${encodeURIComponent(filename)}`,
+      `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/objects/${encodeURIComponent(filename)}`,
       {
         headers: {
           'Authorization': authHeader || '',

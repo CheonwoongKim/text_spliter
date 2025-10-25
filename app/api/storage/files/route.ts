@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const authHeader = request.headers.get('authorization');
-    const url = `${STORAGE_API_BASE}/v1/storage/${DEFAULT_BUCKET}/objects`;
+    const url = `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/objects`;
     console.log('[Storage API] Requesting:', url);
     console.log('[Storage API] Auth header:', authHeader ? 'Token present' : 'No token');
 
@@ -34,14 +34,22 @@ export async function GET(request: NextRequest) {
       console.error('[Storage API] Error response:', errorText);
 
       let errorData;
+      let errorMessage = 'Failed to fetch files';
+
       try {
         errorData = JSON.parse(errorText);
+        // S3 credential 에러를 사용자 친화적인 메시지로 변환
+        if (errorData.error === 's3_error') {
+          errorMessage = 'Storage service error. Please try again later.';
+        } else {
+          errorMessage = errorData.error || errorData.detail || errorData.message || 'Failed to fetch files';
+        }
       } catch {
-        errorData = { error: errorText || 'Failed to fetch files' };
+        errorMessage = errorText || 'Failed to fetch files';
       }
 
       return new Response(
-        JSON.stringify({ error: errorData.error || errorData.detail || 'Failed to fetch files' }),
+        JSON.stringify({ error: errorMessage }),
         { status: response.status, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -95,7 +103,7 @@ export async function DELETE(request: NextRequest) {
 
     const authHeader = request.headers.get('authorization');
 
-    const response = await fetch(`${STORAGE_API_BASE}/v1/storage/${DEFAULT_BUCKET}/object?key=${encodeURIComponent(filename)}`, {
+    const response = await fetch(`${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/objects/${encodeURIComponent(filename)}`, {
       method: 'DELETE',
       headers: {
         'Authorization': authHeader || '',

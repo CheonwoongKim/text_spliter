@@ -28,6 +28,7 @@ const FilesPanel = memo(function FilesPanel() {
       const token = getAuthToken();
       if (!token) {
         setError("Please login first");
+        setFiles([]);
         setLoading(false);
         return;
       }
@@ -39,15 +40,21 @@ const FilesPanel = memo(function FilesPanel() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch files");
+        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch files' }));
+        const errorMessage = errorData.error || "Failed to fetch files";
+        setError(errorMessage);
+        setFiles([]); // 에러 발생 시 빈 배열로 설정
+        setLoading(false);
+        return;
       }
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({ files: [] }));
       setFiles(data.files || []);
+      setError(null); // 성공 시 에러 초기화
     } catch (err) {
-      console.error("Error fetching files:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch files");
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch files";
+      setError(errorMessage);
+      setFiles([]); // 에러 발생 시 빈 배열로 설정
     } finally {
       setLoading(false);
     }
@@ -196,6 +203,48 @@ const FilesPanel = memo(function FilesPanel() {
     } catch (err) {
       console.error("Error downloading file:", err);
       setError(err instanceof Error ? err.message : "Failed to download file");
+    }
+  }, []);
+
+  const handlePreview = useCallback(async (file: FileItem) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Please login to Storage first (Connect page)");
+        return;
+      }
+
+      const response = await fetch(
+        `/api/storage/preview?key=${encodeURIComponent(file.filename)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        // Try to get error message from response
+        const errorData = await response.json().catch(() => ({ error: "Failed to load preview" }));
+        setError(errorData.error || "Failed to load preview");
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      // Open in new tab
+      const newWindow = window.open(url, '_blank');
+
+      // Clean up blob URL after a short delay
+      if (newWindow) {
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 100);
+      }
+    } catch (err) {
+      console.error("Error loading preview:", err);
+      setError(err instanceof Error ? err.message : "Failed to load preview");
     }
   }, []);
 
@@ -417,9 +466,9 @@ const FilesPanel = memo(function FilesPanel() {
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 px-10 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <div className="flex items-center gap-3 flex-1">
               <svg
-                className="h-5 w-5 text-red-400 mr-2"
+                className="h-5 w-5 text-red-400 flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -431,21 +480,39 @@ const FilesPanel = memo(function FilesPanel() {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-sm text-red-800 dark:text-red-200">{error}</span>
+              <div className="flex-1">
+                <p className="text-sm text-red-800 dark:text-red-200 font-medium">{error}</p>
+                {error.includes("Storage service error") && (
+                  <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                    The storage service is experiencing issues. Please contact the administrator or try again later.
+                  </p>
+                )}
+              </div>
             </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-800 dark:text-red-200 hover:text-red-900 dark:hover:text-red-100"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => {
+                  setError(null);
+                  fetchFiles();
+                }}
+                className="px-3 py-1.5 text-xs font-medium text-red-800 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-smooth"
+              >
+                Retry
+              </button>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-800 dark:text-red-200 hover:text-red-900 dark:hover:text-red-100"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -551,7 +618,8 @@ const FilesPanel = memo(function FilesPanel() {
             {currentFiles.map((file) => (
               <div
                 key={file.id}
-                className="bg-card border border-border rounded-lg p-4 hover:bg-muted hover:shadow-md hover:border-accent/50 transition-all group"
+                onClick={() => handlePreview(file)}
+                className="bg-card border border-border rounded-lg p-4 hover:bg-muted hover:shadow-md hover:border-accent/50 transition-all group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   {/* File Icon */}
