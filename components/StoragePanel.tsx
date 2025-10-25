@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { memo, useState, useEffect, useCallback } from "react";
 import { getAuthToken } from "@/lib/auth";
+import { DEFAULT_ROWS_PER_PAGE } from "@/lib/constants";
+import Pagination from "./Pagination";
 
 interface ParseResult {
   id: number;
@@ -51,7 +53,7 @@ interface FullSplitResult extends SplitResult {
   chunks: any[];
 }
 
-export default function StoragePanel() {
+const StoragePanel = memo(function StoragePanel() {
   const [activeTab, setActiveTab] = useState<'parse' | 'split'>('parse');
 
   // Parse results state
@@ -73,7 +75,7 @@ export default function StoragePanel() {
   const [splitViewModalData, setSplitViewModalData] = useState<FullSplitResult | null>(null);
   const [splitCopied, setSplitCopied] = useState(false);
 
-  const rowsPerPage = 20;
+  const rowsPerPage = DEFAULT_ROWS_PER_PAGE;
 
   const fetchResults = useCallback(async () => {
     setLoading(true);
@@ -403,16 +405,16 @@ export default function StoragePanel() {
                 <tbody className="divide-y divide-border">
                   {loading && results.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-12 text-center">
-                        <div className="flex items-center justify-center">
+                      <td colSpan={7} className="h-96">
+                        <div className="flex items-center justify-center h-full">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
                         </div>
                       </td>
                     </tr>
                   ) : results.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-12 text-center">
-                        <div className="flex flex-col items-center">
+                      <td colSpan={7} className="h-96">
+                        <div className="flex flex-col items-center justify-center h-full">
                           <svg className="h-6 w-6 text-muted-foreground mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                           </svg>
@@ -474,29 +476,12 @@ export default function StoragePanel() {
             </div>
 
             {/* Pagination */}
-            {total > rowsPerPage && (
-              <div className="border-t border-border px-4 py-3 flex items-center justify-between bg-card">
-                <p className="text-sm text-muted-foreground">
-                  Showing {page * rowsPerPage + 1} to {Math.min((page + 1) * rowsPerPage, total)} of {total} results
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={page === 0}
-                    className="px-3 py-1.5 text-sm border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={(page + 1) * rowsPerPage >= total}
-                    className="px-3 py-1.5 text-sm border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              total={total}
+              rowsPerPage={rowsPerPage}
+              onPageChange={setPage}
+            />
           </div>
         ) : (
           <div className="flex-1 flex flex-col bg-card border border-border rounded-lg overflow-hidden">
@@ -517,16 +502,16 @@ export default function StoragePanel() {
                 <tbody className="divide-y divide-border">
                   {splitLoading && splitResults.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center">
-                        <div className="flex items-center justify-center">
+                      <td colSpan={8} className="h-96">
+                        <div className="flex items-center justify-center h-full">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
                         </div>
                       </td>
                     </tr>
                   ) : splitResults.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center">
-                        <div className="flex flex-col items-center">
+                      <td colSpan={8} className="h-96">
+                        <div className="flex flex-col items-center justify-center h-full">
                           <svg className="h-6 w-6 text-muted-foreground mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" />
                           </svg>
@@ -591,29 +576,12 @@ export default function StoragePanel() {
             </div>
 
             {/* Pagination */}
-            {splitTotal > rowsPerPage && (
-              <div className="border-t border-border px-4 py-3 flex items-center justify-between bg-card">
-                <p className="text-sm text-muted-foreground">
-                  Showing {splitPage * rowsPerPage + 1} to {Math.min((splitPage + 1) * rowsPerPage, splitTotal)} of {splitTotal} results
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setSplitPage((p) => Math.max(0, p - 1))}
-                    disabled={splitPage === 0}
-                    className="px-3 py-1.5 text-sm border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setSplitPage((p) => p + 1)}
-                    disabled={(splitPage + 1) * rowsPerPage >= splitTotal}
-                    className="px-3 py-1.5 text-sm border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={splitPage}
+              total={splitTotal}
+              rowsPerPage={rowsPerPage}
+              onPageChange={setSplitPage}
+            />
           </div>
         )}
       </div>
@@ -682,4 +650,8 @@ export default function StoragePanel() {
       )}
     </div>
   );
-}
+});
+
+StoragePanel.displayName = 'StoragePanel';
+
+export default StoragePanel;

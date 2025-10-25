@@ -1,3 +1,11 @@
+// JSON value types for better type safety
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+export interface JsonObject {
+  [key: string]: JsonValue;
+}
+export interface JsonArray extends Array<JsonValue> {}
+
 // Splitter types
 export type SplitterType =
   | "CharacterTextSplitter"
@@ -130,7 +138,7 @@ export interface ParseResponse {
   text?: string;
   html?: string;
   markdown?: string;
-  json?: any;
+  json?: JsonValue;
   metadata?: {
     fileName: string;
     fileSize: number;
@@ -164,7 +172,7 @@ export interface ColumnInfo {
 }
 
 export interface TableRow {
-  [key: string]: any;
+  [key: string]: string | number | boolean | null | JsonValue;
 }
 
 export interface VectorStoreConfig {

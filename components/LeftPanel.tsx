@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { SplitterType, SplitterConfig as SplitterConfigType } from "@/lib/types";
 import TextInput from "./TextInput";
 import SplitterSelector from "./SplitterSelector";
@@ -17,7 +18,7 @@ interface LeftPanelProps {
   onReset: () => void;
 }
 
-export default function LeftPanel({
+const LeftPanel = memo(function LeftPanel({
   text,
   config,
   loading,
@@ -150,4 +151,8 @@ export default function LeftPanel({
       </div>
     </div>
   );
-}
+});
+
+LeftPanel.displayName = 'LeftPanel';
+
+export default LeftPanel;

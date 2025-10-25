@@ -64,3 +64,4 @@ export function getAuthHeaders(): HeadersInit {
     Authorization: `Bearer ${token}`,
   };
 }
+

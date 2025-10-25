@@ -40,34 +40,25 @@ export default function LoginPage() {
       setError(null);
 
       try {
-        const response = await fetch(
-          "http://ywstorage.synology.me:4000/v1/auth/login",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              accept: "*/*",
-            },
-            body: JSON.stringify({
-              email,
-              password,
-            }),
-          }
-        );
-
-        console.log("Response status:", response.status);
-        console.log("Response ok:", response.ok);
+        const response = await fetch("/api/storage/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error("Error response:", errorData);
           throw new Error(
-            errorData.message || "Login failed. Please check your credentials."
+            errorData.error || errorData.message || "Login failed. Please check your credentials."
           );
         }
 
         const data = await response.json();
-        console.log("Login response data:", data);
 
         // JWT 토큰 저장
         if (data.token || data.access_token || data.accessToken) {

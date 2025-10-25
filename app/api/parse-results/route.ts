@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getUserEmailFromToken } from '@/lib/auth-server';
 import type { ParseResponse } from '@/lib/types';
 
 interface ParseResult {
@@ -15,24 +16,6 @@ interface ParseResult {
   json_content: any | null;
   processing_time: number | null;
   created_at: string;
-}
-
-// Get user email from JWT token
-function getUserEmailFromToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization');
-  const token = authHeader?.replace('Bearer ', '') || request.cookies.get('auth_token')?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.email || null;
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
 }
 
 // POST - Save parse result
@@ -95,13 +78,9 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve parse results
 export async function GET(request: NextRequest) {
   try {
-    console.log('[API /parse-results GET] Starting request...');
-
     const userEmail = getUserEmailFromToken(request);
-    console.log('[API /parse-results GET] User email:', userEmail);
 
     if (!userEmail) {
-      console.log('[API /parse-results GET] No user email - Unauthorized');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -110,27 +89,20 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    console.log('[API /parse-results GET] Params - id:', id, 'limit:', limit, 'offset:', offset);
-
     if (id) {
       // Get specific result
-      console.log('[API /parse-results GET] Fetching specific result:', id);
       const results = await query<ParseResult[]>(
         'SELECT * FROM parse_results WHERE id = ? AND user_email = ?',
         [id, userEmail]
       );
 
       if (results.length === 0) {
-        console.log('[API /parse-results GET] Result not found');
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
 
-      console.log('[API /parse-results GET] Returning specific result');
       return NextResponse.json(results[0]);
     } else {
       // Get all results with pagination
-      console.log('[API /parse-results GET] Fetching all results with pagination');
-
       const [results, countResult] = await Promise.all([
         query<ParseResult[]>(
           `SELECT id, parser_type, file_name, file_size, mime_type, processing_time, created_at
@@ -146,8 +118,6 @@ export async function GET(request: NextRequest) {
         ),
       ]);
 
-      console.log('[API /parse-results GET] Found', results.length, 'results, total:', countResult[0]?.total);
-
       return NextResponse.json({
         results,
         total: countResult[0]?.total || 0,
@@ -155,7 +125,6 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('[API /parse-results GET] Error:', error);
-    console.error('[API /parse-results GET] Error stack:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
       {
         error: 'Failed to fetch parse results',

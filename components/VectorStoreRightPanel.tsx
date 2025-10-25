@@ -2,6 +2,9 @@
 
 import { memo, useState, useCallback } from "react";
 import type { TableDataResponse } from "@/lib/types";
+import { VDB_ROWS_PER_PAGE } from "@/lib/constants";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+import Pagination from "./Pagination";
 
 interface VectorStoreRightPanelProps {
   selectedSchema: string | undefined;
@@ -28,8 +31,8 @@ function VectorStoreRightPanel({
 }: VectorStoreRightPanelProps) {
   const [page, setPage] = useState(0);
   const [modalData, setModalData] = useState<CellModalData | null>(null);
-  const [copied, setCopied] = useState(false);
-  const rowsPerPage = 50;
+  const { copied, copy, reset } = useCopyToClipboard();
+  const rowsPerPage = VDB_ROWS_PER_PAGE;
 
   const formatCellValue = useCallback((value: any) => {
     if (value === null || value === undefined) {
@@ -47,21 +50,19 @@ function VectorStoreRightPanel({
   const handleCellClick = useCallback((columnName: string, value: any) => {
     const formattedValue = formatCellValue(value);
     setModalData({ columnName, value, formattedValue });
-    setCopied(false);
-  }, [formatCellValue]);
+    reset();
+  }, [formatCellValue, reset]);
 
   const handleCloseModal = useCallback(() => {
     setModalData(null);
-    setCopied(false);
-  }, []);
+    reset();
+  }, [reset]);
 
   const handleCopy = useCallback(() => {
     if (modalData) {
-      navigator.clipboard.writeText(modalData.formattedValue);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      copy(modalData.formattedValue);
     }
-  }, [modalData]);
+  }, [modalData, copy]);
 
   const renderCellContent = useCallback((value: any) => {
     if (value === null || value === undefined) {
@@ -215,33 +216,12 @@ function VectorStoreRightPanel({
             </table>
 
             {/* Pagination */}
-            {tableData.rows.length > rowsPerPage && (
-              <div className="sticky bottom-0 bg-card border-t border-border pl-6 pr-0 py-3 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Showing {page * rowsPerPage + 1} to{" "}
-                  {Math.min((page + 1) * rowsPerPage, tableData.rows.length)} of{" "}
-                  {tableData.rows.length} rows
-                </p>
-                <div className="flex gap-2 mr-6">
-                  <button
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={page === 0}
-                    className="px-3 py-1 text-sm border border-border rounded hover:bg-muted
-                             disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={(page + 1) * rowsPerPage >= tableData.rows.length}
-                    className="px-3 py-1 text-sm border border-border rounded hover:bg-muted
-                             disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              total={tableData.rows.length}
+              rowsPerPage={rowsPerPage}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </div>

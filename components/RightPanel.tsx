@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { memo, useState, useCallback } from "react";
 import { SplitResponse, ViewMode, SplitterConfig } from "@/lib/types";
+import { useAuthFetch } from "@/lib/hooks/useAuthFetch";
 import JsonViewComponent from "./JsonView";
 import CardView from "./CardView";
 
@@ -30,7 +31,7 @@ const emptyResult: SplitResponse = {
   },
 };
 
-export default function RightPanel({
+const RightPanel = memo(function RightPanel({
   result,
   viewMode,
   onViewModeChange,
@@ -40,6 +41,7 @@ export default function RightPanel({
   const displayResult = result || emptyResult;
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const authFetch = useAuthFetch();
 
   const handleSave = useCallback(async () => {
     if (!result || !text) return;
@@ -48,30 +50,14 @@ export default function RightPanel({
     setSaved(false);
 
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        alert('Please login first');
-        setSaving(false);
-        return;
-      }
-
-      const response = await fetch('/api/split-results', {
+      await authFetch('/api/split-results', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
         body: JSON.stringify({
           config,
           result,
           originalText: text,
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save split result');
-      }
 
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -81,7 +67,7 @@ export default function RightPanel({
     } finally {
       setSaving(false);
     }
-  }, [result, config, text]);
+  }, [result, config, text, authFetch]);
 
   return (
     <div className="h-full flex flex-col py-6 bg-surface">
@@ -195,4 +181,8 @@ export default function RightPanel({
       </div>
     </div>
   );
-}
+});
+
+RightPanel.displayName = 'RightPanel';
+
+export default RightPanel;

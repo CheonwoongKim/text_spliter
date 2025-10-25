@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import LeftPanel from "@/components/LeftPanel";
@@ -11,6 +12,7 @@ import LicensesPanel from "@/components/LicensesPanel";
 import VectorStoreLeftPanel from "@/components/VectorStoreLeftPanel";
 import VectorStoreRightPanel from "@/components/VectorStoreRightPanel";
 import StoragePanel from "@/components/StoragePanel";
+import FilesPanel from "@/components/FilesPanel";
 import { getAuthToken } from "@/lib/auth";
 import type {
   SplitterConfig,
@@ -27,7 +29,7 @@ import type {
 
 export default function Home() {
   // State
-  const [activeMenu, setActiveMenu] = useState<"parser" | "splitter" | "licenses" | "vectorstore" | "storage">("splitter");
+  const [activeMenu, setActiveMenu] = useState<"parser" | "splitter" | "licenses" | "vectorstore" | "storage" | "files">("splitter");
 
   // Splitter state
   const [text, setText] = useState("");
@@ -345,6 +347,8 @@ export default function Home() {
               ? "Vector Database"
               : activeMenu === "storage"
               ? "Storage"
+              : activeMenu === "files"
+              ? "Files"
               : "Text Splitter"
           }
         />
@@ -396,12 +400,15 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden bg-surface">
-        <div className="h-full">
-          {activeMenu === "licenses" ? (
-            <LicensesPanel />
-          ) : activeMenu === "storage" ? (
-            <StoragePanel />
-          ) : activeMenu === "vectorstore" ? (
+        <ErrorBoundary>
+          <div className="h-full">
+            {activeMenu === "licenses" ? (
+              <LicensesPanel />
+            ) : activeMenu === "storage" ? (
+              <StoragePanel />
+            ) : activeMenu === "files" ? (
+              <FilesPanel />
+            ) : activeMenu === "vectorstore" ? (
             <div className="h-full grid grid-cols-1 lg:grid-cols-10">
               {/* VectorStore Left Panel */}
               <div className="h-full overflow-hidden lg:col-span-2">
@@ -478,7 +485,8 @@ export default function Home() {
               </div>
             </div>
           )}
-        </div>
+          </div>
+        </ErrorBoundary>
       </main>
       </div>
     </div>

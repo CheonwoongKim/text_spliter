@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { ParseResponse } from "@/lib/types";
 import { query } from "@/lib/db";
 import { decrypt } from "@/lib/encryption";
+import { getUserEmailFromToken } from "@/lib/auth-server";
 
 interface ApiKey {
   id: number;
@@ -10,28 +11,6 @@ interface ApiKey {
   encrypted_key: string;
   created_at: string;
   updated_at: string;
-}
-
-// Verify JWT token and extract user email
-function getUserEmailFromToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get("authorization");
-  const token =
-    authHeader?.replace("Bearer ", "") ||
-    request.cookies.get("auth_token")?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(
-      Buffer.from(token.split(".")[1], "base64").toString()
-    );
-    return payload.email || null;
-  } catch (error) {
-    console.error("Error decoding token:", error);
-    return null;
-  }
 }
 
 export async function POST(request: NextRequest) {
