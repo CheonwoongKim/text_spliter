@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getUserEmailFromToken } from '@/lib/auth-server';
 import type { ParseResponse } from '@/lib/types';
+import { validateParserType, validatePagination, validateId, ValidationError } from '@/lib/validation';
 
 interface ParseResult {
   id: number;
@@ -27,14 +28,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { parserType, result } = body as {
-      parserType: string;
-      result: ParseResponse;
-    };
+    const { parserType: rawParserType, result } = body;
 
-    if (!parserType || !result || !result.metadata) {
+    // Validate inputs
+    const parserType = validateParserType(rawParserType);
+
+    if (!result || !result.metadata) {
       return NextResponse.json(
-        { error: 'Invalid request data' },
+        { error: 'Invalid request data: missing result or metadata' },
         { status: 400 }
       );
     }
@@ -65,6 +66,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error saving parse result:', error);
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       {
         error: 'Failed to save parse result',
@@ -85,12 +94,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const rawId = searchParams.get('id');
+    const rawLimit = searchParams.get('limit') || '50';
+    const rawOffset = searchParams.get('offset') || '0';
 
-    if (id) {
+    if (rawId) {
       // Get specific result
+      const id = validateId(rawId);
+
       const results = await query<ParseResult[]>(
         'SELECT * FROM parse_results WHERE id = ? AND user_email = ?',
         [id, userEmail]
@@ -103,14 +114,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(results[0]);
     } else {
       // Get all results with pagination
+      const { limit, offset } = validatePagination(rawLimit, rawOffset);
+
       const [results, countResult] = await Promise.all([
         query<ParseResult[]>(
           `SELECT id, parser_type, file_name, file_size, mime_type, processing_time, created_at
            FROM parse_results
            WHERE user_email = ?
            ORDER BY created_at DESC
-           LIMIT ${limit} OFFSET ${offset}`,
-          [userEmail]
+           LIMIT ? OFFSET ?`,
+          [userEmail, limit, offset]
         ),
         query<{ total: number }[]>(
           'SELECT COUNT(*) as total FROM parse_results WHERE user_email = ?',
@@ -125,6 +138,14 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('[API /parse-results GET] Error:', error);
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       {
         error: 'Failed to fetch parse results',
@@ -144,11 +165,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const rawId = searchParams.get('id');
 
-    if (!id) {
+    if (!rawId) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
+
+    const id = validateId(rawId);
 
     await query(
       'DELETE FROM parse_results WHERE id = ? AND user_email = ?',
@@ -158,6 +181,14 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting parse result:', error);
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       {
         error: 'Failed to delete parse result',

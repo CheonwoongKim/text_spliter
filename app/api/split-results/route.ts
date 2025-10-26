@@ -118,8 +118,8 @@ export async function GET(request: NextRequest) {
            FROM split_results
            WHERE user_email = ?
            ORDER BY created_at DESC
-           LIMIT ${limit} OFFSET ${offset}`,
-          [userEmail]
+           LIMIT ? OFFSET ?`,
+          [userEmail, limit, offset]
         ),
         query<{ total: number }[]>(
           'SELECT COUNT(*) as total FROM split_results WHERE user_email = ?',
