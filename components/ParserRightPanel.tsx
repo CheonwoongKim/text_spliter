@@ -337,7 +337,7 @@ function ParserRightPanel({ result, selectedFile, config }: ParserRightPanelProp
         </div>
 
         {/* Content Display */}
-        <div className="flex-1 overflow-auto border-2 border-dashed border-border rounded-lg p-6 bg-muted/30">
+        <div className="flex-1 overflow-auto rounded-lg p-6 bg-card">
           {!result ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-sm text-muted-foreground">

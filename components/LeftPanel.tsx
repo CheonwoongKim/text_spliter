@@ -100,7 +100,7 @@ const LeftPanel = memo(function LeftPanel({
           <button
             onClick={onSplit}
             disabled={loading}
-            className="text-blue-500 hover:text-blue-600 disabled:text-muted-foreground
+            className="text-white hover:text-white/90 disabled:text-muted-foreground
                      disabled:cursor-not-allowed font-medium text-sm
                      transition-smooth flex items-center gap-2"
           >

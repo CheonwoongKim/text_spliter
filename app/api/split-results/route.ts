@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { getUserEmailFromToken } from '@/lib/auth-server';
 import type { SplitResponse, SplitterConfig } from '@/lib/types';
 import { PAGINATION_API_CONFIG } from '@/lib/constants';
+import { validatePagination, validateId, ValidationError } from '@/lib/validation';
 
 interface SplitResult {
   id: number;
@@ -94,12 +95,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    const limit = parseInt(searchParams.get('limit') || String(PAGINATION_API_CONFIG.DEFAULT_LIMIT));
-    const offset = parseInt(searchParams.get('offset') || String(PAGINATION_API_CONFIG.DEFAULT_OFFSET));
+    const rawId = searchParams.get('id');
+    const rawLimit = searchParams.get('limit') || String(PAGINATION_API_CONFIG.DEFAULT_LIMIT);
+    const rawOffset = searchParams.get('offset') || String(PAGINATION_API_CONFIG.DEFAULT_OFFSET);
 
-    if (id) {
+    if (rawId) {
       // Get specific result
+      const id = validateId(rawId);
+
       const results = await query<SplitResult[]>(
         'SELECT * FROM split_results WHERE id = ? AND user_email = ?',
         [id, userEmail]
@@ -112,6 +115,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(results[0]);
     } else {
       // Get all results with pagination
+      const { limit, offset } = validatePagination(rawLimit, rawOffset);
+
       const [results, countResult] = await Promise.all([
         query<SplitResult[]>(
           `SELECT id, splitter_type, chunk_size, chunk_overlap, chunk_count, processing_time, created_at,
@@ -119,8 +124,8 @@ export async function GET(request: NextRequest) {
            FROM split_results
            WHERE user_email = ?
            ORDER BY created_at DESC
-           LIMIT ? OFFSET ?`,
-          [userEmail, limit, offset]
+           LIMIT ${limit} OFFSET ${offset}`,
+          [userEmail]
         ),
         query<{ total: number }[]>(
           'SELECT COUNT(*) as total FROM split_results WHERE user_email = ?',
@@ -135,6 +140,14 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('[API /split-results GET] Error:', error);
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       {
         error: 'Failed to fetch split results',
@@ -154,11 +167,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const rawId = searchParams.get('id');
 
-    if (!id) {
+    if (!rawId) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
+
+    const id = validateId(rawId);
 
     await query(
       'DELETE FROM split_results WHERE id = ? AND user_email = ?',
@@ -168,6 +183,14 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting split result:', error);
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       {
         error: 'Failed to delete split result',

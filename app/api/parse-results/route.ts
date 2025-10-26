@@ -123,8 +123,8 @@ export async function GET(request: NextRequest) {
            FROM parse_results
            WHERE user_email = ?
            ORDER BY created_at DESC
-           LIMIT ? OFFSET ?`,
-          [userEmail, limit, offset]
+           LIMIT ${limit} OFFSET ${offset}`,
+          [userEmail]
         ),
         query<{ total: number }[]>(
           'SELECT COUNT(*) as total FROM parse_results WHERE user_email = ?',

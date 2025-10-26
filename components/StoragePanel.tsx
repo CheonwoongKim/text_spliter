@@ -388,7 +388,7 @@ const StoragePanel = memo(function StoragePanel() {
       {/* Content */}
       <div className="flex-1 flex flex-col px-10 py-6 overflow-hidden">
         {activeTab === 'parse' ? (
-          <div className="flex-1 flex flex-col bg-card border border-border rounded-lg overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-auto">
               <table className="w-full">
                 <thead className="bg-muted border-b border-border sticky top-0">
@@ -399,7 +399,7 @@ const StoragePanel = memo(function StoragePanel() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-48 whitespace-nowrap">MIME Type</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Time</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-48 whitespace-nowrap">Created</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Actions</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -426,11 +426,11 @@ const StoragePanel = memo(function StoragePanel() {
                     results.map((result) => (
                       <tr key={result.id} className="hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3 w-32 whitespace-nowrap">
-                          <span className="px-2 py-1 text-xs font-medium rounded bg-accent/10 text-accent whitespace-nowrap">
+                          <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-accent/10 text-accent whitespace-nowrap">
                             {result.parser_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-card-foreground font-medium truncate whitespace-nowrap w-64 max-w-xs">
+                        <td className="px-4 py-3 text-sm text-card-foreground font-medium w-64 truncate whitespace-nowrap">
                           {result.file_name}
                         </td>
                         <td className="px-4 py-3 text-sm text-muted-foreground w-28 whitespace-nowrap">
@@ -446,7 +446,7 @@ const StoragePanel = memo(function StoragePanel() {
                           {formatDate(result.created_at)}
                         </td>
                         <td className="px-4 py-3 w-28 whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleView(result.id)}
                               className="p-2 text-muted-foreground hover:text-accent transition-smooth"
@@ -484,7 +484,7 @@ const StoragePanel = memo(function StoragePanel() {
             />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col bg-card border border-border rounded-lg overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-auto">
               <table className="w-full">
                 <thead className="bg-muted border-b border-border sticky top-0">
@@ -496,7 +496,7 @@ const StoragePanel = memo(function StoragePanel() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Overlap</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Time</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-48 whitespace-nowrap">Created</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Actions</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -523,11 +523,11 @@ const StoragePanel = memo(function StoragePanel() {
                     splitResults.map((result) => (
                       <tr key={result.id} className="hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3 w-40 whitespace-nowrap">
-                          <span className="px-2 py-1 text-xs font-medium rounded bg-accent/10 text-accent whitespace-nowrap">
+                          <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-accent/10 text-accent whitespace-nowrap">
                             {result.splitter_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-card-foreground truncate whitespace-nowrap w-64 max-w-xs">
+                        <td className="px-4 py-3 text-sm text-card-foreground w-64 truncate whitespace-nowrap">
                           {result.original_text_preview}
                         </td>
                         <td className="px-4 py-3 text-sm text-muted-foreground w-24 whitespace-nowrap">
@@ -546,7 +546,7 @@ const StoragePanel = memo(function StoragePanel() {
                           {formatDate(result.created_at)}
                         </td>
                         <td className="px-4 py-3 w-28 whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleViewSplit(result.id)}
                               className="p-2 text-muted-foreground hover:text-accent transition-smooth"

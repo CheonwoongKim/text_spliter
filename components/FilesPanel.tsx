@@ -12,7 +12,7 @@ interface FileItem {
 
 const FilesPanel = memo(function FilesPanel() {
   const [files, setFiles] = useState<FileItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -21,18 +21,18 @@ const FilesPanel = memo(function FilesPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchFiles = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setError("Please login first");
+      setFiles([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const token = getAuthToken();
-      if (!token) {
-        setError("Please login first");
-        setFiles([]);
-        setLoading(false);
-        return;
-      }
-
       const response = await fetch("/api/storage/files", {
         headers: {
           Authorization: `Bearer ${token}`,

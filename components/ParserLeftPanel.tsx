@@ -124,13 +124,14 @@ function ParserLeftPanel({
   );
 
   const fetchStorageFiles = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setLoadingFiles(false);
+      return;
+    }
+
     setLoadingFiles(true);
     try {
-      const token = getAuthToken();
-      if (!token) {
-        return;
-      }
-
       const response = await fetch("/api/storage/files", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -637,7 +638,7 @@ function ParserLeftPanel({
           <button
             onClick={onParse}
             disabled={loading}
-            className="text-blue-500 hover:text-blue-600 disabled:text-muted-foreground
+            className="text-white hover:text-white/90 disabled:text-muted-foreground
                      disabled:cursor-not-allowed font-medium text-sm
                      transition-smooth flex items-center gap-2"
           >
