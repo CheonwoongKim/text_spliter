@@ -321,9 +321,9 @@ const FilesPanel = memo(function FilesPanel() {
       {/* Header */}
       <div className="border-b border-border bg-card px-10 py-3">
         {/* Single Row: Breadcrumb, Search, Actions */}
-        <div className="flex items-center justify-between gap-6">
+        <div className="grid grid-cols-3 gap-6 items-center">
           {/* Left: Breadcrumb Navigation */}
-          <nav className="flex items-center gap-2 text-sm flex-shrink-0">
+          <nav className="flex items-center gap-2 text-sm">
             <button
               onClick={() => setCurrentPath([])}
               className="text-muted-foreground hover:text-card-foreground transition-smooth"
@@ -346,7 +346,7 @@ const FilesPanel = memo(function FilesPanel() {
           </nav>
 
           {/* Center: Search Input */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative">
             <input
               type="text"
               value={searchQuery}
@@ -383,7 +383,7 @@ const FilesPanel = memo(function FilesPanel() {
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 justify-end">
             <button
               onClick={fetchFiles}
               disabled={loading}

@@ -209,8 +209,16 @@ export default function Home() {
         formData.append("googleLocation", parserConfig.googleLocation);
       }
 
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error("Please login to use the parser");
+      }
+
       const response = await fetch("/api/parse", {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
 

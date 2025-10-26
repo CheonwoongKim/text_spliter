@@ -27,39 +27,24 @@ function ParserRightPanel({ result, selectedFile, config }: ParserRightPanelProp
     const tabs: ViewTab[] = [];
 
     if (config.parserType === "Upstage") {
-      const format = config.upstageOutputFormat || "text";
-      if (format === "html") {
-        tabs.push({ key: "html", label: "HTML", available: true, hasData: !!result?.html });
-        tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
-      } else if (format === "markdown") {
-        tabs.push({ key: "markdown", label: "Markdown", available: true, hasData: !!result?.markdown });
-        tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
-      } else {
-        tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
-      }
+      // Upstage returns all formats, show all tabs
+      tabs.push({ key: "html", label: "HTML", available: true, hasData: !!result?.html });
+      tabs.push({ key: "markdown", label: "Markdown", available: true, hasData: !!result?.markdown });
+      tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
     } else if (config.parserType === "LlamaIndex") {
-      const format = config.llamaResultType || "text";
-      if (format === "json") {
-        tabs.push({ key: "json", label: "JSON", available: true, hasData: !!result?.json });
-        tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
-      } else if (format === "markdown") {
-        tabs.push({ key: "markdown", label: "Markdown", available: true, hasData: !!result?.markdown });
-        tabs.push({ key: "html", label: "HTML", available: true, hasData: !!result?.html });
-        tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
-      } else {
-        tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
-      }
+      // LlamaIndex returns all formats from JSON response
+      tabs.push({ key: "markdown", label: "Markdown", available: true, hasData: !!result?.markdown });
+      tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
+      tabs.push({ key: "json", label: "JSON", available: true, hasData: !!result?.json });
     } else if (config.parserType === "Azure") {
       const format = config.azureOutputFormat || "text";
       if (format === "markdown") {
         tabs.push({ key: "markdown", label: "Markdown", available: true, hasData: !!result?.markdown });
-        tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
       } else {
         tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
       }
     } else if (config.parserType === "Google") {
       tabs.push({ key: "json", label: "JSON", available: true, hasData: !!result?.json });
-      tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
     } else {
       // Default tabs for unknown parser
       tabs.push({ key: "text", label: "Text", available: true, hasData: !!result?.text });
@@ -209,37 +194,33 @@ function ParserRightPanel({ result, selectedFile, config }: ParserRightPanelProp
 
       {/* Parsed Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header with Title, Tabs, and Copy Button */}
+        {/* Header with Tabs and Action Buttons */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-surface-foreground">
-            Result
-          </h3>
-          <div className="flex items-center gap-3">
-            {/* View Mode Toggle - Dynamic Tabs */}
-            {expectedTabs.length > 0 && (
-              <div className="flex gap-1 bg-muted rounded-lg p-1">
-                {expectedTabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => tab.hasData && setViewMode(tab.key)}
-                    disabled={!tab.hasData}
-                    className={`px-3 py-1 text-xs font-medium rounded transition-smooth ${
-                      viewMode === tab.key
-                        ? "bg-card text-card-foreground shadow-sm"
-                        : tab.hasData
-                        ? "text-muted-foreground hover:text-surface-foreground"
-                        : "text-muted-foreground/40 cursor-not-allowed"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* View Mode Toggle - Dynamic Tabs */}
+          {expectedTabs.length > 0 && (
+            <div className="flex gap-1 bg-muted rounded-lg p-1">
+              {expectedTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => tab.hasData && setViewMode(tab.key)}
+                  disabled={!tab.hasData}
+                  className={`px-3 py-1 text-xs font-medium rounded transition-smooth ${
+                    viewMode === tab.key
+                      ? "bg-card text-card-foreground shadow-sm"
+                      : tab.hasData
+                      ? "text-muted-foreground hover:text-surface-foreground"
+                      : "text-muted-foreground/40 cursor-not-allowed"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
 
-            {/* Action Buttons */}
-            {result && (
-              <div className="flex items-center gap-2">
+          {/* Action Buttons */}
+          {result && (
+            <div className="flex items-center gap-2">
                 {/* Save Button */}
                 <button
                   onClick={handleSave}
@@ -353,7 +334,6 @@ function ParserRightPanel({ result, selectedFile, config }: ParserRightPanelProp
                 </button>
               </div>
             )}
-          </div>
         </div>
 
         {/* Content Display */}

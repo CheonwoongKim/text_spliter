@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         config.breakpointType || null,
         JSON.stringify(result.chunks),
         result.chunks.length,
-        result.processingTime || null,
+        result.statistics.processingTime || null,
       ]
     );
 

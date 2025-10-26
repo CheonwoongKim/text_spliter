@@ -6,7 +6,7 @@ const DEFAULT_BUCKET = process.env.STORAGE_DEFAULT_BUCKET || 'loan-agent-files';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   const email = getUserEmailFromToken(request);
   if (!email) {
@@ -14,7 +14,7 @@ export async function GET(
   }
 
   try {
-    const filename = params.filename;
+    const { filename } = await params;
 
     if (!filename) {
       return new Response(

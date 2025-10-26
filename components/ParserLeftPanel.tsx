@@ -1,7 +1,15 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState, useEffect } from "react";
 import type { ParserType, ParserConfig } from "@/lib/types";
+import { getAuthToken } from "@/lib/auth";
+
+interface StorageFile {
+  id: number;
+  filename: string;
+  file_size: number;
+  uploaded_at: string;
+}
 
 interface ParserLeftPanelProps {
   config: ParserConfig;
@@ -22,11 +30,17 @@ function ParserLeftPanel({
   onParse,
   onReset,
 }: ParserLeftPanelProps) {
+  const [uploadMode, setUploadMode] = useState<"upload" | "select">("upload");
+  const [storageFiles, setStorageFiles] = useState<StorageFile[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(false);
+  const [selectedFileKey, setSelectedFileKey] = useState<string | null>(null);
+
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
         onFileSelect(file);
+        setSelectedFileKey(null);
       }
     },
     [onFileSelect]
@@ -88,13 +102,6 @@ function ParserLeftPanel({
     [onConfigChange]
   );
 
-  const handleLlamaResultTypeChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      onConfigChange({ llamaResultType: e.target.value as 'text' | 'markdown' | 'json' });
-    },
-    [onConfigChange]
-  );
-
   const handleLlamaGpt4oModeChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       onConfigChange({ llamaGpt4oMode: e.target.checked });
@@ -116,9 +123,258 @@ function ParserLeftPanel({
     [onConfigChange]
   );
 
+  const fetchStorageFiles = useCallback(async () => {
+    setLoadingFiles(true);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch("/api/storage/files", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      setStorageFiles(data.files || []);
+    } catch (err) {
+      console.error("Error fetching storage files:", err);
+    } finally {
+      setLoadingFiles(false);
+    }
+  }, []);
+
+  const handleSelectFile = useCallback(async (fileKey: string) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert("Please login to Storage first");
+        return;
+      }
+
+      const response = await fetch(
+        `/api/storage/preview?key=${encodeURIComponent(fileKey)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to load file");
+      }
+
+      const blob = await response.blob();
+
+      // Convert blob to File object
+      const filename = fileKey.split('/').pop() || fileKey;
+      const file = new File([blob], filename, { type: blob.type });
+
+      onFileSelect(file);
+      setSelectedFileKey(fileKey);
+    } catch (err) {
+      alert(`Failed to load file: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
+  }, [onFileSelect]);
+
+  useEffect(() => {
+    if (uploadMode === "select") {
+      fetchStorageFiles();
+    }
+  }, [uploadMode, fetchStorageFiles]);
+
   return (
     <div className="h-full flex flex-col relative">
       <div className="flex-1 overflow-y-auto py-6 pb-24">
+        {/* File Upload Section */}
+        <div className="mb-10">
+          {/* Header with tabs */}
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex gap-1 bg-muted rounded-lg p-1">
+              <button
+                onClick={() => setUploadMode("upload")}
+                className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+                  uploadMode === "upload"
+                    ? "bg-card text-card-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-card-foreground"
+                }`}
+              >
+                Upload
+              </button>
+              <button
+                onClick={() => setUploadMode("select")}
+                className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+                  uploadMode === "select"
+                    ? "bg-card text-card-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-card-foreground"
+                }`}
+              >
+                Select from Storage
+              </button>
+            </div>
+            {selectedFile && (
+              <span className="text-xs text-muted-foreground">
+                {(selectedFile.size / 1024).toFixed(2)} KB
+              </span>
+            )}
+          </div>
+
+          {/* File Upload Content */}
+          <div className="h-[300px]">
+            {uploadMode === "upload" ? (
+              selectedFile ? (
+                <div className="h-full flex flex-col border border-border rounded-lg overflow-hidden">
+                  <div className="p-3 bg-muted/30 border-b border-border flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-xs font-medium text-surface-foreground">{selectedFile.name}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          onFileSelect(null);
+                          setSelectedFileKey(null);
+                        }}
+                        className="text-xs text-muted-foreground hover:text-surface-foreground transition-smooth"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-h-0 p-4 overflow-auto">
+                    <div className="flex items-center gap-3">
+                      <svg className="w-8 h-8 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-card-foreground mb-1">{selectedFile.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedFile.type || 'Unknown type'} • {(selectedFile.size / 1024).toFixed(2)} KB
+                          {selectedFileKey && <span> • from storage</span>}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx"
+                    onChange={handleFileChange}
+                    disabled={loading}
+                    className="hidden"
+                  />
+                </div>
+              ) : (
+                <label
+                  htmlFor="file-upload"
+                  className="w-full h-full border-2 border-dashed border-border rounded-lg
+                           hover:border-accent hover:bg-accent/5
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                           transition-smooth flex flex-col items-center justify-center gap-3 cursor-pointer"
+                >
+                  <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-surface-foreground mb-1">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PDF, PNG, JPG, JPEG, DOCX, PPTX (max 100MB)
+                    </p>
+                  </div>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx"
+                    onChange={handleFileChange}
+                    disabled={loading}
+                    className="hidden"
+                  />
+                </label>
+              )
+            ) : (
+              // Select from Storage mode
+              <div className="h-full flex flex-col border border-border rounded-lg overflow-hidden">
+                {selectedFile && (
+                  <div className="border-b border-border p-3 bg-muted/30 flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-xs font-medium text-card-foreground">{selectedFile.name}</span>
+                        <span className="text-xs text-muted-foreground">(from storage)</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          onFileSelect(null);
+                          setSelectedFileKey(null);
+                        }}
+                        className="text-xs text-muted-foreground hover:text-surface-foreground transition-smooth"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {loadingFiles ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+                  </div>
+                ) : storageFiles.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6">
+                    <svg className="w-12 h-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    <p className="text-sm text-muted-foreground text-center">
+                      No files in storage.<br />Upload files in the Files page.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex-1 overflow-y-auto p-2">
+                    {storageFiles.map((file) => (
+                      <button
+                        key={file.id}
+                        onClick={() => handleSelectFile(file.filename)}
+                        disabled={loading}
+                        className={`w-full text-left p-3 mb-2 rounded-lg border transition-smooth ${
+                          selectedFileKey === file.filename
+                            ? "border-accent bg-accent/10"
+                            : "border-border hover:border-accent/50 hover:bg-muted"
+                        } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-muted-foreground flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-surface-foreground truncate">
+                              {file.filename.split('/').pop()}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {(file.file_size / 1024).toFixed(2)} KB
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Parser Selection */}
         <div className="mb-6">
           <h3 className="text-sm font-medium text-surface-foreground mb-4">
@@ -160,29 +416,7 @@ function ParserLeftPanel({
             Parser Settings
           </h3>
 
-          {/* Upstage Output Format */}
-          {config.parserType === "Upstage" && (
-            <div className="mb-4">
-              <label className="block text-sm text-muted-foreground mb-2">
-                Output Format
-              </label>
-              <select
-                value={config.upstageOutputFormat || 'markdown'}
-                onChange={handleUpstageOutputFormatChange}
-                disabled={loading}
-                className="w-full h-12 px-3 border border-border rounded-lg
-                         focus-ring bg-card text-card-foreground
-                         transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
-              >
-                <option value="text">Text</option>
-                <option value="html">HTML</option>
-                <option value="markdown">Markdown</option>
-              </select>
-              <p className="text-xs text-muted-foreground mt-2">
-                Upstage는 Text, HTML, Markdown 형식을 모두 지원합니다.
-              </p>
-            </div>
-          )}
+          {/* Upstage: All formats are automatically retrieved */}
 
           {/* Azure Output Format */}
           {config.parserType === "Azure" && (
@@ -302,26 +536,7 @@ function ParserLeftPanel({
           {/* LlamaIndex specific settings */}
           {config.parserType === "LlamaIndex" && (
             <>
-              <div className="mb-4">
-                <label className="block text-sm text-muted-foreground mb-2">
-                  Result Type
-                </label>
-                <select
-                  value={config.llamaResultType || 'markdown'}
-                  onChange={handleLlamaResultTypeChange}
-                  disabled={loading}
-                  className="w-full h-12 px-3 border border-border rounded-lg
-                           focus-ring bg-card text-card-foreground
-                           transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
-                >
-                  <option value="text">Text</option>
-                  <option value="markdown">Markdown</option>
-                  <option value="json">JSON</option>
-                </select>
-                <p className="text-xs text-muted-foreground mt-2">
-                  LlamaParse는 Text, Markdown, JSON 형식을 지원합니다.
-                </p>
-              </div>
+              {/* LlamaIndex: All formats (text, markdown, json) are automatically retrieved */}
               <div className="mb-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -388,130 +603,6 @@ function ParserLeftPanel({
               </div>
             </>
           )}
-        </div>
-
-        {/* File Upload */}
-        <div>
-          <h3 className="text-sm font-medium text-surface-foreground mb-4">
-            File Upload
-          </h3>
-        <div>
-          {selectedFile ? (
-            <div className="border-2 border-dashed border-border rounded-lg p-6 bg-muted/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-5">
-                  <svg
-                    className="w-6 h-6 text-accent"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-medium text-card-foreground">
-                      {selectedFile.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {(selectedFile.size / 1024).toFixed(2)} KB
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <label
-                    htmlFor="file-upload"
-                    className="p-2 bg-muted hover:bg-muted/80 text-muted-foreground
-                             rounded-md transition-smooth cursor-pointer"
-                    title="Change file"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                      />
-                    </svg>
-                  </label>
-                  <button
-                    onClick={() => onFileSelect(null)}
-                    className="p-2 bg-muted hover:bg-red-500/10 text-muted-foreground
-                             hover:text-red-500 rounded-md transition-smooth"
-                    title="Delete file"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <input
-                id="file-upload"
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx"
-                onChange={handleFileChange}
-                disabled={loading}
-                className="hidden"
-              />
-            </div>
-          ) : (
-            <label
-              htmlFor="file-upload"
-              className="flex flex-col items-center justify-center h-48
-                       border-2 border-dashed border-border rounded-lg
-                       cursor-pointer hover:border-accent transition-smooth
-                       bg-muted/30 hover:bg-muted/50"
-            >
-              <svg
-                className="w-6 h-6 mb-4 text-muted-foreground"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              <p className="text-sm text-surface-foreground font-medium mb-1">
-                파일을 선택하거나 드래그하세요
-              </p>
-              <p className="text-xs text-muted-foreground">
-                PDF, PNG, JPG, JPEG, DOCX, PPTX 파일 지원
-              </p>
-              <input
-                id="file-upload"
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx"
-                onChange={handleFileChange}
-                disabled={loading}
-                className="hidden"
-              />
-            </label>
-          )}
-        </div>
         </div>
       </div>
 

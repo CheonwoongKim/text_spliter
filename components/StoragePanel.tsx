@@ -393,13 +393,13 @@ const StoragePanel = memo(function StoragePanel() {
               <table className="w-full">
                 <thead className="bg-muted border-b border-border sticky top-0">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">File Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Size</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">MIME Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Time</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-32 whitespace-nowrap">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-64 whitespace-nowrap">File Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Size</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-48 whitespace-nowrap">MIME Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Time</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-48 whitespace-nowrap">Created</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -425,27 +425,27 @@ const StoragePanel = memo(function StoragePanel() {
                   ) : (
                     results.map((result) => (
                       <tr key={result.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3">
-                          <span className="px-2 py-1 text-xs font-medium rounded bg-accent/10 text-accent">
+                        <td className="px-4 py-3 w-32 whitespace-nowrap">
+                          <span className="px-2 py-1 text-xs font-medium rounded bg-accent/10 text-accent whitespace-nowrap">
                             {result.parser_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-card-foreground font-medium max-w-xs truncate">
+                        <td className="px-4 py-3 text-sm text-card-foreground font-medium truncate whitespace-nowrap w-64 max-w-xs">
                           {result.file_name}
                         </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-muted-foreground w-28 whitespace-nowrap">
                           {formatFileSize(result.file_size)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-muted-foreground w-48 truncate whitespace-nowrap">
                           {result.mime_type}
                         </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-muted-foreground w-28 whitespace-nowrap">
                           {result.processing_time ? `${result.processing_time}ms` : '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-muted-foreground w-48 whitespace-nowrap">
                           {formatDate(result.created_at)}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 w-28 whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleView(result.id)}
@@ -489,14 +489,14 @@ const StoragePanel = memo(function StoragePanel() {
               <table className="w-full">
                 <thead className="bg-muted border-b border-border sticky top-0">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Preview</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chunks</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Size</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Overlap</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Time</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-40 whitespace-nowrap">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-64 whitespace-nowrap">Preview</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-24 whitespace-nowrap">Chunks</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-24 whitespace-nowrap">Size</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Overlap</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Time</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-48 whitespace-nowrap">Created</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -522,30 +522,30 @@ const StoragePanel = memo(function StoragePanel() {
                   ) : (
                     splitResults.map((result) => (
                       <tr key={result.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3">
-                          <span className="px-2 py-1 text-xs font-medium rounded bg-accent/10 text-accent">
+                        <td className="px-4 py-3 w-40 whitespace-nowrap">
+                          <span className="px-2 py-1 text-xs font-medium rounded bg-accent/10 text-accent whitespace-nowrap">
                             {result.splitter_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-card-foreground max-w-xs truncate">
+                        <td className="px-4 py-3 text-sm text-card-foreground truncate whitespace-nowrap w-64 max-w-xs">
                           {result.original_text_preview}
                         </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-muted-foreground w-24 whitespace-nowrap">
                           {result.chunk_count}
                         </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-muted-foreground w-24 whitespace-nowrap">
                           {result.chunk_size || '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-muted-foreground w-28 whitespace-nowrap">
                           {result.chunk_overlap || '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-muted-foreground w-28 whitespace-nowrap">
                           {result.processing_time ? `${result.processing_time}ms` : '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-muted-foreground w-48 whitespace-nowrap">
                           {formatDate(result.created_at)}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 w-28 whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleViewSplit(result.id)}

@@ -12,7 +12,7 @@ interface TextInputProps {
 function TextInput({ value, onChange }: TextInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<InputMode>("plaintext");
+  const [activeTab, setActiveTab] = useState<InputMode>("upload");
   const [fileName, setFileName] = useState<string>("");
   const [plaintextValue, setPlaintextValue] = useState<string>("");
 
@@ -63,7 +63,7 @@ function TextInput({ value, onChange }: TextInputProps) {
             className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
               activeTab === "upload"
                 ? "bg-card text-card-foreground shadow-sm"
-                : "text-muted-foreground hover:text-surface-foreground"
+                : "text-muted-foreground hover:text-card-foreground"
             }`}
           >
             Upload
@@ -73,7 +73,7 @@ function TextInput({ value, onChange }: TextInputProps) {
             className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
               activeTab === "plaintext"
                 ? "bg-card text-card-foreground shadow-sm"
-                : "text-muted-foreground hover:text-surface-foreground"
+                : "text-muted-foreground hover:text-card-foreground"
             }`}
           >
             Plain Text

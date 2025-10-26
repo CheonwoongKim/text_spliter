@@ -112,6 +112,8 @@ export async function POST(request: NextRequest) {
 
     let parsedText = "";
     let parsedHtml = "";
+    let parsedMarkdown = "";
+    let parsedJson: any = null;
 
     // Parse based on parser type
     if (parserType === "Upstage") {
@@ -119,11 +121,8 @@ export async function POST(request: NextRequest) {
       const upstageFormData = new FormData();
       upstageFormData.append("document", file);
 
-      // Add output format if specified
-      const outputFmt = upstageOutputFormat || "markdown";
-      if (outputFmt) {
-        upstageFormData.append("output_format", outputFmt);
-      }
+      // Request all output formats at once
+      upstageFormData.append("output_formats", JSON.stringify(["html", "text", "markdown"]));
 
       // Add OCR options if specified
       if (language) {
@@ -150,24 +149,17 @@ export async function POST(request: NextRequest) {
 
       const data = await response.json();
 
-      // Extract text and html based on output format
-      if (outputFmt === "html") {
-        parsedText = data.content?.html || data.content?.text || "";
-        parsedHtml = data.content?.html || "";
-      } else if (outputFmt === "markdown") {
-        parsedText = data.content?.markdown || data.content?.text || "";
-        parsedHtml = data.content?.html || "";
-      } else {
-        parsedText = data.content?.text || "";
-        parsedHtml = data.content?.html || "";
-      }
+      // Extract all formats from response
+      parsedText = data.content?.text || "";
+      parsedHtml = data.content?.html || "";
+      parsedMarkdown = data.content?.markdown || "";
     } else if (parserType === "LlamaIndex") {
       // Use LlamaParse API
       const llamaFormData = new FormData();
       llamaFormData.append("file", file);
 
-      // Add result type and other options
-      const resultType = llamaResultType || "markdown";
+      // Always use JSON result type as it includes text, markdown, and structured data
+      const resultType = "json";
       if (llamaGpt4oMode) {
         llamaFormData.append("gpt4o_mode", "true");
       }
@@ -176,6 +168,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Upload document
+      console.log('[LlamaParse] Uploading document...');
       const uploadResponse = await fetch(
         "https://api.cloud.llamaindex.ai/api/parsing/upload",
         {
@@ -188,20 +181,23 @@ export async function POST(request: NextRequest) {
       );
 
       if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
+        const errorText = await uploadResponse.text();
+        console.error('[LlamaParse] Upload failed:', uploadResponse.status, errorText);
         throw new Error(
-          errorData.error?.message || "Failed to upload document to LlamaParse"
+          `Failed to upload document to LlamaParse: ${errorText}`
         );
       }
 
       const uploadData = await uploadResponse.json();
       const jobId = uploadData.id;
+      console.log('[LlamaParse] Upload successful, jobId:', jobId);
 
       // Poll for results with appropriate endpoint based on result type
       let parseComplete = false;
-      let maxRetries = 30;
+      let maxRetries = 60; // Increased from 30 to 60 (2 minutes total)
       let retryCount = 0;
 
+      console.log('[LlamaParse] Polling for results, resultType:', resultType);
       while (!parseComplete && retryCount < maxRetries) {
         await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
 
@@ -215,24 +211,42 @@ export async function POST(request: NextRequest) {
           }
         );
 
+        console.log(`[LlamaParse] Poll attempt ${retryCount + 1}/${maxRetries}, status: ${resultResponse.status}`);
+
         if (resultResponse.ok) {
           const resultData = await resultResponse.json();
-          if (resultData.status === "SUCCESS") {
-            // Extract content based on result type
-            if (resultType === "json") {
-              parsedText = JSON.stringify(resultData.json || resultData, null, 2);
-              parsedHtml = "";
-            } else if (resultType === "markdown") {
-              parsedText = resultData.markdown || "";
-              parsedHtml = resultData.html || "";
-            } else {
-              parsedText = resultData.text || resultData.markdown || "";
-              parsedHtml = resultData.html || "";
-            }
-            parseComplete = true;
-          } else if (resultData.status === "ERROR") {
-            throw new Error("LlamaParse job failed");
+          console.log('[LlamaParse] === NEW CODE RUNNING ===');
+          console.log('[LlamaParse] Response type:', typeof resultData);
+          console.log('[LlamaParse] Response keys:', Object.keys(resultData || {}));
+          console.log('[LlamaParse] Response data:', JSON.stringify(resultData, null, 2));
+
+          // Check if result has actual content
+          let hasContent = false;
+
+          // JSON type includes pages array with text and md fields
+          if (resultData.pages && Array.isArray(resultData.pages) && resultData.pages.length > 0) {
+            // Extract text and markdown from all pages
+            parsedText = resultData.pages.map((page: any) => page.text || "").join("\n\n");
+            parsedMarkdown = resultData.pages.map((page: any) => page.md || "").join("\n\n");
+            // Store full JSON for raw view
+            parsedJson = resultData;
+            parsedHtml = ""; // No HTML format
+            hasContent = true;
           }
+
+          if (hasContent) {
+            console.log('[LlamaParse] Job completed successfully, content found');
+            parseComplete = true;
+          } else {
+            console.log('[LlamaParse] No content yet, continuing to poll...');
+          }
+        } else if (resultResponse.status === 404 || resultResponse.status === 202) {
+          // Job still processing
+          console.log('[LlamaParse] Job still processing...');
+        } else {
+          const errorText = await resultResponse.text();
+          console.error('[LlamaParse] Poll request failed:', resultResponse.status, errorText);
+          throw new Error(`LlamaParse polling failed: ${errorText}`);
         }
 
         retryCount++;
@@ -400,32 +414,15 @@ export async function POST(request: NextRequest) {
 
     // Map output based on parser type and selected format
     if (parserType === "Upstage") {
-      const format = upstageOutputFormat || "text";
-      if (format === "html") {
-        result.html = parsedHtml || parsedText;
-        result.text = parsedText; // Fallback
-      } else if (format === "markdown") {
-        result.markdown = parsedText;
-        result.text = parsedText; // Fallback
-      } else {
-        result.text = parsedText;
-      }
+      // Store all available formats
+      if (parsedText) result.text = parsedText;
+      if (parsedHtml) result.html = parsedHtml;
+      if (parsedMarkdown) result.markdown = parsedMarkdown;
     } else if (parserType === "LlamaIndex") {
-      const format = llamaResultType || "text";
-      if (format === "json") {
-        try {
-          result.json = JSON.parse(parsedText);
-        } catch {
-          result.json = parsedText; // If parsing fails, store as string
-        }
-        result.text = parsedText; // Fallback
-      } else if (format === "markdown") {
-        result.markdown = parsedText;
-        result.html = parsedHtml;
-        result.text = parsedText; // Fallback
-      } else {
-        result.text = parsedText;
-      }
+      // Store all available formats from JSON response
+      if (parsedText) result.text = parsedText;
+      if (parsedMarkdown) result.markdown = parsedMarkdown;
+      if (parsedJson) result.json = parsedJson;
     } else if (parserType === "Azure") {
       const format = azureOutputFormat || "text";
       if (format === "markdown") {
