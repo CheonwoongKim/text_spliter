@@ -2,6 +2,15 @@
  * Input validation utilities for API routes
  */
 
+import {
+  PAGINATION_API_CONFIG,
+  FILE_UPLOAD_CONFIG,
+  PARSER_TYPES,
+  SPLITTER_TYPES,
+  CHUNK_CONFIG_LIMITS,
+  API_KEY_NAMES,
+} from './constants';
+
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -16,8 +25,8 @@ export function validatePagination(limit: unknown, offset: unknown): { limit: nu
   const parsedLimit = parseInt(String(limit), 10);
   const parsedOffset = parseInt(String(offset), 10);
 
-  if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
-    throw new ValidationError('Limit must be a number between 1 and 100');
+  if (isNaN(parsedLimit) || parsedLimit < PAGINATION_API_CONFIG.MIN_LIMIT || parsedLimit > PAGINATION_API_CONFIG.MAX_LIMIT) {
+    throw new ValidationError(`Limit must be a number between ${PAGINATION_API_CONFIG.MIN_LIMIT} and ${PAGINATION_API_CONFIG.MAX_LIMIT}`);
   }
 
   if (isNaN(parsedOffset) || parsedOffset < 0) {
@@ -35,24 +44,12 @@ export function validateFile(file: unknown): File {
     throw new ValidationError('No valid file provided');
   }
 
-  const maxSize = 50 * 1024 * 1024; // 50MB
-  if (file.size > maxSize) {
-    throw new ValidationError(`File size must not exceed ${maxSize / 1024 / 1024}MB`);
+  if (file.size > FILE_UPLOAD_CONFIG.MAX_SIZE_BYTES) {
+    throw new ValidationError(`File size must not exceed ${FILE_UPLOAD_CONFIG.MAX_SIZE_BYTES / 1024 / 1024}MB`);
   }
 
-  const allowedTypes = [
-    'application/pdf',
-    'image/jpeg',
-    'image/png',
-    'image/jpg',
-    'image/webp',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
-    'application/msword', // doc
-    'text/plain',
-  ];
-
-  if (!allowedTypes.includes(file.type)) {
-    throw new ValidationError(`File type ${file.type} is not supported. Allowed types: ${allowedTypes.join(', ')}`);
+  if (!FILE_UPLOAD_CONFIG.ALLOWED_MIME_TYPES.includes(file.type)) {
+    throw new ValidationError(`File type ${file.type} is not supported. Allowed types: ${FILE_UPLOAD_CONFIG.ALLOWED_MIME_TYPES.join(', ')}`);
   }
 
   return file;
@@ -62,10 +59,8 @@ export function validateFile(file: unknown): File {
  * Validate parser type
  */
 export function validateParserType(parserType: unknown): 'Upstage' | 'LlamaIndex' | 'Azure' | 'Google' {
-  const validTypes = ['Upstage', 'LlamaIndex', 'Azure', 'Google'] as const;
-
-  if (!parserType || typeof parserType !== 'string' || !validTypes.includes(parserType as any)) {
-    throw new ValidationError(`Invalid parser type. Must be one of: ${validTypes.join(', ')}`);
+  if (!parserType || typeof parserType !== 'string' || !PARSER_TYPES.includes(parserType as any)) {
+    throw new ValidationError(`Invalid parser type. Must be one of: ${PARSER_TYPES.join(', ')}`);
   }
 
   return parserType as 'Upstage' | 'LlamaIndex' | 'Azure' | 'Google';
@@ -75,18 +70,8 @@ export function validateParserType(parserType: unknown): 'Upstage' | 'LlamaIndex
  * Validate splitter type
  */
 export function validateSplitterType(splitterType: unknown): string {
-  const validTypes = [
-    'RecursiveCharacterTextSplitter',
-    'CharacterTextSplitter',
-    'TokenTextSplitter',
-    'MarkdownTextSplitter',
-    'LatexTextSplitter',
-    'PythonCodeTextSplitter',
-    'RecursiveJsonSplitter'
-  ];
-
-  if (!splitterType || typeof splitterType !== 'string' || !validTypes.includes(splitterType)) {
-    throw new ValidationError(`Invalid splitter type. Must be one of: ${validTypes.join(', ')}`);
+  if (!splitterType || typeof splitterType !== 'string' || !SPLITTER_TYPES.includes(splitterType as any)) {
+    throw new ValidationError(`Invalid splitter type. Must be one of: ${SPLITTER_TYPES.join(', ')}`);
   }
 
   return splitterType;
@@ -99,11 +84,11 @@ export function validateChunkConfig(chunkSize: unknown, chunkOverlap: unknown): 
   const size = parseInt(String(chunkSize), 10);
   const overlap = parseInt(String(chunkOverlap), 10);
 
-  if (isNaN(size) || size < 1 || size > 10000) {
-    throw new ValidationError('Chunk size must be a number between 1 and 10000');
+  if (isNaN(size) || size < CHUNK_CONFIG_LIMITS.MIN_CHUNK_SIZE || size > CHUNK_CONFIG_LIMITS.MAX_CHUNK_SIZE) {
+    throw new ValidationError(`Chunk size must be a number between ${CHUNK_CONFIG_LIMITS.MIN_CHUNK_SIZE} and ${CHUNK_CONFIG_LIMITS.MAX_CHUNK_SIZE}`);
   }
 
-  if (isNaN(overlap) || overlap < 0 || overlap >= size) {
+  if (isNaN(overlap) || overlap < CHUNK_CONFIG_LIMITS.MIN_CHUNK_OVERLAP || overlap >= size) {
     throw new ValidationError('Chunk overlap must be a non-negative number less than chunk size');
   }
 
@@ -139,22 +124,7 @@ export function sanitizeString(input: unknown, maxLength: number = 1000): string
  * Validate API key name
  */
 export function validateApiKeyName(keyName: unknown): string {
-  const validKeyNames = [
-    'upstageParser',
-    'llamaParser',
-    'azureParserKey',
-    'azureParserEndpoint',
-    'googleParserKey',
-    'googleParserProjectId',
-    'googleParserLocation',
-    'googleParserProcessorId',
-    'chroamaUrl',
-    'chroamaApiKey',
-    'pineconeUrl',
-    'pineconeApiKey',
-    'weaviateUrl',
-    'weaviateApiKey',
-  ];
+  const validKeyNames = Object.values(API_KEY_NAMES);
 
   if (!keyName || typeof keyName !== 'string' || !validKeyNames.includes(keyName)) {
     throw new ValidationError(`Invalid API key name. Must be one of: ${validKeyNames.join(', ')}`);

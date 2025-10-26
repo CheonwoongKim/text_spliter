@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getUserEmailFromToken } from '@/lib/auth-server';
 import type { SplitResponse, SplitterConfig } from '@/lib/types';
+import { PAGINATION_API_CONFIG } from '@/lib/constants';
 
 interface SplitResult {
   id: number;
@@ -94,8 +95,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || String(PAGINATION_API_CONFIG.DEFAULT_LIMIT));
+    const offset = parseInt(searchParams.get('offset') || String(PAGINATION_API_CONFIG.DEFAULT_OFFSET));
 
     if (id) {
       // Get specific result

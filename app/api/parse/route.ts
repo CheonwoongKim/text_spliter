@@ -3,6 +3,7 @@ import type { ParseResponse } from "@/lib/types";
 import { query } from "@/lib/db";
 import { decrypt } from "@/lib/encryption";
 import { getUserEmailFromToken } from "@/lib/auth-server";
+import { API_KEY_NAMES, API_ENDPOINTS, POLLING_CONFIG } from "@/lib/constants";
 
 interface ApiKey {
   id: number;
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     let projectId: string | undefined;
 
     if (parserType === "Upstage") {
-      apiKey = apiKeys["upstageParser"];
+      apiKey = apiKeys[API_KEY_NAMES.UPSTAGE_PARSER];
       if (!apiKey) {
         return NextResponse.json(
           { error: "Upstage API key not found. Please add it in the APIs page." },
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
         );
       }
     } else if (parserType === "LlamaIndex") {
-      apiKey = apiKeys["llamaParser"];
+      apiKey = apiKeys[API_KEY_NAMES.LLAMA_PARSER];
       if (!apiKey) {
         return NextResponse.json(
           { error: "LlamaIndex API key not found. Please add it in the APIs page." },
@@ -90,8 +91,8 @@ export async function POST(request: NextRequest) {
         );
       }
     } else if (parserType === "Azure") {
-      apiKey = apiKeys["azureParserKey"];
-      endpoint = apiKeys["azureParserEndpoint"];
+      apiKey = apiKeys[API_KEY_NAMES.AZURE_PARSER_KEY];
+      endpoint = apiKeys[API_KEY_NAMES.AZURE_PARSER_ENDPOINT];
       if (!apiKey || !endpoint) {
         return NextResponse.json(
           { error: "Azure API key or endpoint not found. Please add them in the APIs page." },
@@ -99,8 +100,8 @@ export async function POST(request: NextRequest) {
         );
       }
     } else if (parserType === "Google") {
-      apiKey = apiKeys["googleParserKey"];
-      projectId = apiKeys["googleParserProjectId"];
+      apiKey = apiKeys[API_KEY_NAMES.GOOGLE_PARSER_KEY];
+      projectId = apiKeys[API_KEY_NAMES.GOOGLE_PARSER_PROJECT_ID];
 
       if (!apiKey || !projectId) {
         return NextResponse.json(
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
       }
 
       const response = await fetch(
-        "https://api.upstage.ai/v1/document-ai/document-parse",
+        API_ENDPOINTS.UPSTAGE_PARSE,
         {
           method: "POST",
           headers: {
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
       // Upload document
       console.log('[LlamaParse] Uploading document...');
       const uploadResponse = await fetch(
-        "https://api.cloud.llamaindex.ai/api/parsing/upload",
+        API_ENDPOINTS.LLAMA_UPLOAD,
         {
           method: "POST",
           headers: {
@@ -194,15 +195,15 @@ export async function POST(request: NextRequest) {
 
       // Poll for results with appropriate endpoint based on result type
       let parseComplete = false;
-      let maxRetries = 60; // Increased from 30 to 60 (2 minutes total)
+      let maxRetries = POLLING_CONFIG.MAX_RETRIES;
       let retryCount = 0;
 
       console.log('[LlamaParse] Polling for results, resultType:', resultType);
       while (!parseComplete && retryCount < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
+        await new Promise((resolve) => setTimeout(resolve, POLLING_CONFIG.RETRY_DELAY_MS));
 
         const resultResponse = await fetch(
-          `https://api.cloud.llamaindex.ai/api/parsing/job/${jobId}/result/${resultType}`,
+          API_ENDPOINTS.LLAMA_JOB_RESULT(jobId, resultType),
           {
             method: "GET",
             headers: {

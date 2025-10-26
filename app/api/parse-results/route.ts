@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { getUserEmailFromToken } from '@/lib/auth-server';
 import type { ParseResponse } from '@/lib/types';
 import { validateParserType, validatePagination, validateId, ValidationError } from '@/lib/validation';
+import { PAGINATION_API_CONFIG } from '@/lib/constants';
 
 interface ParseResult {
   id: number;
@@ -95,8 +96,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const rawId = searchParams.get('id');
-    const rawLimit = searchParams.get('limit') || '50';
-    const rawOffset = searchParams.get('offset') || '0';
+    const rawLimit = searchParams.get('limit') || String(PAGINATION_API_CONFIG.DEFAULT_LIMIT);
+    const rawOffset = searchParams.get('offset') || String(PAGINATION_API_CONFIG.DEFAULT_OFFSET);
 
     if (rawId) {
       // Get specific result
