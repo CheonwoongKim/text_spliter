@@ -8,6 +8,7 @@ import type { ParseResponse, ParserViewMode, ParserConfig } from "@/lib/types";
 interface ParserRightPanelProps {
   result: ParseResponse | null;
   selectedFile: File | null;
+  selectedFileStorageKey?: string | null;
   config: ParserConfig;
 }
 
@@ -18,7 +19,7 @@ interface ViewTab {
   hasData: boolean;
 }
 
-function ParserRightPanel({ result, selectedFile, config }: ParserRightPanelProps) {
+function ParserRightPanel({ result, selectedFile, selectedFileStorageKey, config }: ParserRightPanelProps) {
   const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState<ParserViewMode>("text");
   const [saving, setSaving] = useState(false);
@@ -107,16 +108,26 @@ function ParserRightPanel({ result, selectedFile, config }: ParserRightPanelProp
         return;
       }
 
+      // Create FormData to send both file and result
+      const formData = new FormData();
+      formData.append('parserType', config.parserType);
+      formData.append('result', JSON.stringify(result));
+
+      // If file is from storage, send the storage key instead of uploading again
+      if (selectedFileStorageKey) {
+        formData.append('fileStorageKey', selectedFileStorageKey);
+      }
+      // Otherwise, upload the file if available
+      else if (selectedFile) {
+        formData.append('file', selectedFile);
+      }
+
       const response = await fetch('/api/parse-results', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          parserType: config.parserType,
-          result,
-        }),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -132,7 +143,7 @@ function ParserRightPanel({ result, selectedFile, config }: ParserRightPanelProp
     } finally {
       setSaving(false);
     }
-  }, [result, config.parserType]);
+  }, [result, config.parserType, selectedFile]);
 
   return (
     <div className="h-full flex flex-col gap-6 py-6">

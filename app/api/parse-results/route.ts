@@ -12,6 +12,7 @@ interface ParseResult {
   file_name: string;
   file_size: number;
   mime_type: string;
+  file_storage_key: string | null;
   text_content: string | null;
   html_content: string | null;
   markdown_content: string | null;
@@ -28,31 +29,107 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { parserType: rawParserType, result } = body;
+    // Check if file_storage_key column exists, if not, add it
+    try {
+      const columns = await query<any[]>(
+        "SHOW COLUMNS FROM parse_results LIKE 'file_storage_key'"
+      );
+
+      if (columns.length === 0) {
+        console.log('[Parse Results] Adding file_storage_key column...');
+        await query(
+          `ALTER TABLE parse_results
+           ADD COLUMN file_storage_key VARCHAR(500) DEFAULT NULL AFTER mime_type,
+           ADD INDEX idx_storage_key (file_storage_key)`
+        );
+        console.log('[Parse Results] Column added successfully');
+      }
+    } catch (migrationError) {
+      console.error('[Parse Results] Migration check failed:', migrationError);
+      // Continue anyway - column might already exist
+    }
+
+    // Parse FormData to support file upload
+    const formData = await request.formData();
+    const parserTypeRaw = formData.get('parserType') as string;
+    const resultStr = formData.get('result') as string;
+    const file = formData.get('file') as File | null;
+    const providedFileStorageKey = formData.get('fileStorageKey') as string | null;
 
     // Validate inputs
-    const parserType = validateParserType(rawParserType);
+    const parserType = validateParserType(parserTypeRaw);
 
-    if (!result || !result.metadata) {
+    if (!resultStr) {
       return NextResponse.json(
-        { error: 'Invalid request data: missing result or metadata' },
+        { error: 'Invalid request data: missing result' },
         { status: 400 }
       );
+    }
+
+    const result = JSON.parse(resultStr);
+
+    if (!result.metadata) {
+      return NextResponse.json(
+        { error: 'Invalid request data: missing metadata' },
+        { status: 400 }
+      );
+    }
+
+    // Determine file storage key
+    let fileStorageKey: string | null = null;
+
+    // If storage key is provided (file from Files storage), use it directly
+    if (providedFileStorageKey) {
+      fileStorageKey = providedFileStorageKey;
+      console.log('[Parse Results] Using provided storage key:', fileStorageKey);
+    }
+    // Otherwise, upload file to Storage if provided
+    else if (file) {
+      try {
+        const storageFormData = new FormData();
+        storageFormData.append('file', file);
+
+        const authHeader = request.headers.get('authorization');
+        const STORAGE_API_BASE = process.env.STORAGE_API_BASE || 'http://ywstorage.synology.me:4000';
+        const DEFAULT_BUCKET = process.env.STORAGE_DEFAULT_BUCKET || 'loan-agent-files';
+
+        const uploadResponse = await fetch(
+          `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/upload`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': authHeader || '',
+            },
+            body: storageFormData,
+          }
+        );
+
+        if (uploadResponse.ok) {
+          const uploadData = await uploadResponse.json();
+          fileStorageKey = uploadData.key || file.name;
+          console.log('[Parse Results] File uploaded to storage:', fileStorageKey);
+        } else {
+          console.error('[Parse Results] Failed to upload file to storage:', uploadResponse.status);
+        }
+      } catch (uploadError) {
+        console.error('[Parse Results] Error uploading file to storage:', uploadError);
+        // Continue without storage key - not critical
+      }
     }
 
     // Insert into database
     const insertResult = await query(
       `INSERT INTO parse_results
-       (user_email, parser_type, file_name, file_size, mime_type,
+       (user_email, parser_type, file_name, file_size, mime_type, file_storage_key,
         text_content, html_content, markdown_content, json_content, processing_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userEmail,
         parserType,
         result.metadata.fileName,
         result.metadata.fileSize,
         result.metadata.mimeType,
+        fileStorageKey,
         result.text || null,
         result.html || null,
         result.markdown || null,
@@ -64,6 +141,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       id: (insertResult as any).insertId,
+      fileStorageKey,
     });
   } catch (error) {
     console.error('Error saving parse result:', error);
@@ -150,6 +228,80 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to fetch parse results',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update parse result
+export async function PUT(request: NextRequest) {
+  try {
+    const userEmail = getUserEmailFromToken(request);
+    if (!userEmail) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { id, text_content, html_content, markdown_content, json_content } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    }
+
+    const validatedId = validateId(String(id));
+
+    // Build update query dynamically based on provided fields
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (text_content !== undefined) {
+      updates.push('text_content = ?');
+      values.push(text_content);
+    }
+    if (html_content !== undefined) {
+      updates.push('html_content = ?');
+      values.push(html_content);
+    }
+    if (markdown_content !== undefined) {
+      updates.push('markdown_content = ?');
+      values.push(markdown_content);
+    }
+    if (json_content !== undefined) {
+      updates.push('json_content = ?');
+      values.push(json_content);
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json(
+        { error: 'No content fields provided for update' },
+        { status: 400 }
+      );
+    }
+
+    // Add WHERE clause parameters
+    values.push(validatedId, userEmail);
+
+    await query(
+      `UPDATE parse_results SET ${updates.join(', ')} WHERE id = ? AND user_email = ?`,
+      values
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating parse result:', error);
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        error: 'Failed to update parse result',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }

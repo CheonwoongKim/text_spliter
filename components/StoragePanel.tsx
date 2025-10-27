@@ -55,7 +55,11 @@ interface FullSplitResult extends SplitResult {
   chunks: any[];
 }
 
-const StoragePanel = memo(function StoragePanel() {
+interface StoragePanelProps {
+  onNavigateToDetail?: (id: number) => void;
+}
+
+const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StoragePanelProps) {
   const [activeTab, setActiveTab] = useState<'parse' | 'split'>('parse');
 
   // Parse results state
@@ -64,9 +68,6 @@ const StoragePanel = memo(function StoragePanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
-  const [viewModalData, setViewModalData] = useState<FullParseResult | null>(null);
-  const [viewMode, setViewMode] = useState<'text' | 'html' | 'markdown' | 'json'>('text');
-  const [copied, setCopied] = useState(false);
 
   // Split results state
   const [splitResults, setSplitResults] = useState<SplitResult[]>([]);
@@ -76,6 +77,9 @@ const StoragePanel = memo(function StoragePanel() {
   const [splitPage, setSplitPage] = useState(0);
   const [splitViewModalData, setSplitViewModalData] = useState<FullSplitResult | null>(null);
   const [splitCopied, setSplitCopied] = useState(false);
+
+  // Sync state
+  const [syncing, setSyncing] = useState(false);
 
   const rowsPerPage = DEFAULT_ROWS_PER_PAGE;
 
@@ -225,43 +229,11 @@ const StoragePanel = memo(function StoragePanel() {
     }
   }, [fetchSplitResults]);
 
-  const handleView = useCallback(async (id: number) => {
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        alert('Please login first');
-        return;
-      }
-
-      const response = await fetch(`/api/parse-results?id=${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch result');
-      }
-
-      const data: FullParseResult = await response.json();
-      setViewModalData(data);
-
-      if (data.markdown_content) {
-        setViewMode('markdown');
-      } else if (data.html_content) {
-        setViewMode('html');
-      } else if (data.json_content) {
-        setViewMode('json');
-      } else {
-        setViewMode('text');
-      }
-      setCopied(false);
-    } catch (err) {
-      console.error('Error fetching result:', err);
-      alert(err instanceof Error ? err.message : 'Failed to fetch result');
+  const handleView = useCallback((id: number) => {
+    if (onNavigateToDetail) {
+      onNavigateToDetail(id);
     }
-  }, []);
+  }, [onNavigateToDetail]);
 
   const handleViewSplit = useCallback(async (id: number) => {
     try {
@@ -290,6 +262,79 @@ const StoragePanel = memo(function StoragePanel() {
       alert(err instanceof Error ? err.message : 'Failed to fetch result');
     }
   }, []);
+
+  const handleCheckMigration = useCallback(async () => {
+    setSyncing(true);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert('Please login first');
+        return;
+      }
+
+      const response = await fetch('/api/parse-results/migrate', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to check migration');
+      }
+
+      const data = await response.json();
+
+      if (data.migrated) {
+        alert('Migration executed successfully! You can now sync storage.');
+      } else {
+        alert('Database is up to date. You can proceed to sync storage.');
+      }
+    } catch (err) {
+      console.error('Error checking migration:', err);
+      alert(err instanceof Error ? err.message : 'Failed to check migration');
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
+
+  const handleSyncStorage = useCallback(async () => {
+    if (!confirm('Sync parse results with Files storage? This will match file names and add preview capability.')) {
+      return;
+    }
+
+    setSyncing(true);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert('Please login first');
+        return;
+      }
+
+      const response = await fetch('/api/parse-results/sync-storage', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to sync storage');
+      }
+
+      const data = await response.json();
+      alert(`Successfully synced ${data.updated} out of ${data.total} parse results!\n\nMatched files:\n${data.matches.slice(0, 5).map((m: any) => `- ID ${m.id}: ${m.key}`).join('\n')}${data.matches.length > 5 ? '\n...' : ''}`);
+
+      // Refresh the list
+      fetchResults();
+    } catch (err) {
+      console.error('Error syncing storage:', err);
+      alert(err instanceof Error ? err.message : 'Failed to sync storage');
+    } finally {
+      setSyncing(false);
+    }
+  }, [fetchResults]);
 
   useEffect(() => {
     if (activeTab === 'parse') {
@@ -352,6 +397,58 @@ const StoragePanel = memo(function StoragePanel() {
                 Split Results
               </button>
             </div>
+
+            {/* Migration and Sync buttons (only show for parse results tab) */}
+            {activeTab === 'parse' && (
+              <>
+                <button
+                  onClick={handleCheckMigration}
+                  disabled={syncing || loading}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth border border-border rounded-md"
+                  title="Check and run database migration"
+                >
+                  {syncing ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Checking...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                      </svg>
+                      Check DB
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleSyncStorage}
+                  disabled={syncing || loading}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth border border-border rounded-md"
+                  title="Sync with Files storage"
+                >
+                  {syncing ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Sync Storage
+                    </>
+                  )}
+                </button>
+              </>
+            )}
 
             {/* Refresh Button */}
             <button
@@ -599,36 +696,6 @@ const StoragePanel = memo(function StoragePanel() {
           </div>
         )}
       </div>
-
-      {/* Parse Results View Modal */}
-      {viewModalData && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setViewModalData(null)}>
-          <div className="bg-surface shadow-xl max-w-3xl w-full h-[80vh] flex flex-col border border-border" onClick={(e) => e.stopPropagation()}>
-            <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-card">
-              <h2 className="text-lg font-semibold text-card-foreground truncate">
-                {viewModalData.file_name}
-              </h2>
-              <button onClick={() => setViewModalData(null)} className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-6 bg-card">
-              <JsonView
-                value={viewModalData}
-                style={{
-                  ...darkTheme,
-                  '--w-rjv-background-color': 'transparent',
-                }}
-                collapsed={false}
-                displayDataTypes={false}
-                enableClipboard={true}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Split Results View Modal */}
       {splitViewModalData && (

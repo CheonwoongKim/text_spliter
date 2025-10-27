@@ -13,6 +13,7 @@ import VectorStoreLeftPanel from "@/components/VectorStoreLeftPanel";
 import VectorStoreRightPanel from "@/components/VectorStoreRightPanel";
 import StoragePanel from "@/components/StoragePanel";
 import FilesPanel from "@/components/FilesPanel";
+import ParseResultDetailPanel from "@/components/ParseResultDetailPanel";
 import { getAuthToken } from "@/lib/auth";
 import type {
   SplitterConfig,
@@ -30,7 +31,8 @@ import type {
 
 export default function Home() {
   // State
-  const [activeMenu, setActiveMenu] = useState<"parser" | "splitter" | "licenses" | "vectorstore" | "storage" | "files">("splitter");
+  const [activeMenu, setActiveMenu] = useState<"parser" | "splitter" | "licenses" | "vectorstore" | "storage" | "files" | "parse-detail">("splitter");
+  const [selectedParseResultId, setSelectedParseResultId] = useState<number | null>(null);
 
   // Splitter state
   const [text, setText] = useState("");
@@ -58,6 +60,7 @@ export default function Home() {
     extractTables: false,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFileStorageKey, setSelectedFileStorageKey] = useState<string | null>(null);
   const [parseResult, setParseResult] = useState<ParseResponse | null>(null);
   const [parserLoading, setParserLoading] = useState(false);
   const [parserError, setParserError] = useState<string | null>(null);
@@ -138,13 +141,15 @@ export default function Home() {
     []
   );
 
-  const handleFileSelect = useCallback((file: File | null) => {
+  const handleFileSelect = useCallback((file: File | null, storageKey?: string | null) => {
     setSelectedFile(file);
+    setSelectedFileStorageKey(storageKey || null);
     setParseResult(null);
   }, []);
 
   const handleParserReset = useCallback(() => {
     setSelectedFile(null);
+    setSelectedFileStorageKey(null);
     setParseResult(null);
     setParserError(null);
   }, []);
@@ -340,6 +345,18 @@ export default function Home() {
     }
   }, [activeMenu, schemas.length, handleRefreshSchemas]);
 
+  // Handler to navigate to parse result detail page
+  const handleNavigateToParseDetail = useCallback((id: number) => {
+    setSelectedParseResultId(id);
+    setActiveMenu("parse-detail");
+  }, []);
+
+  // Handler to go back from detail page to storage
+  const handleBackToStorage = useCallback(() => {
+    setSelectedParseResultId(null);
+    setActiveMenu("storage");
+  }, []);
+
   return (
     <div className="h-screen flex bg-surface">
       {/* Sidebar */}
@@ -360,6 +377,8 @@ export default function Home() {
               ? "Storage"
               : activeMenu === "files"
               ? "Files"
+              : activeMenu === "parse-detail"
+              ? "Parse Result Detail"
               : "Text Splitter"
           }
         />
@@ -416,9 +435,16 @@ export default function Home() {
             {activeMenu === "licenses" ? (
               <LicensesPanel />
             ) : activeMenu === "storage" ? (
-              <StoragePanel />
+              <StoragePanel onNavigateToDetail={handleNavigateToParseDetail} />
             ) : activeMenu === "files" ? (
               <FilesPanel />
+            ) : activeMenu === "parse-detail" && selectedParseResultId ? (
+              <div className="h-full px-10 py-6">
+                <ParseResultDetailPanel
+                  resultId={selectedParseResultId}
+                  onBack={handleBackToStorage}
+                />
+              </div>
             ) : activeMenu === "vectorstore" ? (
             <div className="h-full grid grid-cols-1 lg:grid-cols-10">
               {/* VectorStore Left Panel */}
@@ -464,6 +490,7 @@ export default function Home() {
                 <ParserRightPanel
                   result={parseResult}
                   selectedFile={selectedFile}
+                  selectedFileStorageKey={selectedFileStorageKey}
                   config={parserConfig}
                 />
               </div>

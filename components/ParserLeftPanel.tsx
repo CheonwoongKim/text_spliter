@@ -16,7 +16,7 @@ interface ParserLeftPanelProps {
   loading: boolean;
   selectedFile: File | null;
   onConfigChange: (updates: Partial<ParserConfig>) => void;
-  onFileSelect: (file: File | null) => void;
+  onFileSelect: (file: File | null, storageKey?: string | null) => void;
   onParse: () => void;
   onReset: () => void;
 }
@@ -39,7 +39,7 @@ function ParserLeftPanel({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        onFileSelect(file);
+        onFileSelect(file, null);  // null indicates this is a direct upload
         setSelectedFileKey(null);
       }
     },
@@ -178,7 +178,7 @@ function ParserLeftPanel({
       const filename = fileKey.split('/').pop() || fileKey;
       const file = new File([blob], filename, { type: blob.type });
 
-      onFileSelect(file);
+      onFileSelect(file, fileKey);  // Pass the storage key
       setSelectedFileKey(fileKey);
     } catch (err) {
       alert(`Failed to load file: ${err instanceof Error ? err.message : "Unknown error"}`);
@@ -242,7 +242,7 @@ function ParserLeftPanel({
                       </div>
                       <button
                         onClick={() => {
-                          onFileSelect(null);
+                          onFileSelect(null, null);
                           setSelectedFileKey(null);
                         }}
                         className="text-xs text-muted-foreground hover:text-surface-foreground transition-smooth"
@@ -318,7 +318,7 @@ function ParserLeftPanel({
                       </div>
                       <button
                         onClick={() => {
-                          onFileSelect(null);
+                          onFileSelect(null, null);
                           setSelectedFileKey(null);
                         }}
                         className="text-xs text-muted-foreground hover:text-surface-foreground transition-smooth"
