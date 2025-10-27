@@ -41,6 +41,20 @@ export interface SplitterConfig {
   breakpointType?: BreakpointType;
 }
 
+// Source document metadata (from parsing)
+export interface SourceMetadata {
+  fileName?: string;
+  parserType?: string;
+  pageNumber?: number;
+  bBox?: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  };
+  originalJson?: any; // Full original page JSON for reference
+}
+
 // Chunk metadata
 export interface ChunkMetadata {
   startIndex: number;
@@ -49,6 +63,8 @@ export interface ChunkMetadata {
   chunkSize: number;
   chunkOverlap: number;
   tokenCount?: number;
+  // Source document metadata
+  source?: SourceMetadata;
 }
 
 // Individual chunk result
@@ -76,13 +92,14 @@ export interface SplitResponse {
 export interface SplitRequest {
   text: string;
   config: SplitterConfig;
+  sourceMetadata?: SourceMetadata; // Optional metadata from parsing
 }
 
 // View mode
 export type ViewMode = "json" | "card";
 
 // Input mode
-export type InputMode = "upload" | "plaintext";
+export type InputMode = "upload" | "plaintext" | "storage";
 
 // Splitter description
 export interface SplitterDescription {

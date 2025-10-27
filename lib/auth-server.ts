@@ -4,7 +4,7 @@ import { ValidationError } from './validation';
 /**
  * Extract user email from JWT token in server-side API routes
  * @param request - Next.js request object
- * @returns User email or null if token is invalid
+ * @returns User email or null if token is invalid or expired
  */
 export function getUserEmailFromToken(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization');
@@ -16,6 +16,13 @@ export function getUserEmailFromToken(request: NextRequest): string | null {
 
   try {
     const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+
+    // Check if token is expired
+    if (payload.exp && payload.exp < Date.now() / 1000) {
+      console.log('[Auth] Token expired:', { exp: payload.exp, now: Date.now() / 1000 });
+      return null;
+    }
+
     return payload.email || null;
   } catch (error) {
     console.error('Error decoding token:', error);

@@ -23,6 +23,17 @@ interface LicenseKeys {
   supabaseKey: string;
 }
 
+type TestStatus = 'idle' | 'testing' | 'success' | 'error';
+
+interface TestResults {
+  openai: { status: TestStatus; message?: string };
+  upstage: { status: TestStatus; message?: string };
+  llama: { status: TestStatus; message?: string };
+  azure: { status: TestStatus; message?: string };
+  google: { status: TestStatus; message?: string };
+  supabase: { status: TestStatus; message?: string };
+}
+
 export default function LicensesPanel() {
   const [keys, setKeys] = useState<LicenseKeys>({
     openaiEmbedding: "",
@@ -41,6 +52,14 @@ export default function LicensesPanel() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"embedding" | "parser" | "database">("embedding");
+  const [testResults, setTestResults] = useState<TestResults>({
+    openai: { status: 'idle' },
+    upstage: { status: 'idle' },
+    llama: { status: 'idle' },
+    azure: { status: 'idle' },
+    google: { status: 'idle' },
+    supabase: { status: 'idle' },
+  });
 
   // Load keys from backend on mount
   useEffect(() => {
@@ -162,6 +181,58 @@ export default function LicensesPanel() {
     }
   };
 
+  const handleTestConnection = async (service: keyof TestResults) => {
+    setTestResults(prev => ({
+      ...prev,
+      [service]: { status: 'testing', message: undefined },
+    }));
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setTestResults(prev => ({
+          ...prev,
+          [service]: { status: 'error', message: 'Please login first' },
+        }));
+        return;
+      }
+
+      const response = await fetch('/api/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ service }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setTestResults(prev => ({
+          ...prev,
+          [service]: { status: 'success', message: data.message },
+        }));
+        setTimeout(() => {
+          setTestResults(prev => ({
+            ...prev,
+            [service]: { status: 'idle' },
+          }));
+        }, 5000);
+      } else {
+        setTestResults(prev => ({
+          ...prev,
+          [service]: { status: 'error', message: data.error },
+        }));
+      }
+    } catch (error) {
+      setTestResults(prev => ({
+        ...prev,
+        [service]: { status: 'error', message: error instanceof Error ? error.message : 'Connection test failed' },
+      }));
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto">
@@ -278,7 +349,31 @@ export default function LicensesPanel() {
                     />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-base font-medium text-card-foreground mb-1">OpenAI</h4>
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-base font-medium text-card-foreground">OpenAI</h4>
+                      <button
+                        onClick={() => handleTestConnection('openai')}
+                        disabled={testResults.openai.status === 'testing' || !keys.openaiEmbedding}
+                        className="text-xs text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      >
+                        {testResults.openai.status === 'testing' ? (
+                          <>
+                            <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Testing...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Test
+                          </>
+                        )}
+                      </button>
+                    </div>
                     <p className="text-xs text-muted-foreground mb-4">
                       Used for text embeddings with text-embedding-ada-002 model
                     </p>
@@ -297,6 +392,22 @@ export default function LicensesPanel() {
                                  placeholder-light"
                       />
                     </div>
+                    {testResults.openai.status !== 'idle' && testResults.openai.status !== 'testing' && (
+                      <div className={`mt-2 text-xs flex items-center gap-1 ${
+                        testResults.openai.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {testResults.openai.status === 'success' ? (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )}
+                        {testResults.openai.message}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -319,7 +430,31 @@ export default function LicensesPanel() {
                       />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-base font-medium text-card-foreground mb-1">Upstage Document AI</h4>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="text-base font-medium text-card-foreground">Upstage Document AI</h4>
+                        <button
+                          onClick={() => handleTestConnection('upstage')}
+                          disabled={testResults.upstage.status === 'testing' || !keys.upstageParser}
+                          className="text-xs text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {testResults.upstage.status === 'testing' ? (
+                            <>
+                              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Testing...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              Test
+                            </>
+                          )}
+                        </button>
+                      </div>
                       <p className="text-xs text-muted-foreground mb-4">
                         Parse PDF and image files with Upstage Document AI
                       </p>
@@ -338,6 +473,22 @@ export default function LicensesPanel() {
                                    placeholder-light"
                         />
                       </div>
+                      {testResults.upstage.status !== 'idle' && testResults.upstage.status !== 'testing' && (
+                        <div className={`mt-2 text-xs flex items-center gap-1 ${
+                          testResults.upstage.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {testResults.upstage.status === 'success' ? (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          {testResults.upstage.message}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -355,7 +506,31 @@ export default function LicensesPanel() {
                       />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-base font-medium text-card-foreground mb-1">LlamaIndex (LlamaParse)</h4>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="text-base font-medium text-card-foreground">LlamaIndex (LlamaParse)</h4>
+                        <button
+                          onClick={() => handleTestConnection('llama')}
+                          disabled={testResults.llama.status === 'testing' || !keys.llamaParser}
+                          className="text-xs text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {testResults.llama.status === 'testing' ? (
+                            <>
+                              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Testing...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              Test
+                            </>
+                          )}
+                        </button>
+                      </div>
                       <p className="text-xs text-muted-foreground mb-4">
                         Parse PDF, DOCX, PPTX and image files with LlamaParse
                       </p>
@@ -374,6 +549,22 @@ export default function LicensesPanel() {
                                    placeholder-light"
                         />
                       </div>
+                      {testResults.llama.status !== 'idle' && testResults.llama.status !== 'testing' && (
+                        <div className={`mt-2 text-xs flex items-center gap-1 ${
+                          testResults.llama.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {testResults.llama.status === 'success' ? (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          {testResults.llama.message}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -391,7 +582,31 @@ export default function LicensesPanel() {
                       />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-base font-medium text-card-foreground mb-1">Azure Document Intelligence</h4>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="text-base font-medium text-card-foreground">Azure Document Intelligence</h4>
+                        <button
+                          onClick={() => handleTestConnection('azure')}
+                          disabled={testResults.azure.status === 'testing' || !keys.azureParserKey || !keys.azureParserEndpoint}
+                          className="text-xs text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {testResults.azure.status === 'testing' ? (
+                            <>
+                              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Testing...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              Test
+                            </>
+                          )}
+                        </button>
+                      </div>
                       <p className="text-xs text-muted-foreground mb-4">
                         Parse documents with Azure Cognitive Services
                       </p>
@@ -427,6 +642,22 @@ export default function LicensesPanel() {
                           />
                         </div>
                       </div>
+                      {testResults.azure.status !== 'idle' && testResults.azure.status !== 'testing' && (
+                        <div className={`mt-2 text-xs flex items-center gap-1 ${
+                          testResults.azure.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {testResults.azure.status === 'success' ? (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          {testResults.azure.message}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -444,7 +675,31 @@ export default function LicensesPanel() {
                       />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-base font-medium text-card-foreground mb-1">Google Document AI</h4>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="text-base font-medium text-card-foreground">Google Document AI</h4>
+                        <button
+                          onClick={() => handleTestConnection('google')}
+                          disabled={testResults.google.status === 'testing' || !keys.googleParserKey || !keys.googleParserProjectId || !keys.googleParserLocation || !keys.googleParserProcessorId}
+                          className="text-xs text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {testResults.google.status === 'testing' ? (
+                            <>
+                              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Testing...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              Test
+                            </>
+                          )}
+                        </button>
+                      </div>
                       <p className="text-xs text-muted-foreground mb-4">
                         Parse documents with Google Cloud Document AI
                       </p>
@@ -512,6 +767,22 @@ export default function LicensesPanel() {
                           </div>
                         </div>
                       </div>
+                      {testResults.google.status !== 'idle' && testResults.google.status !== 'testing' && (
+                        <div className={`mt-2 text-xs flex items-center gap-1 ${
+                          testResults.google.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {testResults.google.status === 'success' ? (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          {testResults.google.message}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -534,7 +805,31 @@ export default function LicensesPanel() {
                     />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-base font-medium text-card-foreground mb-1">Supabase</h4>
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-base font-medium text-card-foreground">Supabase</h4>
+                      <button
+                        onClick={() => handleTestConnection('supabase')}
+                        disabled={testResults.supabase.status === 'testing' || !keys.supabaseUrl || !keys.supabaseKey}
+                        className="text-xs text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      >
+                        {testResults.supabase.status === 'testing' ? (
+                          <>
+                            <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Testing...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Test
+                          </>
+                        )}
+                      </button>
+                    </div>
                     <p className="text-xs text-muted-foreground mb-4">
                       Vector database for storing and querying embeddings with pgvector
                     </p>
@@ -573,6 +868,22 @@ export default function LicensesPanel() {
                         </p>
                       </div>
                     </div>
+                    {testResults.supabase.status !== 'idle' && testResults.supabase.status !== 'testing' && (
+                      <div className={`mt-2 text-xs flex items-center gap-1 ${
+                        testResults.supabase.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {testResults.supabase.status === 'success' ? (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )}
+                        {testResults.supabase.message}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

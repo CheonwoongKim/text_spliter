@@ -25,6 +25,7 @@ import type {
   VectorStoreConfig,
   DatabaseSchema,
   TableDataResponse,
+  SourceMetadata,
 } from "@/lib/types";
 
 export default function Home() {
@@ -33,6 +34,7 @@ export default function Home() {
 
   // Splitter state
   const [text, setText] = useState("");
+  const [sourceMetadata, setSourceMetadata] = useState<SourceMetadata | null>(null);
   const [config, setConfig] = useState<SplitterConfig>({
     splitterType: "RecursiveCharacterTextSplitter",
     chunkSize: 1000,
@@ -97,6 +99,7 @@ export default function Home() {
       const requestBody: SplitRequest = {
         text,
         config,
+        sourceMetadata: sourceMetadata || undefined,
       };
 
       const response = await fetch("/api/split", {
@@ -122,7 +125,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [text, config]);
+  }, [text, config, sourceMetadata]);
 
   // Parser handlers
   const handleParserConfigChange = useCallback(
@@ -474,6 +477,7 @@ export default function Home() {
                   config={config}
                   loading={loading}
                   onTextChange={setText}
+                  onSourceMetadataChange={setSourceMetadata}
                   onSplitterTypeChange={handleSplitterTypeChange}
                   onConfigChange={handleConfigChange}
                   onSplit={handleSplit}

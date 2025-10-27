@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { SplitterType, SplitterConfig as SplitterConfigType } from "@/lib/types";
+import { SplitterType, SplitterConfig as SplitterConfigType, SourceMetadata } from "@/lib/types";
 import TextInput from "./TextInput";
 import SplitterSelector from "./SplitterSelector";
 import SplitterConfig from "./SplitterConfig";
@@ -12,6 +12,7 @@ interface LeftPanelProps {
   config: SplitterConfigType;
   loading: boolean;
   onTextChange: (text: string) => void;
+  onSourceMetadataChange?: (metadata: SourceMetadata | null) => void;
   onSplitterTypeChange: (type: SplitterType) => void;
   onConfigChange: (config: Partial<SplitterConfigType>) => void;
   onSplit: () => void;
@@ -23,6 +24,7 @@ const LeftPanel = memo(function LeftPanel({
   config,
   loading,
   onTextChange,
+  onSourceMetadataChange,
   onSplitterTypeChange,
   onConfigChange,
   onSplit,
@@ -33,7 +35,11 @@ const LeftPanel = memo(function LeftPanel({
       <div className="flex-1 overflow-y-auto py-6 pb-24">
         {/* Text Input */}
         <div className="mb-10 h-[400px]">
-          <TextInput value={text} onChange={onTextChange} />
+          <TextInput
+            value={text}
+            onChange={onTextChange}
+            onSourceMetadataChange={onSourceMetadataChange}
+          />
         </div>
 
         {/* Splitter Selector */}

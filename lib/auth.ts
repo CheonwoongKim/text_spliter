@@ -65,3 +65,72 @@ export function getAuthHeaders(): HeadersInit {
   };
 }
 
+/**
+ * Handle 401 Unauthorized response - logout and redirect to login
+ */
+export function handleUnauthorized(): void {
+  if (typeof window === "undefined") return;
+
+  console.log('[Auth] Unauthorized - clearing tokens and redirecting to login');
+  clearAuthTokens();
+
+  // Redirect to login page
+  window.location.href = '/login';
+}
+
+/**
+ * Check if token is expired (client-side check)
+ */
+export function isTokenExpired(): boolean {
+  const token = getAuthToken();
+  if (!token) return true;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+
+    // Check if token has expiration and if it's expired
+    if (payload.exp && payload.exp < Date.now() / 1000) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error checking token expiration:', error);
+    return true;
+  }
+}
+
+/**
+ * Fetch wrapper that automatically handles 401 responses
+ */
+export async function authFetch(
+  url: string,
+  options?: RequestInit
+): Promise<Response> {
+  const token = getAuthToken();
+
+  // Check token expiration before making request
+  if (isTokenExpired()) {
+    handleUnauthorized();
+    throw new Error('Token expired');
+  }
+
+  const headers = {
+    ...options?.headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  // Handle 401 Unauthorized
+  if (response.status === 401) {
+    handleUnauthorized();
+    throw new Error('Unauthorized');
+  }
+
+  return response;
+}
+

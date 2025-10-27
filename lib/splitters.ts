@@ -10,6 +10,7 @@ import type {
   SplitterConfig,
   ChunkResult,
   SplitResponse,
+  SourceMetadata,
 } from "./types";
 
 /**
@@ -27,7 +28,8 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
  */
 export async function splitText(
   text: string,
-  config: SplitterConfig
+  config: SplitterConfig,
+  sourceMetadata?: SourceMetadata
 ): Promise<SplitResponse> {
   const startTime = Date.now();
 
@@ -225,6 +227,7 @@ export async function splitText(
           length: chunk.length,
           chunkSize: config.chunkSize,
           chunkOverlap: config.chunkOverlap,
+          source: sourceMetadata, // Include source metadata if provided
         },
       });
 

@@ -1,7 +1,9 @@
 "use client";
 
 import { memo, useState, useEffect, useCallback } from "react";
-import { getAuthToken } from "@/lib/auth";
+import JsonView from '@uiw/react-json-view';
+import { darkTheme } from '@uiw/react-json-view/dark';
+import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 import { DEFAULT_ROWS_PER_PAGE } from "@/lib/constants";
 import Pagination from "./Pagination";
 
@@ -98,6 +100,12 @@ const StoragePanel = memo(function StoragePanel() {
         }
       );
 
+      // Handle 401 Unauthorized - token expired
+      if (response.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.details || errorData.error || 'Failed to fetch results');
@@ -133,6 +141,12 @@ const StoragePanel = memo(function StoragePanel() {
           },
         }
       );
+
+      // Handle 401 Unauthorized - token expired
+      if (response.status === 401) {
+        handleUnauthorized();
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -588,22 +602,29 @@ const StoragePanel = memo(function StoragePanel() {
 
       {/* Parse Results View Modal */}
       {viewModalData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setViewModalData(null)}>
-          <div className="bg-card rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="border-b border-border px-6 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setViewModalData(null)}>
+          <div className="bg-surface shadow-xl max-w-3xl w-full h-[80vh] flex flex-col border border-border" onClick={(e) => e.stopPropagation()}>
+            <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-card">
               <h2 className="text-lg font-semibold text-card-foreground truncate">
                 {viewModalData.file_name}
               </h2>
-              <button onClick={() => setViewModalData(null)} className="p-2 text-muted-foreground hover:text-card-foreground rounded-lg hover:bg-muted transition-smooth">
+              <button onClick={() => setViewModalData(null)} className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="flex-1 overflow-auto p-6">
-              <pre className="text-sm text-card-foreground whitespace-pre-wrap font-mono">
-                {viewModalData.text_content || viewModalData.markdown_content || viewModalData.html_content || 'No content available'}
-              </pre>
+            <div className="flex-1 overflow-auto p-6 bg-card">
+              <JsonView
+                value={viewModalData}
+                style={{
+                  ...darkTheme,
+                  '--w-rjv-background-color': 'transparent',
+                }}
+                collapsed={false}
+                displayDataTypes={false}
+                enableClipboard={true}
+              />
             </div>
           </div>
         </div>
@@ -611,39 +632,30 @@ const StoragePanel = memo(function StoragePanel() {
 
       {/* Split Results View Modal */}
       {splitViewModalData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSplitViewModalData(null)}>
-          <div className="bg-card rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="border-b border-border px-6 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setSplitViewModalData(null)}>
+          <div className="bg-surface shadow-xl max-w-3xl w-full h-[80vh] flex flex-col border border-border" onClick={(e) => e.stopPropagation()}>
+            <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-card">
               <div>
                 <h2 className="text-lg font-semibold text-card-foreground">Split Result</h2>
                 <p className="text-xs text-muted-foreground mt-1">{splitViewModalData.chunk_count} chunks</p>
               </div>
-              <button onClick={() => setSplitViewModalData(null)} className="p-2 text-muted-foreground hover:text-card-foreground rounded-lg hover:bg-muted transition-smooth">
+              <button onClick={() => setSplitViewModalData(null)} className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="flex-1 overflow-auto p-6 space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold text-card-foreground mb-2">Original Text</h3>
-                <pre className="text-sm text-card-foreground whitespace-pre-wrap font-mono bg-muted p-4 rounded">
-                  {splitViewModalData.original_text}
-                </pre>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-card-foreground mb-2">Chunks ({splitViewModalData.chunk_count})</h3>
-                <div className="space-y-3">
-                  {splitViewModalData.chunks.map((chunk: any, index: number) => (
-                    <div key={index} className="bg-muted p-4 rounded">
-                      <div className="text-xs font-semibold text-muted-foreground mb-2">Chunk {index + 1}</div>
-                      <pre className="text-sm text-card-foreground whitespace-pre-wrap font-mono">
-                        {typeof chunk === 'string' ? chunk : chunk.text || JSON.stringify(chunk, null, 2)}
-                      </pre>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="flex-1 overflow-auto p-6 bg-card">
+              <JsonView
+                value={splitViewModalData}
+                style={{
+                  ...darkTheme,
+                  '--w-rjv-background-color': 'transparent',
+                }}
+                collapsed={false}
+                displayDataTypes={false}
+                enableClipboard={true}
+              />
             </div>
           </div>
         </div>

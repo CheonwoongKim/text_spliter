@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Split text
-    const result = await splitText(body.text, body.config);
+    const result = await splitText(body.text, body.config, body.sourceMetadata);
 
     return NextResponse.json(result);
   } catch (error) {

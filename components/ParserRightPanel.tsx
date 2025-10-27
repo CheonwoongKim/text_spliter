@@ -1,6 +1,8 @@
 "use client";
 
 import { memo, useCallback, useState, useMemo, useEffect } from "react";
+import JsonView from '@uiw/react-json-view';
+import { darkTheme } from '@uiw/react-json-view/dark';
 import type { ParseResponse, ParserViewMode, ParserConfig } from "@/lib/types";
 
 interface ParserRightPanelProps {
@@ -381,11 +383,18 @@ function ParserRightPanel({ result, selectedFile, config }: ParserRightPanelProp
               )}
               {viewMode === "json" && (
                 result.json ? (
-                  <pre className="text-sm text-card-foreground whitespace-pre-wrap font-mono">
-                    {typeof result.json === "string"
-                      ? result.json
-                      : JSON.stringify(result.json, null, 2)}
-                  </pre>
+                  <div className="w-full">
+                    <JsonView
+                      value={typeof result.json === "string" ? JSON.parse(result.json) : result.json}
+                      style={{
+                        ...darkTheme,
+                        '--w-rjv-background-color': 'transparent',
+                      }}
+                      collapsed={2}
+                      displayDataTypes={false}
+                      enableClipboard={true}
+                    />
+                  </div>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">
                     JSON content not available
@@ -393,9 +402,18 @@ function ParserRightPanel({ result, selectedFile, config }: ParserRightPanelProp
                 )
               )}
               {viewMode === "raw" && (
-                <pre className="text-sm text-card-foreground whitespace-pre-wrap font-mono">
-                  {JSON.stringify(result, null, 2)}
-                </pre>
+                <div className="w-full">
+                  <JsonView
+                    value={result}
+                    style={{
+                      ...darkTheme,
+                      '--w-rjv-background-color': 'transparent',
+                    }}
+                    collapsed={1}
+                    displayDataTypes={false}
+                    enableClipboard={true}
+                  />
+                </div>
               )}
             </>
           )}

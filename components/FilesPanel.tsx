@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState, useCallback, useEffect, useRef } from "react";
-import { getAuthToken } from "@/lib/auth";
+import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 
 interface FileItem {
   id: number;
@@ -38,6 +38,12 @@ const FilesPanel = memo(function FilesPanel() {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      // Handle 401 Unauthorized - token expired
+      if (response.status === 401) {
+        handleUnauthorized();
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to fetch files' }));
