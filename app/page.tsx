@@ -31,7 +31,7 @@ import type {
 
 export default function Home() {
   // State
-  const [activeMenu, setActiveMenu] = useState<"parser" | "splitter" | "licenses" | "vectorstore" | "storage" | "files" | "parse-detail">("splitter");
+  const [activeMenu, setActiveMenu] = useState<"parser" | "splitter" | "licenses" | "vectorstore" | "storage" | "files" | "parse-detail">("storage");
   const [selectedParseResultId, setSelectedParseResultId] = useState<number | null>(null);
 
   // Splitter state

@@ -15,6 +15,33 @@ function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
         <h1 className="text-white font-bold text-lg tracking-tight">BGK</h1>
       </div>
 
+      {/* Storage Menu */}
+      <button
+        onClick={() => onMenuChange("storage")}
+        className={`w-14 h-14 flex flex-col items-center justify-center rounded-lg transition-smooth ${
+          activeMenu === "storage"
+            ? "text-white"
+            : "text-gray-500 hover:text-gray-400"
+        }`}
+        aria-label="Storage"
+        title="Storage"
+      >
+        <svg
+          className="w-6 h-6 mb-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1}
+            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+          />
+        </svg>
+        <span className="text-[10px] font-medium">Storage</span>
+      </button>
+
       {/* Parser Menu */}
       <button
         onClick={() => onMenuChange("parser")}
@@ -94,33 +121,6 @@ function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
           />
         </svg>
         <span className="text-[10px] font-medium">VDB</span>
-      </button>
-
-      {/* Storage Menu */}
-      <button
-        onClick={() => onMenuChange("storage")}
-        className={`w-14 h-14 flex flex-col items-center justify-center rounded-lg transition-smooth ${
-          activeMenu === "storage"
-            ? "text-white"
-            : "text-gray-500 hover:text-gray-400"
-        }`}
-        aria-label="Storage"
-        title="Storage"
-      >
-        <svg
-          className="w-6 h-6 mb-1"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1}
-            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-          />
-        </svg>
-        <span className="text-[10px] font-medium">Storage</span>
       </button>
 
       {/* Files Menu */}
