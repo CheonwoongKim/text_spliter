@@ -19,7 +19,8 @@ interface ApiKeys {
   llamaParser?: string;
   azureParserKey?: string;
   azureParserEndpoint?: string;
-  googleParserKey?: string;
+  googleParserServiceAccountEmail?: string;
+  googleParserPrivateKey?: string;
   googleParserProjectId?: string;
   googleParserLocation?: string;
   googleParserProcessorId?: string;
@@ -85,7 +86,8 @@ export async function POST(request: NextRequest) {
 
       case 'google':
         return await testGoogle(
-          keys.googleParserKey,
+          keys.googleParserServiceAccountEmail,
+          keys.googleParserPrivateKey,
           keys.googleParserProjectId,
           keys.googleParserLocation,
           keys.googleParserProcessorId
@@ -261,8 +263,8 @@ async function testAzure(apiKey?: string, endpoint?: string): Promise<NextRespon
   }
 }
 
-async function testGoogle(apiKey?: string, projectId?: string, location?: string, processorId?: string): Promise<NextResponse> {
-  if (!apiKey || !projectId || !location || !processorId) {
+async function testGoogle(serviceAccountEmail?: string, privateKey?: string, projectId?: string, location?: string, processorId?: string): Promise<NextResponse> {
+  if (!serviceAccountEmail || !privateKey || !projectId || !location || !processorId) {
     return NextResponse.json(
       { success: false, error: 'Google API credentials not fully configured' },
       { status: 400 }
@@ -270,11 +272,38 @@ async function testGoogle(apiKey?: string, projectId?: string, location?: string
   }
 
   try {
-    // Note: Google Document AI requires service account credentials
-    // This is a simplified check - in production you'd validate the credentials properly
-    if (apiKey.length < 10 || projectId.length < 3) {
+    // Validate service account email format
+    if (!serviceAccountEmail.includes('@') || !serviceAccountEmail.includes('.iam.gserviceaccount.com')) {
       return NextResponse.json(
-        { success: false, error: 'Invalid Google API credentials format' },
+        { success: false, error: 'Invalid Service Account Email format' },
+        { status: 200 }
+      );
+    }
+
+    // Validate private key format - normalize whitespace for checking
+    const normalizedKey = privateKey.replace(/\s+/g, ' ').trim();
+    if (!normalizedKey.includes('BEGIN PRIVATE KEY') || !normalizedKey.includes('END PRIVATE KEY')) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Private Key format - must include BEGIN and END markers' },
+        { status: 200 }
+      );
+    }
+
+    // Check if private key has the correct structure (should have base64 content)
+    const keyContent = privateKey.replace(/-----BEGIN PRIVATE KEY-----/g, '')
+                                 .replace(/-----END PRIVATE KEY-----/g, '')
+                                 .replace(/\s+/g, '');
+    if (keyContent.length < 100) {
+      return NextResponse.json(
+        { success: false, error: 'Private Key appears to be too short or incomplete' },
+        { status: 200 }
+      );
+    }
+
+    // Validate other fields
+    if (projectId.length < 3 || location.length < 2 || processorId.length < 10) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Project ID, Location, or Processor ID' },
         { status: 200 }
       );
     }

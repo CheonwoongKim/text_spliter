@@ -81,6 +81,16 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
   // Sync state
   const [syncing, setSyncing] = useState(false);
 
+  // VDB upload state
+  const [showVdbModal, setShowVdbModal] = useState(false);
+  const [vdbTableName, setVdbTableName] = useState("");
+  const [vdbBatchSize, setVdbBatchSize] = useState(10);
+  const [selectedSplitId, setSelectedSplitId] = useState<number | null>(null);
+  const [vdbUploading, setVdbUploading] = useState(false);
+  const [vdbMessage, setVdbMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [vdbTables, setVdbTables] = useState<string[]>([]);
+  const [vdbTablesLoading, setVdbTablesLoading] = useState(false);
+
   const rowsPerPage = DEFAULT_ROWS_PER_PAGE;
 
   const fetchResults = useCallback(async () => {
@@ -228,6 +238,117 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
       alert(err instanceof Error ? err.message : 'Failed to delete result');
     }
   }, [fetchSplitResults]);
+
+  const handleUploadToVdb = useCallback(async (id: number) => {
+    setSelectedSplitId(id);
+    setVdbTableName("");
+    setVdbBatchSize(10);
+    setVdbMessage(null);
+    setShowVdbModal(true);
+
+    // Fetch available tables
+    setVdbTablesLoading(true);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setVdbMessage({ type: 'error', text: 'Please login first' });
+        setVdbTablesLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/vectorstore/schemas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch tables');
+      }
+
+      const schemas = await response.json();
+      const allTables: string[] = [];
+
+      schemas.forEach((schema: any) => {
+        if (schema.tables && Array.isArray(schema.tables)) {
+          schema.tables.forEach((table: any) => {
+            allTables.push(table.name);
+          });
+        }
+      });
+
+      setVdbTables(allTables);
+    } catch (err) {
+      console.error('Error fetching tables:', err);
+      setVdbMessage({
+        type: 'error',
+        text: 'Failed to load tables. Please check your Supabase connection.'
+      });
+    } finally {
+      setVdbTablesLoading(false);
+    }
+  }, []);
+
+  const handleVdbUploadSubmit = useCallback(async () => {
+    if (!vdbTableName.trim()) {
+      setVdbMessage({ type: 'error', text: 'Please enter a table name' });
+      return;
+    }
+
+    if (!selectedSplitId) {
+      setVdbMessage({ type: 'error', text: 'No split result selected' });
+      return;
+    }
+
+    setVdbUploading(true);
+    setVdbMessage(null);
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        handleUnauthorized();
+        return;
+      }
+
+      const response = await fetch('/api/vectorstore/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          splitResultId: selectedSplitId,
+          tableName: vdbTableName.trim(),
+          batchSize: vdbBatchSize,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.details || data.error || 'Failed to upload to vector database');
+      }
+
+      setVdbMessage({
+        type: 'success',
+        text: data.message || `Successfully uploaded ${data.chunksUploaded} chunks`
+      });
+
+      // Auto close after 3 seconds on success
+      setTimeout(() => {
+        setShowVdbModal(false);
+        setVdbMessage(null);
+      }, 3000);
+    } catch (err) {
+      console.error('Error uploading to VDB:', err);
+      setVdbMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to upload to vector database'
+      });
+    } finally {
+      setVdbUploading(false);
+    }
+  }, [vdbTableName, vdbBatchSize, selectedSplitId]);
 
   const handleView = useCallback((id: number) => {
     if (onNavigateToDetail) {
@@ -669,6 +790,15 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                               </svg>
                             </button>
                             <button
+                              onClick={() => handleUploadToVdb(result.id)}
+                              className="p-2 text-muted-foreground hover:text-accent transition-smooth"
+                              title="Upload to Vector DB"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                              </svg>
+                            </button>
+                            <button
                               onClick={() => handleDeleteSplit(result.id)}
                               className="p-2 text-muted-foreground hover:text-red-500 transition-smooth"
                               title="Delete"
@@ -723,6 +853,120 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                 displayDataTypes={false}
                 enableClipboard={true}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VDB Upload Modal */}
+      {showVdbModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setShowVdbModal(false)}>
+          <div className="bg-surface shadow-xl max-w-lg w-full flex flex-col border border-border rounded-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-card rounded-t-lg">
+              <h2 className="text-lg font-semibold text-card-foreground">Upload to Vector Database</h2>
+              <button onClick={() => setShowVdbModal(false)} className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth rounded">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 bg-card space-y-4">
+              {vdbMessage && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  vdbMessage.type === 'success'
+                    ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800'
+                    : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800'
+                }`}>
+                  {vdbMessage.text}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Table Name <span className="text-red-500">*</span>
+                </label>
+                {vdbTablesLoading ? (
+                  <div className="flex items-center justify-center h-10 border border-border rounded-lg bg-surface">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent"></div>
+                  </div>
+                ) : vdbTables.length === 0 ? (
+                  <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                      No tables found. Please create a table in VDB page first.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <select
+                      value={vdbTableName}
+                      onChange={(e) => setVdbTableName(e.target.value)}
+                      disabled={vdbUploading}
+                      className="w-full h-10 px-3 border border-border rounded-lg
+                               focus:outline-none focus:ring-2 focus:ring-accent
+                               bg-surface text-card-foreground text-sm
+                               disabled:opacity-50"
+                    >
+                      <option value="">Select a table...</option>
+                      {vdbTables.map((tableName) => (
+                        <option key={tableName} value={tableName}>
+                          {tableName}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Select the Supabase table where chunks will be uploaded
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Batch Size
+                </label>
+                <input
+                  type="number"
+                  value={vdbBatchSize}
+                  onChange={(e) => setVdbBatchSize(Math.max(1, Math.min(100, parseInt(e.target.value) || 10)))}
+                  min="1"
+                  max="100"
+                  disabled={vdbUploading}
+                  className="w-full h-10 px-3 border border-border rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-accent
+                           bg-surface text-card-foreground text-sm
+                           disabled:opacity-50"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Number of chunks to process at once (1-100). Lower values reduce rate limit errors.
+                </p>
+              </div>
+
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground">
+                  <strong className="text-card-foreground">Note:</strong> This will generate OpenAI embeddings for all chunks and upload them to your Supabase vector database. Make sure:
+                </p>
+                <ul className="text-xs text-muted-foreground mt-2 space-y-1 list-disc list-inside">
+                  <li>OpenAI API key is configured in Connect page</li>
+                  <li>Supabase credentials are configured in Connect page</li>
+                  <li>Target table has been created in VDB page</li>
+                </ul>
+              </div>
+            </div>
+            <div className="border-t border-border px-6 py-4 flex items-center justify-end gap-3 bg-card rounded-b-lg">
+              <button
+                onClick={() => setShowVdbModal(false)}
+                disabled={vdbUploading}
+                className="px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleVdbUploadSubmit}
+                disabled={vdbUploading || !vdbTableName.trim()}
+                className="px-4 py-2 text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {vdbUploading ? 'Uploading...' : 'Upload to VDB'}
+              </button>
             </div>
           </div>
         </div>

@@ -13,7 +13,8 @@ interface LicenseKeys {
   llamaParser: string;
   azureParserKey: string;
   azureParserEndpoint: string;
-  googleParserKey: string;
+  googleParserServiceAccountEmail: string;
+  googleParserPrivateKey: string;
   googleParserProjectId: string;
   googleParserLocation: string;
   googleParserProcessorId: string;
@@ -41,7 +42,8 @@ export default function LicensesPanel() {
     llamaParser: "",
     azureParserKey: "",
     azureParserEndpoint: "",
-    googleParserKey: "",
+    googleParserServiceAccountEmail: "",
+    googleParserPrivateKey: "",
     googleParserProjectId: "",
     googleParserLocation: "",
     googleParserProcessorId: "",
@@ -151,7 +153,8 @@ export default function LicensesPanel() {
         llamaParser: "",
         azureParserKey: "",
         azureParserEndpoint: "",
-        googleParserKey: "",
+        googleParserServiceAccountEmail: "",
+        googleParserPrivateKey: "",
         googleParserProjectId: "",
         googleParserLocation: "",
         googleParserProcessorId: "",
@@ -679,7 +682,7 @@ export default function LicensesPanel() {
                         <h4 className="text-base font-medium text-card-foreground">Google Document AI</h4>
                         <button
                           onClick={() => handleTestConnection('google')}
-                          disabled={testResults.google.status === 'testing' || !keys.googleParserKey || !keys.googleParserProjectId || !keys.googleParserLocation || !keys.googleParserProcessorId}
+                          disabled={testResults.google.status === 'testing' || !keys.googleParserServiceAccountEmail || !keys.googleParserPrivateKey || !keys.googleParserProjectId || !keys.googleParserLocation || !keys.googleParserProcessorId}
                           className="text-xs text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                         >
                           {testResults.google.status === 'testing' ? (
@@ -706,64 +709,99 @@ export default function LicensesPanel() {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-xs font-medium text-muted-foreground mb-2">
-                            API Key
+                            Service Account Email <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="password"
-                            value={keys.googleParserKey}
-                            onChange={(e) => handleChange("googleParserKey", e.target.value)}
-                            placeholder="Enter your Google API key"
+                            value={keys.googleParserServiceAccountEmail}
+                            onChange={(e) => handleChange("googleParserServiceAccountEmail", e.target.value)}
+                            placeholder="your-service-account@project.iam.gserviceaccount.com"
                             className="w-full h-10 px-3 border border-border rounded-lg
                                      focus:outline-none focus:ring-2 focus:ring-accent
                                      bg-surface text-card-foreground text-sm
                                      placeholder-light"
                           />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            From JSON key file: <code className="text-accent">client_email</code> field
+                          </p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-2">
+                            Private Key <span className="text-red-500">*</span>
+                          </label>
+                          <textarea
+                            value={keys.googleParserPrivateKey}
+                            onChange={(e) => {
+                              // Auto-format: replace literal \n with actual newlines
+                              const formatted = e.target.value.replace(/\\n/g, '\n');
+                              handleChange("googleParserPrivateKey", formatted);
+                            }}
+                            placeholder="-----BEGIN PRIVATE KEY-----&#10;MIIEvgIBADANBgkqhkiG9w0BAQEF...&#10;-----END PRIVATE KEY-----"
+                            rows={6}
+                            style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
+                            className="w-full px-3 py-2 border border-border rounded-lg
+                                     focus:outline-none focus:ring-2 focus:ring-accent
+                                     bg-surface text-card-foreground text-sm
+                                     placeholder-light font-mono resize-none"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Paste the entire <code className="text-accent">private_key</code> value from JSON file (literal <code>\n</code> will be auto-converted to line breaks)
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-2">
+                            Project ID <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="password"
+                            value={keys.googleParserProjectId}
+                            onChange={(e) => handleChange("googleParserProjectId", e.target.value)}
+                            placeholder="your-project-id or 123456789"
+                            className="w-full h-10 px-3 border border-border rounded-lg
+                                     focus:outline-none focus:ring-2 focus:ring-accent
+                                     bg-surface text-card-foreground text-sm
+                                     placeholder-light"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            From JSON key file: <code className="text-accent">project_id</code> field, or from processor URL
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs font-medium text-muted-foreground mb-2">
-                              Project ID
+                              Location <span className="text-red-500">*</span>
                             </label>
                             <input
-                              type="text"
-                              value={keys.googleParserProjectId}
-                              onChange={(e) => handleChange("googleParserProjectId", e.target.value)}
-                              placeholder="your-project-id"
-                              className="w-full h-10 px-3 border border-border rounded-lg
-                                       focus:outline-none focus:ring-2 focus:ring-accent
-                                       bg-surface text-card-foreground text-sm
-                                       placeholder-light"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-muted-foreground mb-2">
-                              Location
-                            </label>
-                            <input
-                              type="text"
+                              type="password"
                               value={keys.googleParserLocation}
                               onChange={(e) => handleChange("googleParserLocation", e.target.value)}
-                              placeholder="us or eu"
+                              placeholder="us, eu, or us-central1"
                               className="w-full h-10 px-3 border border-border rounded-lg
                                        focus:outline-none focus:ring-2 focus:ring-accent
                                        bg-surface text-card-foreground text-sm
                                        placeholder-light"
                             />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              From processor URL: <code className="text-accent">/locations/[location]/</code>
+                            </p>
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-muted-foreground mb-2">
-                              Processor ID
+                              Processor ID <span className="text-red-500">*</span>
                             </label>
                             <input
-                              type="text"
+                              type="password"
                               value={keys.googleParserProcessorId}
                               onChange={(e) => handleChange("googleParserProcessorId", e.target.value)}
-                              placeholder="processor-id"
+                              placeholder="9f9bd205a57448a5"
                               className="w-full h-10 px-3 border border-border rounded-lg
                                        focus:outline-none focus:ring-2 focus:ring-accent
                                        bg-surface text-card-foreground text-sm
                                        placeholder-light"
                             />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              From processor URL: <code className="text-accent">/processors/[processor-id]:</code>
+                            </p>
                           </div>
                         </div>
                       </div>

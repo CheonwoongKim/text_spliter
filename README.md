@@ -48,14 +48,21 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - Full-height 테이블 레이아웃
 
 ### 🗄️ Vector Database
-- Supabase (PostgreSQL with pgvector) 벡터 데이터베이스 연결 및 조회
+- Supabase (PostgreSQL with pgvector) 벡터 데이터베이스 연결 및 관리
+- **테이블 생성/삭제**: VDB 페이지에서 벡터 테이블 생성 및 삭제
+- **Split Results 업로드**: Storage 페이지에서 청킹 결과를 벡터 스토어에 업로드
+  - OpenAI 임베딩 자동 생성 (text-embedding-ada-002)
+  - 메타데이터 JSONB 형식 저장
+  - 배치 처리로 rate limit 관리 (1-100 chunks/batch)
+  - 드롭다운으로 테이블 선택
 - 스키마 및 테이블 탐색
 - 벡터 데이터 시각화
 
 ### 🔐 API 키 관리
-- MySQL 데이터베이스에 암호화된 API 키 저장
+- MySQL 데이터베이스에 암호화된 API 키 및 자격 증명 저장
 - 사용자별 안전한 키 관리
 - 로그인 기반 인증 시스템
+- Google Document AI: Service Account 인증 (Email + Private Key)
 
 ## 기술 스택
 
@@ -103,7 +110,7 @@ npm install
 `.env.local` 파일을 생성하고 다음 내용을 입력합니다:
 
 ```env
-# OpenAI API Key (for embeddings)
+# OpenAI API Key (for embeddings and VDB upload)
 OPENAI_API_KEY=your_openai_api_key
 
 # MySQL Database Configuration (API keys, Parse/Split Results)
@@ -116,6 +123,7 @@ DB_PASSWORD=your_mysql_password
 # Supabase Configuration (Vector Database - optional)
 # Note: Supabase URL and Key are stored in the database via Connect page
 # No environment variables needed for Supabase
+# OpenAI API Key is also stored in the database and used for VDB uploads
 
 # Storage API Configuration (External Storage Service)
 STORAGE_API_BASE=http://ywstorage.synology.me:4000
@@ -180,6 +188,10 @@ npm start
 
 ### 2. API 키 설정 (Connect 탭)
 - 각 파서의 API 키를 입력
+- **Google Document AI**: Service Account 인증 사용
+  - Service Account Email (JSON key file의 `client_email`)
+  - Private Key (JSON key file의 `private_key`)
+  - Project ID, Location, Processor ID
 - **Save** 버튼 클릭으로 데이터베이스에 암호화하여 저장
 - 페이지 새로고침 시 자동으로 불러옴
 
@@ -193,6 +205,7 @@ npm start
 ### 4. Document Parser 사용
 1. **파서 선택**: 사용할 AI 파서 선택
 2. **API 키 입력**: 해당 파서의 API 키 입력 (저장된 키 자동 로드)
+   - Google Document AI는 Service Account 정보가 자동으로 로드됨
 3. **파일 업로드**: PDF, 이미지 등 문서 파일 선택
 4. **Parse Document 실행**: 파싱 결과를 Preview, HTML, JSON으로 확인
 5. **결과 저장**: Save 버튼으로 파싱 결과를 데이터베이스에 저장
@@ -244,12 +257,30 @@ npm start
    - 없으면 자동으로 컬럼 추가
 4. **완료 후**: Sync Storage 실행 가능
 
-### 10. Vector Database
-1. **VDB 탭**: Supabase 벡터 데이터베이스 연결
-2. **Supabase 설정**: Connect 탭에서 Supabase URL과 Key 저장
-3. **Schema 선택**: 조회할 스키마 선택
-4. **Table 선택**: 테이블 데이터 확인
-5. **벡터 데이터**: 임베딩 벡터 시각화
+### 10. Vector Database (VDB)
+1. **Supabase 설정**: Connect 탭에서 Supabase URL과 Key 저장
+2. **테이블 생성 (VDB 탭)**:
+   - Create Table (+) 버튼 클릭
+   - 테이블명 입력 (영문자로 시작, 영문/숫자/언더스코어만 사용)
+   - Vector Dimension 설정 (기본값: 1536)
+   - Create Table 버튼으로 생성
+3. **테이블 삭제**:
+   - 테이블 hover 시 나타나는 삭제 아이콘 클릭
+   - 확인 후 테이블 삭제
+4. **Split Results 업로드 (Storage 탭)**:
+   - Split Results에서 업로드할 결과의 "Upload to VDB" 아이콘 클릭
+   - 드롭다운에서 대상 테이블 선택
+   - Batch Size 설정 (1-100, 기본값: 10)
+   - Upload to VDB 버튼으로 업로드 실행
+   - OpenAI API를 통해 자동으로 임베딩 생성 후 Supabase에 저장
+5. **Schema 및 Table 탐색**: 좌측 패널에서 스키마와 테이블 선택
+6. **벡터 데이터 조회**: 우측 패널에서 테이블 데이터 및 임베딩 확인
+
+**업로드 프로세스:**
+- 각 chunk의 content에 대해 OpenAI embedding 생성
+- 메타데이터 자동 생성 (source, splitter_type, chunk_size, chunk_overlap, chunk_index)
+- Supabase 테이블에 content, embedding, metadata 저장
+- 배치 처리로 rate limit 회피
 
 ## 프로젝트 구조
 
@@ -288,9 +319,13 @@ text_spliter/
 │   │   │           └── route.ts  # Storage 로그인
 │   │   └── vectorstore/       # Vector Database
 │   │       ├── schemas/
-│   │       │   └── route.ts
-│   │       └── table-data/
-│   │           └── route.ts
+│   │       │   └── route.ts   # 스키마/테이블 목록
+│   │       ├── table-data/
+│   │       │   └── route.ts   # 테이블 데이터 조회
+│   │       ├── tables/
+│   │       │   └── route.ts   # 테이블 생성/삭제
+│   │       └── upload/
+│   │           └── route.ts   # Split Results 업로드
 │   ├── login/                 # 로그인 페이지
 │   │   └── page.tsx
 │   ├── layout.tsx
@@ -528,6 +563,23 @@ Supabase 스키마 및 테이블 목록을 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
+**Response:**
+```json
+[
+  {
+    "name": "public",
+    "tables": [
+      {
+        "name": "my_vectors",
+        "schema": "public",
+        "rowCount": 150,
+        "columns": [...]
+      }
+    ]
+  }
+]
+```
+
 **Note:** Supabase URL과 Key는 Connect 페이지에서 설정한 값을 사용합니다.
 
 #### GET /api/vectorstore/table-data
@@ -535,6 +587,103 @@ Supabase 스키마 및 테이블 목록을 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?table=<table_name>&schema=<schema_name>`
+
+#### POST /api/vectorstore/tables
+벡터 테이블을 생성합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```json
+{
+  "tableName": "my_documents",
+  "vectorDimension": 1536
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Table 'my_documents' created successfully",
+  "tableName": "my_documents",
+  "vectorDimension": 1536
+}
+```
+
+**Table Schema:**
+```sql
+CREATE TABLE my_documents (
+  id BIGSERIAL PRIMARY KEY,
+  content TEXT NOT NULL,
+  embedding vector(1536),
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+**Note:**
+- pgvector extension 자동 활성화
+- ivfflat 인덱스 자동 생성 (vector_cosine_ops)
+- 직접 생성 실패 시 SQL 명령어 제공
+
+#### DELETE /api/vectorstore/tables
+벡터 테이블을 삭제합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+**Query:** `?tableName=<table_name>`
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Table 'my_documents' deleted successfully"
+}
+```
+
+#### POST /api/vectorstore/upload
+Split Results를 벡터 데이터베이스에 업로드합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```json
+{
+  "splitResultId": 123,
+  "tableName": "my_documents",
+  "batchSize": 10
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Successfully uploaded 50 chunks to table 'my_documents'",
+  "chunksUploaded": 50,
+  "tableName": "my_documents"
+}
+```
+
+**Process:**
+1. Split Result를 MySQL에서 조회
+2. 각 chunk에 대해 OpenAI embedding 생성 (text-embedding-ada-002)
+3. 메타데이터 생성:
+   ```json
+   {
+     "source": "split_result_123",
+     "splitter_type": "RecursiveCharacterTextSplitter",
+     "chunk_size": 1000,
+     "chunk_overlap": 200,
+     "chunk_index": 0
+   }
+   ```
+4. Supabase 테이블에 삽입 (content, embedding, metadata)
+5. 배치 처리로 rate limit 관리
+
+**Required API Keys:**
+- OpenAI API Key (임베딩 생성용)
+- Supabase URL & Key (저장용)
 
 ### API 키 관리
 
@@ -554,13 +703,25 @@ API 키를 저장하거나 업데이트합니다.
   "openaiEmbedding": "sk-...",
   "upstageParser": "up_...",
   "llamaParser": "llx-...",
-  ...
+  "azureParserKey": "...",
+  "azureParserEndpoint": "https://...",
+  "googleParserServiceAccountEmail": "...@...iam.gserviceaccount.com",
+  "googleParserPrivateKey": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
+  "googleParserProjectId": "...",
+  "googleParserLocation": "us",
+  "googleParserProcessorId": "...",
+  "supabaseUrl": "https://....supabase.co",
+  "supabaseKey": "eyJ..."
 }
 ```
 
+**Note:** Google Document AI는 Service Account 인증을 사용하며, Private Key는 PEM 형식의 전체 키를 포함해야 합니다.
+
 ## 보안
 
-- **암호화**: 모든 API 키는 AES-256-CBC로 암호화되어 저장
+- **암호화**: 모든 API 키 및 자격 증명은 AES-256-CBC로 암호화되어 저장
+- **민감 정보 마스킹**: UI에서 모든 API 키와 Private Key는 마스킹 처리
+- **Service Account 보안**: Google Document AI Private Key는 PEM 형식으로 암호화 저장
 - **인증**: JWT 토큰 기반 사용자 인증
 - **데이터베이스**: 사용자별 격리된 키 저장
 - **Storage API 프록시**: Next.js API Routes를 통한 안전한 외부 API 호출
@@ -575,6 +736,11 @@ API 키를 저장하거나 업데이트합니다.
 - Storage 파일 업로드: 외부 Storage API의 제한 준수
 - 파일 미리보기: 대용량 파일의 경우 로딩 시간이 길어질 수 있음
 - Sync Storage: 파일명 기반 매칭으로 정확한 파일명 필요
+- VDB 업로드:
+  - OpenAI API rate limits 적용 (배치 처리로 완화)
+  - 대용량 청킹 결과 업로드 시 시간 소요
+  - 임베딩 비용 발생 (OpenAI API 사용)
+  - Supabase 직접 DDL 실행 제한 (RPC 필요)
 
 ## 개발
 

@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
     // Insert into database
     const insertResult = await query(
       `INSERT INTO split_results
-       (user_email, splitter_type, original_text, chunk_size, chunk_overlap,
-        separator, separators, encoding_name, language, breakpoint_type,
-        chunks, chunk_count, processing_time)
+       (\`user_email\`, \`splitter_type\`, \`original_text\`, \`chunk_size\`, \`chunk_overlap\`,
+        \`separator\`, \`separators\`, \`encoding_name\`, \`language\`, \`breakpoint_type\`,
+        \`chunks\`, \`chunk_count\`, \`processing_time\`)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userEmail,
