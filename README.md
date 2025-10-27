@@ -32,7 +32,7 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - Full-height 테이블 레이아웃
 
 ### 🗄️ Vector Database
-- PostgreSQL 벡터 데이터베이스 연결 및 조회
+- Supabase (PostgreSQL with pgvector) 벡터 데이터베이스 연결 및 조회
 - 스키마 및 테이블 탐색
 - 벡터 데이터 시각화
 
@@ -95,12 +95,9 @@ DB_NAME=your_mysql_database
 DB_USER=your_mysql_user
 DB_PASSWORD=your_mysql_password
 
-# PostgreSQL Configuration (Vector Database - optional)
-POSTGRES_HOST=your_postgres_host
-POSTGRES_PORT=5432
-POSTGRES_DB=your_postgres_database
-POSTGRES_USER=your_postgres_user
-POSTGRES_PASSWORD=your_postgres_password
+# Supabase Configuration (Vector Database - optional)
+# Note: Supabase URL and Key are stored in the database via Connect page
+# No environment variables needed for Supabase
 
 # Encryption Key (32 bytes)
 ENCRYPTION_KEY=your_32_byte_encryption_key
@@ -186,10 +183,11 @@ npm start
 5. **Pagination**: 페이지 단위로 결과 탐색
 
 ### 6. Vector Database
-1. **VDB 탭**: PostgreSQL 벡터 데이터베이스 연결
-2. **Schema 선택**: 조회할 스키마 선택
-3. **Table 선택**: 테이블 데이터 확인
-4. **벡터 데이터**: 임베딩 벡터 시각화
+1. **VDB 탭**: Supabase 벡터 데이터베이스 연결
+2. **Supabase 설정**: Connect 탭에서 Supabase URL과 Key 저장
+3. **Schema 선택**: 조회할 스키마 선택
+4. **Table 선택**: 테이블 데이터 확인
+5. **벡터 데이터**: 임베딩 벡터 시각화
 
 ## 프로젝트 구조
 
@@ -319,9 +317,11 @@ text_spliter/
 ### Vector Database
 
 #### GET /api/vectorstore/schemas
-PostgreSQL 스키마 목록을 조회합니다.
+Supabase 스키마 및 테이블 목록을 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
+
+**Note:** Supabase URL과 Key는 Connect 페이지에서 설정한 값을 사용합니다.
 
 #### GET /api/vectorstore/table-data
 테이블 데이터를 조회합니다.
