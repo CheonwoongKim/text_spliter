@@ -24,11 +24,27 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - **Azure Document Intelligence** - Microsoft Azure 기반 문서 파싱
 - **Google Document AI** - Google Cloud 기반 문서 파싱
 
+### 📁 Files (파일 관리)
+- 외부 Storage API와 연동한 파일 업로드/다운로드/삭제 기능
+- 파일 검색 및 브라우징
+- 폴더 구조 탐색 (브레드크럼 네비게이션)
+- 파일 미리보기 (PDF, 이미지 등)
+- 파일 크기 및 업로드 시간 표시
+- Parser에서 Files 탭의 파일을 직접 선택하여 파싱 가능
+
 ### 💾 Storage (결과 저장 및 관리)
 - 파싱 결과 및 분할 결과를 MySQL에 저장
 - Parse Results와 Split Results를 탭으로 분리하여 표시
-- 저장된 결과 조회, 상세보기, 삭제 기능
-- 페이지네이션 지원
+- **Parse Result Detail 페이지**: 원본 파일과 파싱 결과를 나란히 표시
+  - 좌측: 원본 파일 미리보기 (PDF, 이미지)
+  - 우측: 편집 가능한 파싱 결과
+  - LlamaParse의 페이지별 편집 지원 (text/markdown 모드 전환)
+- **Sync Storage 기능**: Files storage와 Parse Results 동기화
+  - 파일명 매칭으로 자동 연결
+  - 원본 파일 미리보기 활성화
+- **Check DB 기능**: 데이터베이스 마이그레이션 확인 및 실행
+- 저장된 결과 조회, 상세보기, 편집, 삭제 기능
+- 페이지네이션 지원 (20개/페이지)
 - Full-height 테이블 레이아웃
 
 ### 🗄️ Vector Database
@@ -60,6 +76,8 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - **Token Encoding**: js-tiktoken
 - **Database**: mysql2
 - **Document Parsing**: Upstage, LlamaIndex, Azure AI, Google AI
+- **UI Components**: @uiw/react-json-view (JSON 뷰어)
+- **Storage Integration**: External Storage API (S3-compatible)
 
 ## 시작하기
 
@@ -98,6 +116,10 @@ DB_PASSWORD=your_mysql_password
 # Supabase Configuration (Vector Database - optional)
 # Note: Supabase URL and Key are stored in the database via Connect page
 # No environment variables needed for Supabase
+
+# Storage API Configuration (External Storage Service)
+STORAGE_API_BASE=http://ywstorage.synology.me:4000
+STORAGE_DEFAULT_BUCKET=loan-agent-files
 
 # Encryption Key (32 bytes)
 ENCRYPTION_KEY=your_32_byte_encryption_key
@@ -175,14 +197,54 @@ npm start
 4. **Parse Document 실행**: 파싱 결과를 Preview, HTML, JSON으로 확인
 5. **결과 저장**: Save 버튼으로 파싱 결과를 데이터베이스에 저장
 
-### 5. Storage (저장된 결과 관리)
+### 5. Files (파일 관리)
+1. **Files 탭**: 업로드된 파일 목록 확인
+2. **파일 업로드**: Upload 버튼으로 새 파일 추가
+3. **파일 검색**: 검색창에서 파일명으로 검색
+4. **폴더 탐색**: 브레드크럼 네비게이션으로 폴더 구조 탐색
+5. **파일 미리보기**: 파일 클릭으로 새 탭에서 미리보기
+6. **파일 다운로드**: 점 3개 메뉴에서 Download 선택
+7. **파일 삭제**: 점 3개 메뉴에서 Delete 선택
+8. **Parser 연동**: Parser 탭에서 Files의 파일을 직접 선택하여 파싱 가능
+
+### 6. Storage (저장된 결과 관리)
 1. **Storage 탭**: 저장된 결과 목록 확인
 2. **Parse Results / Split Results**: 탭 전환으로 결과 유형 선택
 3. **View**: 저장된 결과의 상세 내용 확인
 4. **Delete**: 불필요한 결과 삭제
 5. **Pagination**: 페이지 단위로 결과 탐색
 
-### 6. Vector Database
+### 7. Parse Result Detail (상세보기)
+1. **Storage 탭 → Parse Results**: 저장된 파싱 결과 목록
+2. **View 버튼 클릭**: 상세 페이지로 이동
+3. **좌측 패널**: 원본 파일 미리보기
+   - PDF: iframe으로 표시
+   - 이미지: 확대/축소 가능한 이미지 뷰어
+   - 파일이 없는 경우: 파일 정보 표시
+4. **우측 패널**: 파싱 결과 편집
+   - LlamaParse: 페이지별 편집 (text/markdown 전환)
+   - 기타 파서: 전체 내용 편집
+5. **Save Changes**: 편집 내용 저장
+6. **뒤로가기**: Storage 탭으로 복귀
+
+### 8. Sync Storage (파일 동기화)
+1. **Storage 탭 → Parse Results**: Parse Results 탭 선택
+2. **Sync Storage 버튼**: 파일 동기화 실행
+3. **동기화 프로세스**:
+   - Parse Results의 파일명과 Files storage의 파일 매칭
+   - `file_storage_key` 자동 설정
+   - 원본 파일 미리보기 활성화
+4. **동기화 결과**: 성공한 매칭 수와 세부 정보 표시
+
+### 9. Check DB (데이터베이스 마이그레이션)
+1. **Storage 탭 → Parse Results**: Parse Results 탭 선택
+2. **Check DB 버튼**: 데이터베이스 마이그레이션 확인
+3. **자동 마이그레이션**:
+   - `file_storage_key` 컬럼 존재 여부 확인
+   - 없으면 자동으로 컬럼 추가
+4. **완료 후**: Sync Storage 실행 가능
+
+### 10. Vector Database
 1. **VDB 탭**: Supabase 벡터 데이터베이스 연결
 2. **Supabase 설정**: Connect 탭에서 Supabase URL과 Key 저장
 3. **Schema 선택**: 조회할 스키마 선택
@@ -200,11 +262,30 @@ text_spliter/
 │   │   ├── parse/             # 문서 파싱
 │   │   │   └── route.ts
 │   │   ├── parse-results/     # Parse Results CRUD
-│   │   │   └── route.ts
+│   │   │   ├── route.ts
+│   │   │   ├── sync-storage/  # Storage 동기화
+│   │   │   │   └── route.ts
+│   │   │   └── migrate/       # DB 마이그레이션
+│   │   │       └── route.ts
 │   │   ├── split/             # 텍스트 분할
 │   │   │   └── route.ts
 │   │   ├── split-results/     # Split Results CRUD
 │   │   │   └── route.ts
+│   │   ├── storage/           # Storage API 프록시
+│   │   │   ├── files/
+│   │   │   │   └── route.ts   # 파일 목록/삭제
+│   │   │   ├── upload/
+│   │   │   │   └── route.ts   # 파일 업로드
+│   │   │   ├── download/
+│   │   │   │   └── [filename]/
+│   │   │   │       └── route.ts  # 파일 다운로드
+│   │   │   ├── preview/
+│   │   │   │   └── route.ts   # 파일 미리보기
+│   │   │   ├── buckets/
+│   │   │   │   └── route.ts   # 버킷 관리
+│   │   │   └── auth/
+│   │   │       └── login/
+│   │   │           └── route.ts  # Storage 로그인
 │   │   └── vectorstore/       # Vector Database
 │   │       ├── schemas/
 │   │       │   └── route.ts
@@ -221,18 +302,28 @@ text_spliter/
 │   ├── ParserLeftPanel.tsx    # Document Parser 입력 패널
 │   ├── ParserRightPanel.tsx   # Document Parser 결과 패널
 │   ├── StoragePanel.tsx       # Storage 관리 패널
+│   ├── FilesPanel.tsx         # Files 관리 패널
+│   ├── ParseResultDetailPanel.tsx  # Parse 결과 상세보기
 │   ├── VectorStoreLeftPanel.tsx   # VDB 조회 패널
 │   ├── VectorStoreRightPanel.tsx  # VDB 데이터 패널
 │   ├── LicensesPanel.tsx      # API 키 관리 패널
 │   ├── Sidebar.tsx            # 네비게이션
 │   ├── Header.tsx             # 페이지 헤더
+│   ├── ErrorBoundary.tsx      # 에러 바운더리
+│   ├── Modal.tsx              # 모달 컴포넌트
+│   ├── Pagination.tsx         # 페이지네이션
 │   └── ...
 ├── lib/
 │   ├── types.ts               # TypeScript 타입
 │   ├── splitters.ts           # 스플리터 로직
 │   ├── db.ts                  # 데이터베이스 연결
 │   ├── encryption.ts          # 암호화 유틸리티
-│   └── auth.ts                # 인증 유틸리티
+│   ├── auth.ts                # 클라이언트 인증 유틸리티
+│   ├── auth-server.ts         # 서버 인증 유틸리티
+│   ├── storage-config.ts      # Storage API 설정
+│   ├── constants.ts           # 애플리케이션 상수
+│   ├── validation.ts          # 입력 검증
+│   └── hooks/                 # Custom React hooks
 ├── scripts/
 │   ├── schema.sql             # API 키 테이블 스키마
 │   ├── parse_results_schema.sql   # Parse Results 스키마
@@ -289,11 +380,53 @@ text_spliter/
 
 **Headers:** `Authorization: Bearer <token>`
 
+#### PUT /api/parse-results
+파싱 결과를 수정합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```json
+{
+  "id": 123,
+  "text_content": "Updated content...",
+  "json_content": "{...}"
+}
+```
+
 #### DELETE /api/parse-results
 파싱 결과를 삭제합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?id=123`
+
+#### POST /api/parse-results/sync-storage
+Parse Results를 Storage의 파일과 동기화합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response:**
+```json
+{
+  "message": "Successfully synced 15 parse results",
+  "updated": 15,
+  "total": 20,
+  "matches": [
+    {
+      "id": 1,
+      "key": "path/to/file.pdf",
+      "fileName": "file.pdf"
+    }
+  ]
+}
+```
+
+**Note:** 파일명 매칭을 통해 `file_storage_key`를 자동으로 설정하여 원본 파일 미리보기를 활성화합니다.
+
+#### GET /api/parse-results/migrate
+데이터베이스 마이그레이션을 확인하고 실행합니다.
+
+**Headers:** `Authorization: Bearer <token>`
 
 ### Split Results (Storage)
 
@@ -313,6 +446,80 @@ text_spliter/
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?id=123`
+
+### Storage API (파일 관리)
+
+#### GET /api/storage/files
+파일 목록을 조회합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response:**
+```json
+{
+  "files": [
+    {
+      "id": 1,
+      "filename": "document.pdf",
+      "file_size": 1024000,
+      "uploaded_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "total": 100,
+  "bucket": "loan-agent-files"
+}
+```
+
+#### DELETE /api/storage/files
+파일을 삭제합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+**Query:** `?filename=document.pdf`
+
+#### POST /api/storage/upload
+파일을 업로드합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+**Request:** `multipart/form-data`
+- `file`: 업로드할 파일
+
+#### GET /api/storage/download/[filename]
+파일을 다운로드합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response:** File blob with appropriate content-type
+
+#### GET /api/storage/preview
+파일 미리보기를 가져옵니다.
+
+**Headers:** `Authorization: Bearer <token>`
+**Query:** `?key=<file_storage_key>`
+
+**Response:** File blob (PDF, 이미지 등)
+
+**Note:**
+- PDF: iframe으로 표시
+- 이미지: img 태그로 표시
+- 최대 파일 크기 제한 적용
+
+#### POST /api/storage/buckets
+사용자별 버킷을 생성합니다.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response:**
+```json
+{
+  "bucket": "user-email-com",
+  "message": "Bucket ready"
+}
+```
+
+#### GET /api/storage/buckets
+사용자의 버킷 이름을 조회합니다.
+
+**Headers:** `Authorization: Bearer <token>`
 
 ### Vector Database
 
@@ -356,6 +563,8 @@ API 키를 저장하거나 업데이트합니다.
 - **암호화**: 모든 API 키는 AES-256-CBC로 암호화되어 저장
 - **인증**: JWT 토큰 기반 사용자 인증
 - **데이터베이스**: 사용자별 격리된 키 저장
+- **Storage API 프록시**: Next.js API Routes를 통한 안전한 외부 API 호출
+- **파일 접근 제어**: 사용자별 토큰 기반 파일 접근 권한
 - **HTTPS**: 프로덕션 환경에서는 반드시 HTTPS 사용 권장
 
 ## 제한사항
@@ -363,6 +572,9 @@ API 키를 저장하거나 업데이트합니다.
 - 최대 입력 텍스트 길이: 100,000 문자
 - 최대 파일 크기: 파서별로 상이 (일반적으로 10-100MB)
 - Chunk Overlap은 Chunk Size보다 작아야 함
+- Storage 파일 업로드: 외부 Storage API의 제한 준수
+- 파일 미리보기: 대용량 파일의 경우 로딩 시간이 길어질 수 있음
+- Sync Storage: 파일명 기반 매칭으로 정확한 파일명 필요
 
 ## 개발
 
