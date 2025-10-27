@@ -1,25 +1,17 @@
 import { NextRequest } from 'next/server';
 import { getUserEmailFromToken, createUnauthorizedResponse } from '@/lib/auth-server';
-
-const STORAGE_API_BASE = process.env.STORAGE_API_BASE || 'http://ywstorage.synology.me:4000';
-const DEFAULT_BUCKET = process.env.STORAGE_DEFAULT_BUCKET || 'loan-agent-files';
+import { STORAGE_API_BASE, DEFAULT_BUCKET } from '@/lib/storage-config';
 
 export async function GET(request: NextRequest) {
   const email = getUserEmailFromToken(request);
-  console.log('[Storage API] User email:', email);
 
   if (!email) {
-    console.log('[Storage API] No email found, returning unauthorized');
     return createUnauthorizedResponse();
   }
-
-  console.log('[Storage API] Using default bucket:', DEFAULT_BUCKET);
 
   try {
     const authHeader = request.headers.get('authorization');
     const url = `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/objects`;
-    console.log('[Storage API] Requesting:', url);
-    console.log('[Storage API] Auth header:', authHeader ? 'Token present' : 'No token');
 
     const response = await fetch(url, {
       headers: {
@@ -27,11 +19,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log('[Storage API] Response status:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[Storage API] Error response:', errorText);
 
       let errorData;
       let errorMessage = 'Failed to fetch files';
@@ -55,7 +44,6 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log('[Storage API] Success, objects count:', data.objects?.length || 0);
 
     // Transform Storage API response to match frontend expectations
     const transformedData = {
@@ -98,8 +86,6 @@ export async function DELETE(request: NextRequest) {
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('[Storage API] Deleting file:', filename, 'from bucket:', DEFAULT_BUCKET);
 
     const authHeader = request.headers.get('authorization');
 

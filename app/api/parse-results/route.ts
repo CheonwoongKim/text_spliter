@@ -4,6 +4,7 @@ import { getUserEmailFromToken } from '@/lib/auth-server';
 import type { ParseResponse } from '@/lib/types';
 import { validateParserType, validatePagination, validateId, ValidationError } from '@/lib/validation';
 import { PAGINATION_API_CONFIG } from '@/lib/constants';
+import { STORAGE_API_BASE, DEFAULT_BUCKET } from '@/lib/storage-config';
 
 interface ParseResult {
   id: number;
@@ -36,16 +37,13 @@ export async function POST(request: NextRequest) {
       );
 
       if (columns.length === 0) {
-        console.log('[Parse Results] Adding file_storage_key column...');
         await query(
           `ALTER TABLE parse_results
            ADD COLUMN file_storage_key VARCHAR(500) DEFAULT NULL AFTER mime_type,
            ADD INDEX idx_storage_key (file_storage_key)`
         );
-        console.log('[Parse Results] Column added successfully');
       }
     } catch (migrationError) {
-      console.error('[Parse Results] Migration check failed:', migrationError);
       // Continue anyway - column might already exist
     }
 
@@ -81,7 +79,6 @@ export async function POST(request: NextRequest) {
     // If storage key is provided (file from Files storage), use it directly
     if (providedFileStorageKey) {
       fileStorageKey = providedFileStorageKey;
-      console.log('[Parse Results] Using provided storage key:', fileStorageKey);
     }
     // Otherwise, upload file to Storage if provided
     else if (file) {
@@ -90,8 +87,6 @@ export async function POST(request: NextRequest) {
         storageFormData.append('file', file);
 
         const authHeader = request.headers.get('authorization');
-        const STORAGE_API_BASE = process.env.STORAGE_API_BASE || 'http://ywstorage.synology.me:4000';
-        const DEFAULT_BUCKET = process.env.STORAGE_DEFAULT_BUCKET || 'loan-agent-files';
 
         const uploadResponse = await fetch(
           `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/upload`,
@@ -107,12 +102,8 @@ export async function POST(request: NextRequest) {
         if (uploadResponse.ok) {
           const uploadData = await uploadResponse.json();
           fileStorageKey = uploadData.key || file.name;
-          console.log('[Parse Results] File uploaded to storage:', fileStorageKey);
-        } else {
-          console.error('[Parse Results] Failed to upload file to storage:', uploadResponse.status);
         }
       } catch (uploadError) {
-        console.error('[Parse Results] Error uploading file to storage:', uploadError);
         // Continue without storage key - not critical
       }
     }

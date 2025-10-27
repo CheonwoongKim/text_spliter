@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getUserEmailFromToken } from '@/lib/auth-server';
-
-const STORAGE_API_BASE = process.env.STORAGE_API_BASE || 'http://ywstorage.synology.me:4000';
-const DEFAULT_BUCKET = process.env.STORAGE_DEFAULT_BUCKET || 'loan-agent-files';
+import { STORAGE_API_BASE, DEFAULT_BUCKET } from '@/lib/storage-config';
 
 interface ParseResult {
   id: number;
@@ -106,15 +104,6 @@ export async function POST(request: NextRequest) {
         updatedCount++;
       }
     }
-
-    console.log('[Sync Storage] Results:', {
-      total: parseResults.length,
-      updated: updatedCount,
-      storageFilesCount: storageFiles.length,
-      parseResultFileNames: parseResults.map(r => r.file_name),
-      storageFileKeys: storageFiles.map(f => f.key),
-      matches: updates,
-    });
 
     return NextResponse.json({
       message: `Successfully synced ${updatedCount} parse results`,

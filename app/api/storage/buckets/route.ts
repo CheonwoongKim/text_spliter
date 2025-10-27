@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getUserEmailFromToken, createUnauthorizedResponse } from '@/lib/auth-server';
-
-const STORAGE_API_BASE = process.env.STORAGE_API_BASE || 'http://ywstorage.synology.me:4000';
+import { STORAGE_API_BASE } from '@/lib/storage-config';
 
 // Convert email to valid S3 bucket name
 // S3 bucket naming rules: lowercase, numbers, hyphens, 3-63 chars

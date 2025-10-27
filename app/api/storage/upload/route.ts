@@ -1,8 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getUserEmailFromToken, createUnauthorizedResponse } from '@/lib/auth-server';
-
-const STORAGE_API_BASE = process.env.STORAGE_API_BASE || 'http://ywstorage.synology.me:4000';
-const DEFAULT_BUCKET = process.env.STORAGE_DEFAULT_BUCKET || 'loan-agent-files';
+import { STORAGE_API_BASE, DEFAULT_BUCKET } from '@/lib/storage-config';
 
 export async function POST(request: NextRequest) {
   const email = getUserEmailFromToken(request);
