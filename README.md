@@ -5,9 +5,11 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 ## 주요 기능
 
 ### 📄 Text Splitter
+
 다양한 LangChain 텍스트 스플리터를 실시간으로 테스트하고 결과를 시각화합니다.
 
 **지원 스플리터:**
+
 - **Recursive Character Text Splitter** - 계층적 구분자를 사용한 자연스러운 분할 (권장)
 - **Character Text Splitter** - 단일 구분자 기반 분할
 - **Token Text Splitter** - OpenAI 토큰 기반 정확한 분할
@@ -16,15 +18,18 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - **Semantic Chunker** - 의미론적 유사도 기반 지능형 분할
 
 ### 🔍 Document Parser
+
 다양한 AI 파서를 사용하여 PDF, 이미지, 문서 파일을 텍스트로 변환합니다.
 
 **지원 파서:**
+
 - **Upstage Document AI** - PDF, 이미지 파싱
 - **LlamaIndex (LlamaParse)** - PDF, DOCX, PPTX, 이미지 파싱
 - **Azure Document Intelligence** - Microsoft Azure 기반 문서 파싱
 - **Google Document AI** - Google Cloud 기반 문서 파싱
 
 ### 📁 Files (파일 관리)
+
 - 외부 Storage API와 연동한 파일 업로드/다운로드/삭제 기능
 - 파일 검색 및 브라우징
 - 폴더 구조 탐색 (브레드크럼 네비게이션)
@@ -33,6 +38,7 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - Parser에서 Files 탭의 파일을 직접 선택하여 파싱 가능
 
 ### 💾 Storage (결과 저장 및 관리)
+
 - 파싱 결과 및 분할 결과를 MySQL에 저장
 - Parse Results와 Split Results를 탭으로 분리하여 표시
 - **Parse Result Detail 페이지**: 원본 파일과 파싱 결과를 나란히 표시
@@ -48,6 +54,7 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - Full-height 테이블 레이아웃
 
 ### 🗄️ Vector Database
+
 - Supabase (PostgreSQL with pgvector) 벡터 데이터베이스 연결 및 관리
 - **테이블 생성/삭제**: VDB 페이지에서 벡터 테이블 생성 및 삭제
 - **Split Results 업로드**: Storage 페이지에서 청킹 결과를 벡터 스토어에 업로드
@@ -59,6 +66,7 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - 벡터 데이터 시각화
 
 ### 🔐 API 키 관리
+
 - MySQL 데이터베이스에 암호화된 API 키 및 자격 증명 저장
 - 사용자별 안전한 키 관리
 - 로그인 기반 인증 시스템
@@ -67,18 +75,21 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 ## 기술 스택
 
 ### Frontend
+
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **UI**: React 18
 
 ### Backend
+
 - **API Routes**: Next.js API Routes
 - **Database**: MySQL
 - **Encryption**: Node.js Crypto (AES-256-CBC)
 - **Authentication**: JWT
 
 ### Libraries
+
 - **Text Processing**: LangChain, @langchain/textsplitters
 - **Token Encoding**: js-tiktoken
 - **Database**: mysql2
@@ -158,6 +169,7 @@ node scripts/create-split-results-table.js
 ```
 
 **주요 테이블:**
+
 - `user_api_keys` - 암호화된 API 키 저장
 - `parse_results` - 문서 파싱 결과 저장
 - `split_results` - 텍스트 분할 결과 저장
@@ -183,10 +195,12 @@ npm start
 ## 사용 방법
 
 ### 1. 로그인
+
 - `/login` 페이지에서 이메일과 비밀번호로 로그인
 - JWT 토큰이 localStorage에 저장됨
 
 ### 2. API 키 설정 (Connect 탭)
+
 - 각 파서의 API 키를 입력
 - **Google Document AI**: Service Account 인증 사용
   - Service Account Email (JSON key file의 `client_email`)
@@ -196,6 +210,7 @@ npm start
 - 페이지 새로고침 시 자동으로 불러옴
 
 ### 3. Text Splitter 사용
+
 1. **텍스트 입력**: Upload 또는 Plain Text 탭에서 텍스트 입력
 2. **스플리터 선택**: 원하는 분할 방식 선택
 3. **파라미터 설정**: Chunk Size, Overlap 등 조정
@@ -203,6 +218,7 @@ npm start
 5. **결과 저장**: Save 버튼으로 분할 결과를 데이터베이스에 저장
 
 ### 4. Document Parser 사용
+
 1. **파서 선택**: 사용할 AI 파서 선택
 2. **API 키 입력**: 해당 파서의 API 키 입력 (저장된 키 자동 로드)
    - Google Document AI는 Service Account 정보가 자동으로 로드됨
@@ -211,6 +227,7 @@ npm start
 5. **결과 저장**: Save 버튼으로 파싱 결과를 데이터베이스에 저장
 
 ### 5. Files (파일 관리)
+
 1. **Files 탭**: 업로드된 파일 목록 확인
 2. **파일 업로드**: Upload 버튼으로 새 파일 추가
 3. **파일 검색**: 검색창에서 파일명으로 검색
@@ -221,6 +238,7 @@ npm start
 8. **Parser 연동**: Parser 탭에서 Files의 파일을 직접 선택하여 파싱 가능
 
 ### 6. Storage (저장된 결과 관리)
+
 1. **Storage 탭**: 저장된 결과 목록 확인
 2. **Parse Results / Split Results**: 탭 전환으로 결과 유형 선택
 3. **View**: 저장된 결과의 상세 내용 확인
@@ -228,6 +246,7 @@ npm start
 5. **Pagination**: 페이지 단위로 결과 탐색
 
 ### 7. Parse Result Detail (상세보기)
+
 1. **Storage 탭 → Parse Results**: 저장된 파싱 결과 목록
 2. **View 버튼 클릭**: 상세 페이지로 이동
 3. **좌측 패널**: 원본 파일 미리보기
@@ -241,6 +260,7 @@ npm start
 6. **뒤로가기**: Storage 탭으로 복귀
 
 ### 8. Sync Storage (파일 동기화)
+
 1. **Storage 탭 → Parse Results**: Parse Results 탭 선택
 2. **Sync Storage 버튼**: 파일 동기화 실행
 3. **동기화 프로세스**:
@@ -250,6 +270,7 @@ npm start
 4. **동기화 결과**: 성공한 매칭 수와 세부 정보 표시
 
 ### 9. Check DB (데이터베이스 마이그레이션)
+
 1. **Storage 탭 → Parse Results**: Parse Results 탭 선택
 2. **Check DB 버튼**: 데이터베이스 마이그레이션 확인
 3. **자동 마이그레이션**:
@@ -258,6 +279,7 @@ npm start
 4. **완료 후**: Sync Storage 실행 가능
 
 ### 10. Vector Database (VDB)
+
 1. **Supabase 설정**: Connect 탭에서 Supabase URL과 Key 저장
 2. **테이블 생성 (VDB 탭)**:
    - Create Table (+) 버튼 클릭
@@ -277,6 +299,7 @@ npm start
 6. **벡터 데이터 조회**: 우측 패널에서 테이블 데이터 및 임베딩 확인
 
 **업로드 프로세스:**
+
 - 각 chunk의 content에 대해 OpenAI embedding 생성
 - 메타데이터 자동 생성 (source, splitter_type, chunk_size, chunk_overlap, chunk_index)
 - Supabase 테이블에 content, embedding, metadata 저장
@@ -284,7 +307,7 @@ npm start
 
 ## 프로젝트 구조
 
-```
+```text
 text_spliter/
 ├── app/                       # Next.js App Router
 │   ├── api/
@@ -377,9 +400,11 @@ text_spliter/
 ### Text Splitter
 
 #### POST /api/split
+
 텍스트를 분할합니다.
 
 **Request:**
+
 ```json
 {
   "text": "분할할 텍스트",
@@ -394,9 +419,11 @@ text_spliter/
 ### Document Parser
 
 #### POST /api/parse
+
 문서를 파싱합니다.
 
 **Request:** `multipart/form-data`
+
 - `file`: 파싱할 문서 파일
 - `parserType`: 사용할 파서 (Upstage, LlamaIndex, Azure, Google)
 - `apiKey`: 파서 API 키
@@ -405,22 +432,26 @@ text_spliter/
 ### Parse Results (Storage)
 
 #### GET /api/parse-results
+
 저장된 파싱 결과를 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?limit=20&offset=0` 또는 `?id=123`
 
 #### POST /api/parse-results
+
 파싱 결과를 저장합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 #### PUT /api/parse-results
+
 파싱 결과를 수정합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request:**
+
 ```json
 {
   "id": 123,
@@ -430,17 +461,20 @@ text_spliter/
 ```
 
 #### DELETE /api/parse-results
+
 파싱 결과를 삭제합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?id=123`
 
 #### POST /api/parse-results/sync-storage
+
 Parse Results를 Storage의 파일과 동기화합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "message": "Successfully synced 15 parse results",
@@ -459,6 +493,7 @@ Parse Results를 Storage의 파일과 동기화합니다.
 **Note:** 파일명 매칭을 통해 `file_storage_key`를 자동으로 설정하여 원본 파일 미리보기를 활성화합니다.
 
 #### GET /api/parse-results/migrate
+
 데이터베이스 마이그레이션을 확인하고 실행합니다.
 
 **Headers:** `Authorization: Bearer <token>`
@@ -466,17 +501,20 @@ Parse Results를 Storage의 파일과 동기화합니다.
 ### Split Results (Storage)
 
 #### GET /api/split-results
+
 저장된 분할 결과를 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?limit=20&offset=0` 또는 `?id=123`
 
 #### POST /api/split-results
+
 분할 결과를 저장합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 #### DELETE /api/split-results
+
 분할 결과를 삭제합니다.
 
 **Headers:** `Authorization: Bearer <token>`
@@ -485,11 +523,13 @@ Parse Results를 Storage의 파일과 동기화합니다.
 ### Storage API (파일 관리)
 
 #### GET /api/storage/files
+
 파일 목록을 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "files": [
@@ -506,19 +546,23 @@ Parse Results를 Storage의 파일과 동기화합니다.
 ```
 
 #### DELETE /api/storage/files
+
 파일을 삭제합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?filename=document.pdf`
 
 #### POST /api/storage/upload
+
 파일을 업로드합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Request:** `multipart/form-data`
+
 - `file`: 업로드할 파일
 
 #### GET /api/storage/download/[filename]
+
 파일을 다운로드합니다.
 
 **Headers:** `Authorization: Bearer <token>`
@@ -526,6 +570,7 @@ Parse Results를 Storage의 파일과 동기화합니다.
 **Response:** File blob with appropriate content-type
 
 #### GET /api/storage/preview
+
 파일 미리보기를 가져옵니다.
 
 **Headers:** `Authorization: Bearer <token>`
@@ -534,16 +579,19 @@ Parse Results를 Storage의 파일과 동기화합니다.
 **Response:** File blob (PDF, 이미지 등)
 
 **Note:**
+
 - PDF: iframe으로 표시
 - 이미지: img 태그로 표시
 - 최대 파일 크기 제한 적용
 
 #### POST /api/storage/buckets
+
 사용자별 버킷을 생성합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "bucket": "user-email-com",
@@ -552,6 +600,7 @@ Parse Results를 Storage의 파일과 동기화합니다.
 ```
 
 #### GET /api/storage/buckets
+
 사용자의 버킷 이름을 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
@@ -559,11 +608,13 @@ Parse Results를 Storage의 파일과 동기화합니다.
 ### Vector Database
 
 #### GET /api/vectorstore/schemas
+
 Supabase 스키마 및 테이블 목록을 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 [
   {
@@ -583,17 +634,20 @@ Supabase 스키마 및 테이블 목록을 조회합니다.
 **Note:** Supabase URL과 Key는 Connect 페이지에서 설정한 값을 사용합니다.
 
 #### GET /api/vectorstore/table-data
+
 테이블 데이터를 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?table=<table_name>&schema=<schema_name>`
 
 #### POST /api/vectorstore/tables
+
 벡터 테이블을 생성합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request:**
+
 ```json
 {
   "tableName": "my_documents",
@@ -602,6 +656,7 @@ Supabase 스키마 및 테이블 목록을 조회합니다.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -612,6 +667,7 @@ Supabase 스키마 및 테이블 목록을 조회합니다.
 ```
 
 **Table Schema:**
+
 ```sql
 CREATE TABLE my_documents (
   id BIGSERIAL PRIMARY KEY,
@@ -623,17 +679,20 @@ CREATE TABLE my_documents (
 ```
 
 **Note:**
+
 - pgvector extension 자동 활성화
 - ivfflat 인덱스 자동 생성 (vector_cosine_ops)
 - 직접 생성 실패 시 SQL 명령어 제공
 
 #### DELETE /api/vectorstore/tables
+
 벡터 테이블을 삭제합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?tableName=<table_name>`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -642,11 +701,13 @@ CREATE TABLE my_documents (
 ```
 
 #### POST /api/vectorstore/upload
+
 Split Results를 벡터 데이터베이스에 업로드합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request:**
+
 ```json
 {
   "splitResultId": 123,
@@ -656,6 +717,7 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -666,9 +728,11 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 ```
 
 **Process:**
+
 1. Split Result를 MySQL에서 조회
 2. 각 chunk에 대해 OpenAI embedding 생성 (text-embedding-ada-002)
 3. 메타데이터 생성:
+
    ```json
    {
      "source": "split_result_123",
@@ -678,26 +742,31 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
      "chunk_index": 0
    }
    ```
+
 4. Supabase 테이블에 삽입 (content, embedding, metadata)
 5. 배치 처리로 rate limit 관리
 
 **Required API Keys:**
+
 - OpenAI API Key (임베딩 생성용)
 - Supabase URL & Key (저장용)
 
 ### API 키 관리
 
 #### GET /api/keys
+
 사용자의 저장된 API 키를 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 #### POST /api/keys
+
 API 키를 저장하거나 업데이트합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request:**
+
 ```json
 {
   "openaiEmbedding": "sk-...",
@@ -715,7 +784,8 @@ API 키를 저장하거나 업데이트합니다.
 }
 ```
 
-**Note:** Google Document AI는 Service Account 인증을 사용하며, Private Key는 PEM 형식의 전체 키를 포함해야 합니다.
+**Note:** Google Document AI는 Service Account 인증을 사용하며,
+Private Key는 PEM 형식의 전체 키를 포함해야 합니다.
 
 ## 보안
 
@@ -759,6 +829,7 @@ npm run type-check
 ## 로고 이미지
 
 프로젝트는 다음 서비스의 로고를 사용합니다:
+
 - OpenAI
 - Upstage
 - LlamaIndex
