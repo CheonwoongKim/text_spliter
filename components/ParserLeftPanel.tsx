@@ -3,10 +3,14 @@
 import { memo, useCallback, useState, useEffect } from "react";
 import type { ParserType, ParserConfig } from "@/lib/types";
 import { getAuthToken } from "@/lib/auth";
+import { getDocumentEngine, listDocumentEngines } from "@/lib/document-engines";
+
+const documentEngines = listDocumentEngines();
 
 interface StorageFile {
-  id: number;
+  id: string;
   filename: string;
+  storage_key: string;
   file_size: number;
   uploaded_at: string;
 }
@@ -17,7 +21,7 @@ interface ParserLeftPanelProps {
   selectedFile: File | null;
   onConfigChange: (updates: Partial<ParserConfig>) => void;
   onFileSelect: (file: File | null, storageKey?: string | null) => void;
-  onParse: () => void;
+  onParse: (parserTypes: ParserType[]) => void;
   onReset: () => void;
 }
 
@@ -30,10 +34,26 @@ function ParserLeftPanel({
   onParse,
   onReset,
 }: ParserLeftPanelProps) {
+  const selectedEngine = getDocumentEngine(config.parserType);
   const [uploadMode, setUploadMode] = useState<"upload" | "select">("upload");
   const [storageFiles, setStorageFiles] = useState<StorageFile[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [selectedFileKey, setSelectedFileKey] = useState<string | null>(null);
+  const [experimentEngines, setExperimentEngines] = useState<ParserType[]>([
+    config.parserType,
+  ]);
+
+  const toggleExperimentEngine = useCallback((parserType: ParserType) => {
+    setExperimentEngines((current) => {
+      if (current.includes(parserType)) {
+        return current.length === 1
+          ? current
+          : current.filter((candidate) => candidate !== parserType);
+      }
+
+      return [...current, parserType];
+    });
+  }, []);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,20 +94,6 @@ function ParserLeftPanel({
     [onConfigChange]
   );
 
-  const handleExtractImagesChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      onConfigChange({ extractImages: e.target.checked });
-    },
-    [onConfigChange]
-  );
-
-  const handleExtractTablesChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      onConfigChange({ extractTables: e.target.checked });
-    },
-    [onConfigChange]
-  );
-
   const handlePageRangeChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       onConfigChange({ pageRange: e.target.value });
@@ -102,9 +108,16 @@ function ParserLeftPanel({
     [onConfigChange]
   );
 
-  const handleLlamaGpt4oModeChange = useCallback(
+  const handleLlamaTierChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      onConfigChange({ llamaTier: e.target.value as ParserConfig["llamaTier"] });
+    },
+    [onConfigChange]
+  );
+
+  const handleLlamaVersionChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      onConfigChange({ llamaGpt4oMode: e.target.checked });
+      onConfigChange({ llamaVersion: e.target.value });
     },
     [onConfigChange]
   );
@@ -119,6 +132,41 @@ function ParserLeftPanel({
   const handleGoogleLocationChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       onConfigChange({ googleLocation: e.target.value });
+    },
+    [onConfigChange]
+  );
+
+  const handleDoclingOutputFormatChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      onConfigChange({ doclingOutputFormat: e.target.value as 'markdown' | 'html' | 'json' });
+    },
+    [onConfigChange]
+  );
+
+  const handleDoclingPipelineChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      onConfigChange({ doclingPipeline: e.target.value as ParserConfig["doclingPipeline"] });
+    },
+    [onConfigChange]
+  );
+
+  const handleDoclingOcrModeChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      onConfigChange({ doclingOcrMode: e.target.value as ParserConfig["doclingOcrMode"] });
+    },
+    [onConfigChange]
+  );
+
+  const handleDoclingTableModeChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      onConfigChange({ doclingTableMode: e.target.value as ParserConfig["doclingTableMode"] });
+    },
+    [onConfigChange]
+  );
+
+  const handleExtractImagesChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onConfigChange({ extractImages: e.target.checked });
     },
     [onConfigChange]
   );
@@ -151,7 +199,7 @@ function ParserLeftPanel({
     }
   }, []);
 
-  const handleSelectFile = useCallback(async (fileKey: string) => {
+  const handleSelectFile = useCallback(async (fileKey: string, displayName: string) => {
     try {
       const token = getAuthToken();
       if (!token) {
@@ -175,8 +223,7 @@ function ParserLeftPanel({
       const blob = await response.blob();
 
       // Convert blob to File object
-      const filename = fileKey.split('/').pop() || fileKey;
-      const file = new File([blob], filename, { type: blob.type });
+      const file = new File([blob], displayName, { type: blob.type });
 
       onFileSelect(file, fileKey);  // Pass the storage key
       setSelectedFileKey(fileKey);
@@ -190,6 +237,13 @@ function ParserLeftPanel({
       fetchStorageFiles();
     }
   }, [uploadMode, fetchStorageFiles]);
+
+  const acceptedFileTypes = config.parserType === "Docling"
+    ? ".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.html,.htm,.md,.txt"
+    : ".pdf,.png,.jpg,.jpeg,.docx,.pptx";
+  const acceptedFileLabel = config.parserType === "Docling"
+    ? "PDF, images, Office, HTML, Markdown, CSV, TXT"
+    : "PDF, PNG, JPG, JPEG, DOCX, PPTX";
 
   return (
     <div className="h-full flex flex-col relative">
@@ -268,7 +322,7 @@ function ParserLeftPanel({
                   <input
                     id="file-upload"
                     type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx"
+                    accept={acceptedFileTypes}
                     onChange={handleFileChange}
                     disabled={loading}
                     className="hidden"
@@ -290,13 +344,13 @@ function ParserLeftPanel({
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      PDF, PNG, JPG, JPEG, DOCX, PPTX (max 100MB)
+                      {acceptedFileLabel} (max 100MB)
                     </p>
                   </div>
                   <input
                     id="file-upload"
                     type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx"
+                    accept={acceptedFileTypes}
                     onChange={handleFileChange}
                     disabled={loading}
                     className="hidden"
@@ -346,10 +400,10 @@ function ParserLeftPanel({
                     {storageFiles.map((file) => (
                       <button
                         key={file.id}
-                        onClick={() => handleSelectFile(file.filename)}
+                        onClick={() => handleSelectFile(file.storage_key, file.filename)}
                         disabled={loading}
                         className={`w-full text-left p-3 mb-2 rounded-lg border transition-smooth ${
-                          selectedFileKey === file.filename
+                          selectedFileKey === file.storage_key
                             ? "border-accent bg-accent/10"
                             : "border-border hover:border-accent/50 hover:bg-muted"
                         } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -360,7 +414,7 @@ function ParserLeftPanel({
                           </svg>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-surface-foreground truncate">
-                              {file.filename.split('/').pop()}
+                              {file.filename}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {(file.file_size / 1024).toFixed(2)} KB
@@ -376,14 +430,14 @@ function ParserLeftPanel({
           </div>
         </div>
 
-        {/* Parser Selection */}
+        {/* Document processing engine selection */}
         <div className="mb-6">
           <h3 className="text-sm font-medium text-surface-foreground mb-4">
-            Parser Selection
+            Document Processing Engine
           </h3>
         <div>
           <label className="block text-sm text-muted-foreground mb-2">
-            Parser Type
+            Engine
           </label>
           <select
             value={config.parserType}
@@ -393,21 +447,82 @@ function ParserLeftPanel({
                      focus-ring bg-card text-card-foreground
                      transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
           >
-            <option value="Upstage">Upstage Document AI</option>
-            <option value="LlamaIndex">LlamaIndex (LlamaParse)</option>
-            <option value="Azure">Azure Document Intelligence</option>
-            <option value="Google">Google Document AI</option>
+            {documentEngines.map((engine) => (
+              <option key={engine.id} value={engine.parserType}>
+                {engine.displayName}
+              </option>
+            ))}
           </select>
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {selectedEngine.stages.map((stage) => (
+              <span
+                key={stage}
+                className="px-2 py-1 text-[11px] font-medium rounded-md bg-muted text-muted-foreground"
+              >
+                {stage === "ocr" ? "OCR" :
+                  stage === "layout" ? "Layout" :
+                  stage === "structure" ? "Structure" :
+                  stage === "visual-understanding" ? "Vision" : "Extraction"}
+              </span>
+            ))}
+            <span className="px-2 py-1 text-[11px] font-medium rounded-md border border-border text-muted-foreground">
+              {selectedEngine.deployment === "self-hosted" ? "Self-hosted" : "Managed"}
+            </span>
+          </div>
           <p className="text-xs text-muted-foreground mt-2">
-            {config.parserType === "Upstage" &&
-              "Upstage Document AI를 사용하여 PDF, 이미지 파일을 파싱합니다."}
-            {config.parserType === "LlamaIndex" &&
-              "LlamaIndex의 LlamaParse를 사용하여 PDF, DOCX, PPTX, 이미지 파일을 파싱합니다."}
-            {config.parserType === "Azure" &&
-              "Azure Document Intelligence를 사용하여 PDF, 이미지 파일을 파싱합니다."}
-            {config.parserType === "Google" &&
-              "Google Document AI를 사용하여 PDF, 이미지 파일을 파싱합니다."}
+            {selectedEngine.category === "ocr-layout-hybrid"
+              ? "OCR과 레이아웃 분석을 결합해 문서 구조를 복원합니다."
+              : selectedEngine.category === "document-vlm"
+              ? "Vision-Language Model로 문서 구조와 시각적 맥락을 해석합니다."
+              : "텍스트뿐 아니라 레이아웃과 구조를 문서 표현으로 변환합니다."}
           </p>
+
+          <div className="mt-5 pt-5 border-t border-border">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <p className="text-sm font-medium text-card-foreground">Experiment batch</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  체크한 엔진을 같은 원본에 순차 실행합니다.
+                </p>
+              </div>
+              <span className="shrink-0 px-2 py-1 rounded-full bg-muted text-[11px] text-muted-foreground">
+                {experimentEngines.length} selected
+              </span>
+            </div>
+            <div className="space-y-2">
+              {documentEngines.map((engine) => {
+                const checked = experimentEngines.includes(engine.parserType);
+                const editing = config.parserType === engine.parserType;
+                return (
+                  <label
+                    key={engine.id}
+                    className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-smooth ${
+                      checked
+                        ? "border-accent/60 bg-accent/5"
+                        : "border-border hover:border-border-darkest"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleExperimentEngine(engine.parserType)}
+                      disabled={loading || (checked && experimentEngines.length === 1)}
+                      className="w-4 h-4 rounded border-border text-accent focus:ring-2 focus:ring-accent/20"
+                    />
+                    <span className="min-w-0 flex-1 text-xs font-medium text-card-foreground truncate">
+                      {engine.displayName}
+                    </span>
+                    {editing && (
+                      <span className="text-[10px] font-medium text-accent">Editing settings</span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+            <p className="text-[11px] leading-4 text-muted-foreground mt-3">
+              위 Engine 선택은 옵션 편집 대상을 바꾸며, 체크된 모든 엔진의 현재 설정이 배치에 사용됩니다.
+            </p>
+          </div>
         </div>
         </div>
 
@@ -442,73 +557,26 @@ function ParserLeftPanel({
             </div>
           )}
 
-          {/* OCR Language */}
-          <div className="mb-4">
-            <label className="block text-sm text-muted-foreground mb-2">
-              OCR Language
-            </label>
-            <input
-              type="text"
-              value={config.language || ''}
-              onChange={handleLanguageChange}
-              disabled={loading}
-              placeholder="ko, en, ja, etc."
-              className="w-full h-12 px-3 border border-border rounded-lg
-                       focus-ring bg-card text-card-foreground placeholder-light
-                       transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              OCR 언어 코드를 입력하세요 (예: ko, en, ja).
-            </p>
-          </div>
-
-          {/* Page Range */}
-          <div className="mb-4">
-            <label className="block text-sm text-muted-foreground mb-2">
-              Page Range (Optional)
-            </label>
-            <input
-              type="text"
-              value={config.pageRange || ''}
-              onChange={handlePageRangeChange}
-              disabled={loading}
-              placeholder="e.g., 1-5 or 1,3,5-10"
-              className="w-full h-12 px-3 border border-border rounded-lg
-                       focus-ring bg-card text-card-foreground placeholder-light
-                       transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              특정 페이지만 파싱하려면 범위를 입력하세요 (예: 1-5, 1,3,5-10).
-            </p>
-          </div>
-
-          {/* Extract Options */}
-          <div className="mb-4 space-y-3">
-            <label className="flex items-center gap-2 cursor-pointer">
+          {config.parserType === "Upstage" && (
+            <div className="mb-4">
+              <label className="block text-sm text-muted-foreground mb-2">
+                OCR Language
+              </label>
               <input
-                type="checkbox"
-                checked={config.extractImages || false}
-                onChange={handleExtractImagesChange}
+                type="text"
+                value={config.language || ""}
+                onChange={handleLanguageChange}
                 disabled={loading}
-                className="w-4 h-4 rounded border-border text-accent
-                         focus:ring-2 focus:ring-accent/20 disabled:opacity-disabled
-                         disabled:cursor-not-allowed"
+                placeholder="ko, en, ja, etc."
+                className="w-full h-12 px-3 border border-border rounded-lg
+                         focus-ring bg-card text-card-foreground placeholder-light
+                         transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
               />
-              <span className="text-sm text-card-foreground">Extract Images</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={config.extractTables || false}
-                onChange={handleExtractTablesChange}
-                disabled={loading}
-                className="w-4 h-4 rounded border-border text-accent
-                         focus:ring-2 focus:ring-accent/20 disabled:opacity-disabled
-                         disabled:cursor-not-allowed"
-              />
-              <span className="text-sm text-card-foreground">Extract Tables</span>
-            </label>
-          </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Upstage 내부 OCR에 전달할 언어 코드입니다.
+              </p>
+            </div>
+          )}
 
           {/* Azure specific settings */}
           {config.parserType === "Azure" && (
@@ -537,23 +605,74 @@ function ParserLeftPanel({
           {/* LlamaIndex specific settings */}
           {config.parserType === "LlamaIndex" && (
             <>
-              {/* LlamaIndex: All formats (text, markdown, json) are automatically retrieved */}
               <div className="mb-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={config.llamaGpt4oMode || false}
-                    onChange={handleLlamaGpt4oModeChange}
-                    disabled={loading}
-                    className="w-4 h-4 rounded border-border text-accent
-                             focus:ring-2 focus:ring-accent/20 disabled:opacity-disabled
-                             disabled:cursor-not-allowed"
-                  />
-                  <span className="text-sm text-card-foreground">Enable GPT-4o Mode</span>
+                <label className="block text-sm text-muted-foreground mb-2">
+                  Parsing Tier
                 </label>
+                <select
+                  value={config.llamaTier || "agentic"}
+                  onChange={handleLlamaTierChange}
+                  disabled={loading}
+                  className="w-full h-12 px-3 border border-border rounded-lg
+                           focus-ring bg-card text-card-foreground
+                           transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
+                >
+                  <option value="fast">Fast (text only)</option>
+                  <option value="cost_effective">Cost Effective</option>
+                  <option value="agentic">Agentic</option>
+                  <option value="agentic_plus">Agentic Plus</option>
+                </select>
                 <p className="text-xs text-muted-foreground mt-2">
-                  더 정확한 결과를 위해 GPT-4o를 사용합니다 (처리 시간이 길어질 수 있습니다).
+                  복잡한 표와 스캔 문서는 Agentic 이상을 권장합니다.
                 </p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm text-muted-foreground mb-2">
+                  Parser Version
+                </label>
+                <input
+                  type="text"
+                  value={config.llamaVersion || "latest"}
+                  onChange={handleLlamaVersionChange}
+                  disabled={loading}
+                  placeholder="latest or YYYY-MM-DD"
+                  className="w-full h-12 px-3 border border-border rounded-lg
+                           focus-ring bg-card text-card-foreground placeholder-light
+                           transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm text-muted-foreground mb-2">
+                  Page Range (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={config.pageRange || ""}
+                  onChange={handlePageRangeChange}
+                  disabled={loading}
+                  placeholder="1-5 or 1,3,5-10"
+                  className="w-full h-12 px-3 border border-border rounded-lg
+                           focus-ring bg-card text-card-foreground placeholder-light
+                           transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
+                />
+              </div>
+              <div className="mb-4 border-t border-border pt-4">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                  OCR Options
+                </p>
+                <label className="block text-sm text-muted-foreground mb-2">
+                  OCR Language
+                </label>
+                <input
+                  type="text"
+                  value={config.language || ""}
+                  onChange={handleLanguageChange}
+                  disabled={loading}
+                  placeholder="ko, en, ja, etc."
+                  className="w-full h-12 px-3 border border-border rounded-lg
+                           focus-ring bg-card text-card-foreground placeholder-light
+                           transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
+                />
               </div>
             </>
           )}
@@ -604,6 +723,121 @@ function ParserLeftPanel({
               </div>
             </>
           )}
+
+          {/* Docling specific settings */}
+          {config.parserType === "Docling" && (
+            <>
+              <div className="mb-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+                <p className="text-xs text-purple-700 dark:text-purple-300">
+                  Docling (IBM Research)은 PDF, DOCX, PPTX, XLSX, HTML, 이미지 등 다양한 문서 형식을 지원합니다.
+                </p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm text-muted-foreground mb-2">
+                  Output Format
+                </label>
+                <select
+                  value={config.doclingOutputFormat || 'markdown'}
+                  onChange={handleDoclingOutputFormatChange}
+                  disabled={loading}
+                  className="w-full h-12 px-3 border border-border rounded-lg
+                           focus-ring bg-card text-card-foreground
+                           transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
+                >
+                  <option value="markdown">Markdown</option>
+                  <option value="html">HTML</option>
+                  <option value="json">JSON</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  출력 형식을 선택하세요. Markdown이 권장됩니다.
+                </p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm text-muted-foreground mb-2">
+                  Parser Pipeline
+                </label>
+                <select
+                  value={config.doclingPipeline || "standard"}
+                  onChange={handleDoclingPipelineChange}
+                  disabled={loading}
+                  className="w-full h-12 px-3 border border-border rounded-lg
+                           focus-ring bg-card text-card-foreground
+                           transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
+                >
+                  <option value="standard">Standard</option>
+                  <option value="vlm">VLM</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  VLM은 복잡한 레이아웃에 유리하지만 더 많은 연산이 필요합니다.
+                </p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm text-muted-foreground mb-2">
+                  Table Structure Mode
+                </label>
+                <select
+                  value={config.doclingTableMode || "accurate"}
+                  onChange={handleDoclingTableModeChange}
+                  disabled={loading}
+                  className="w-full h-12 px-3 border border-border rounded-lg
+                           focus-ring bg-card text-card-foreground
+                           transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
+                >
+                  <option value="fast">Fast</option>
+                  <option value="accurate">Accurate</option>
+                </select>
+              </div>
+              <label className="mb-4 flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.extractImages || false}
+                  onChange={handleExtractImagesChange}
+                  disabled={loading}
+                  className="w-4 h-4 rounded border-border text-accent
+                           focus:ring-2 focus:ring-accent/20 disabled:opacity-disabled
+                           disabled:cursor-not-allowed"
+                />
+                <span className="text-sm text-card-foreground">Embed Images</span>
+              </label>
+              <div className="mb-4 border-t border-border pt-4">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                  OCR Options
+                </p>
+                <label className="block text-sm text-muted-foreground mb-2">
+                  OCR Mode
+                </label>
+                <select
+                  value={config.doclingOcrMode || "auto"}
+                  onChange={handleDoclingOcrModeChange}
+                  disabled={loading}
+                  className="w-full h-12 px-3 border border-border rounded-lg
+                           focus-ring bg-card text-card-foreground
+                           transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
+                >
+                  <option value="disabled">Disabled (native text only)</option>
+                  <option value="auto">Auto</option>
+                  <option value="force">Force OCR</option>
+                </select>
+              </div>
+              {config.doclingOcrMode !== "disabled" && (
+                <div className="mb-4">
+                  <label className="block text-sm text-muted-foreground mb-2">
+                    OCR Language
+                  </label>
+                  <input
+                    type="text"
+                    value={config.language || ""}
+                    onChange={handleLanguageChange}
+                    disabled={loading}
+                    placeholder="ko, en, ja, etc."
+                    className="w-full h-12 px-3 border border-border rounded-lg
+                             focus-ring bg-card text-card-foreground placeholder-light
+                             transition-smooth disabled:opacity-disabled disabled:cursor-not-allowed"
+                  />
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -636,8 +870,8 @@ function ParserLeftPanel({
 
           {/* Parse Button */}
           <button
-            onClick={onParse}
-            disabled={loading}
+            onClick={() => onParse(experimentEngines)}
+            disabled={loading || !selectedFile || experimentEngines.length === 0}
             className="text-white hover:text-white/90 disabled:text-muted-foreground
                      disabled:cursor-not-allowed font-medium text-sm
                      transition-smooth flex items-center gap-2"
@@ -664,11 +898,13 @@ function ParserLeftPanel({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              Processing...
+              Processing {experimentEngines.length}...
             </>
           ) : (
             <>
-              Parse Document
+              {experimentEngines.length > 1
+                ? `Run ${experimentEngines.length} Parsers`
+                : "Parse Document"}
               <svg
                 className="w-4 h-4"
                 fill="none"

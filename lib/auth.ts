@@ -2,8 +2,10 @@
  * Authentication utility functions
  */
 
+import type { Session } from "@supabase/supabase-js";
+import { getBrowserSupabase } from "@/lib/supabase-browser";
+
 export const AUTH_TOKEN_KEY = "auth_token";
-export const REFRESH_TOKEN_KEY = "refresh_token";
 
 /**
  * Get the authentication token from localStorage
@@ -11,14 +13,6 @@ export const REFRESH_TOKEN_KEY = "refresh_token";
 export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(AUTH_TOKEN_KEY);
-}
-
-/**
- * Get the refresh token from localStorage
- */
-export function getRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
 /**
@@ -30,20 +24,33 @@ export function setAuthToken(token: string): void {
 }
 
 /**
- * Set the refresh token in localStorage
- */
-export function setRefreshToken(token: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(REFRESH_TOKEN_KEY, token);
-}
-
-/**
  * Remove all authentication tokens from localStorage
  */
 export function clearAuthTokens(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem("refresh_token");
+}
+
+/**
+ * Keep legacy API helpers synchronized with the verified Supabase session.
+ * Supabase remains the source of truth for session persistence and refresh.
+ */
+export function syncAuthSession(session: Session | null): void {
+  if (!session) {
+    clearAuthTokens();
+    return;
+  }
+
+  setAuthToken(session.access_token);
+}
+
+export async function signOut(): Promise<void> {
+  try {
+    await getBrowserSupabase().auth.signOut({ scope: "local" });
+  } finally {
+    clearAuthTokens();
+  }
 }
 
 /**
@@ -73,6 +80,10 @@ export function handleUnauthorized(): void {
 
   console.log('[Auth] Unauthorized - clearing tokens and redirecting to login');
   clearAuthTokens();
+
+  void getBrowserSupabase().auth.signOut({ scope: "local" }).catch((error) => {
+    console.error('[Auth] Failed to clear Supabase session:', error);
+  });
 
   // Redirect to login page
   window.location.href = '/login';
@@ -133,4 +144,3 @@ export async function authFetch(
 
   return response;
 }
-

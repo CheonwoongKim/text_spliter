@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:supabase": "node scripts/dev-with-supabase.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -21,7 +22,6 @@
     "js-tiktoken": "^1.0.15",
     "langchain": "^0.3.36",
     "mammoth": "^1.11.0",
-    "mysql2": "^3.15.3",
     "next": "^15.1.0",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^5.4.296",

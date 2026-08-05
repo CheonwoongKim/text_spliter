@@ -1,3 +1,5 @@
+import type { NormalizedDocument } from "@/lib/document-ir";
+
 // JSON value types for better type safety
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
@@ -45,6 +47,9 @@ export interface SplitterConfig {
 export interface SourceMetadata {
   fileName?: string;
   parserType?: string;
+  parseRunId?: string;
+  documentHash?: string;
+  engineId?: string;
   pageNumber?: number;
   bBox?: {
     x: number;
@@ -116,7 +121,12 @@ export interface SplitterDescription {
 }
 
 // Parser types
-export type ParserType = "Upstage" | "LlamaIndex" | "Azure" | "Google";
+export type ParserType = "Upstage" | "LlamaIndex" | "Azure" | "Google" | "Docling";
+export type LlamaParseTier = "fast" | "cost_effective" | "agentic" | "agentic_plus";
+export type DoclingOutputFormat = "markdown" | "html" | "json";
+export type DoclingOcrMode = "disabled" | "auto" | "force";
+export type DoclingPipeline = "standard" | "vlm";
+export type DoclingTableMode = "fast" | "accurate";
 
 // Parser configuration
 export interface ParserConfig {
@@ -132,8 +142,8 @@ export interface ParserConfig {
   upstageOutputFormat?: 'text' | 'html' | 'markdown';
 
   // LlamaIndex specific settings
-  llamaResultType?: 'text' | 'markdown' | 'json';
-  llamaGpt4oMode?: boolean;
+  llamaTier?: LlamaParseTier;
+  llamaVersion?: string;
 
   // Azure specific settings
   azureModelId?: string; // e.g., 'prebuilt-layout', 'prebuilt-read', 'prebuilt-document'
@@ -142,6 +152,12 @@ export interface ParserConfig {
   // Google specific settings (JSON only - no output format option)
   googleProcessorId?: string;
   googleLocation?: string;
+
+  // Docling specific settings
+  doclingOutputFormat?: DoclingOutputFormat;
+  doclingOcrMode?: DoclingOcrMode;
+  doclingPipeline?: DoclingPipeline;
+  doclingTableMode?: DoclingTableMode;
 }
 
 // Parse request
@@ -150,23 +166,53 @@ export interface ParseRequest {
   config: ParserConfig;
 }
 
+export type ParseRunStatus = "queued" | "running" | "succeeded" | "failed";
+
+export interface ParseRunMetadata {
+  id: string;
+  engineId: string;
+  provider: string;
+  model?: string;
+  version?: string;
+  status: ParseRunStatus;
+  config: JsonObject;
+  startedAt: string;
+  completedAt?: string;
+}
+
 // Parse response
 export interface ParseResponse {
   text?: string;
   html?: string;
   markdown?: string;
   json?: JsonValue;
+  pages?: Array<{
+    pageNumber: number;
+    text?: string;
+    markdown?: string;
+    width?: number;
+    height?: number;
+    items?: JsonValue[];
+  }>;
+  /** Provider-independent, page/block-level document representation. */
+  document?: NormalizedDocument;
+  /** Immutable provider response. `json` remains for the legacy result tab. */
+  raw?: JsonValue;
+  run?: ParseRunMetadata;
   metadata?: {
     fileName: string;
     fileSize: number;
     mimeType: string;
     pageCount?: number;
     processingTime: number;
+    parserType: ParserType;
+    parserVersion?: string;
+    documentHash?: string;
   };
 }
 
 // Parser view mode - now dynamic based on available content
-export type ParserViewMode = "text" | "html" | "markdown" | "json" | "raw";
+export type ParserViewMode = "text" | "html" | "markdown" | "json" | "document" | "raw";
 
 // VectorStore types
 export interface DatabaseSchema {

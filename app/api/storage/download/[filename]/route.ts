@@ -1,64 +1,53 @@
-import { NextRequest } from 'next/server';
-import { getUserEmailFromToken, createUnauthorizedResponse } from '@/lib/auth-server';
-import { STORAGE_API_BASE, DEFAULT_BUCKET } from '@/lib/storage-config';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromToken } from '@/lib/auth-server';
+import { assertUserDocumentKey, fileNameFromDocumentKey } from '@/lib/document-storage';
+import { DOCUMENTS_BUCKET } from '@/lib/storage-config';
+import { getAppSupabase } from '@/lib/supabase-server';
+import { ValidationError } from '@/lib/validation';
+
+function contentDispositionFileName(name: string): string {
+  return name.replace(/["\r\n]/g, '_');
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
 ) {
-  const email = getUserEmailFromToken(request);
-  if (!email) {
-    return createUnauthorizedResponse();
+  const user = await getUserFromToken(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const { filename } = await params;
+    const safeKey = assertUserDocumentKey(filename, user.id);
+    const { data, error } = await getAppSupabase().storage
+      .from(DOCUMENTS_BUCKET)
+      .download(safeKey);
 
-    if (!filename) {
-      return new Response(
-        JSON.stringify({ error: 'Filename is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+    if (error || !data) {
+      return NextResponse.json(
+        { error: error?.message || 'Document not found' },
+        { status: 404 }
       );
     }
 
-    console.log('[Storage API] Downloading file:', filename, 'from bucket:', DEFAULT_BUCKET);
-
-    const authHeader = request.headers.get('authorization');
-
-    const response = await fetch(
-      `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/objects/${encodeURIComponent(filename)}`,
-      {
-        headers: {
-          'Authorization': authHeader || '',
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Failed to download file' }));
-      return new Response(
-        JSON.stringify({ error: errorData.error || 'Failed to download file' }),
-        { status: response.status, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get the file blob and content type
-    const blob = await response.blob();
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
-    const contentDisposition = response.headers.get('content-disposition') || `attachment; filename="${filename}"`;
-
-    return new Response(blob, {
+    const originalName = contentDispositionFileName(fileNameFromDocumentKey(safeKey));
+    return new Response(data, {
       status: 200,
       headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': contentDisposition,
+        'Content-Type': data.type || 'application/octet-stream',
+        'Content-Length': String(data.size),
+        'Content-Disposition': `attachment; filename="${originalName}"; filename*=UTF-8''${encodeURIComponent(originalName)}`,
+        'Cache-Control': 'private, no-store',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (error) {
-    console.error('Error downloading file from storage API:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to download file from storage' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    console.error('[Supabase Storage] Download failed:', error);
+    return NextResponse.json(
+      { error: error instanceof ValidationError ? error.message : 'Failed to download document' },
+      { status: error instanceof ValidationError ? 400 : 500 }
     );
   }
 }

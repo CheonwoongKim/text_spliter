@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { isAuthenticated } from "@/lib/auth";
+import { clearAuthTokens, syncAuthSession } from "@/lib/auth";
+import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -14,24 +15,45 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Public paths that don't require authentication
+    let active = true;
     const publicPaths = ["/login"];
     const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
+    const supabase = getBrowserSupabase();
 
-    if (!isPublicPath) {
-      // Check if user is authenticated
-      if (!isAuthenticated()) {
-        // Not authenticated, redirect to login
-        router.push("/login");
+    const applySession = (session: Parameters<typeof syncAuthSession>[0]) => {
+      if (!active) return;
+
+      syncAuthSession(session);
+
+      if (!session && !isPublicPath) {
+        router.replace("/login");
+      } else if (session && isPublicPath) {
+        router.replace("/");
+      } else {
+        setIsChecking(false);
+      }
+    };
+
+    setIsChecking(true);
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error("[AuthGuard] Failed to restore Supabase session:", error);
+        clearAuthTokens();
+        applySession(null);
         return;
       }
-    } else if (isPublicPath && isAuthenticated()) {
-      // Already logged in, redirect to home
-      router.push("/");
-      return;
-    }
 
-    setIsChecking(false);
+      applySession(data.session);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session);
+    });
+
+    return () => {
+      active = false;
+      authListener.subscription.unsubscribe();
+    };
   }, [pathname, router]);
 
   // Show loading spinner while checking auth

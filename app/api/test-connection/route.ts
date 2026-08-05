@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserEmailFromToken } from '@/lib/auth-server';
-import { query } from '@/lib/db';
-import { decrypt } from '@/lib/encryption';
-import { createClient } from '@supabase/supabase-js';
-
-interface ApiKey {
-  id: number;
-  user_email: string;
-  key_name: string;
-  encrypted_key: string;
-  created_at: string;
-  updated_at: string;
-}
+import { API_ENDPOINTS, CONNECT_KEY_NAMES } from '@/lib/constants';
+import { getGoogleServiceAccountAccessToken } from '@/lib/google-auth';
+import { getDecryptedApiKeyMap } from '@/lib/api-key-store';
 
 interface ApiKeys {
   openaiEmbedding?: string;
@@ -24,20 +15,27 @@ interface ApiKeys {
   googleParserProjectId?: string;
   googleParserLocation?: string;
   googleParserProcessorId?: string;
+  doclingEndpoint?: string;
+  doclingApiKey?: string;
   supabaseUrl?: string;
   supabaseKey?: string;
 }
 
+const connectKeyNameSet = new Set<string>(CONNECT_KEY_NAMES);
+
 // POST - Test API connection
 export async function POST(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { service } = body as { service: string };
+    const { service, credentials } = body as {
+      service: string;
+      credentials?: Record<string, unknown>;
+    };
 
     if (!service) {
       return NextResponse.json(
@@ -46,29 +44,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get API keys from database
-    const dbKeys = await query<ApiKey[]>(
-      'SELECT * FROM user_api_keys WHERE user_email = ?',
-      [userEmail]
-    );
+    const providedCredentials = credentials || {};
+    const invalidCredentialNames = Object.entries(providedCredentials)
+      .filter(([keyName, value]) => !connectKeyNameSet.has(keyName) || typeof value !== 'string')
+      .map(([keyName]) => keyName);
 
-    if (dbKeys.length === 0) {
+    if (invalidCredentialNames.length > 0) {
+      return NextResponse.json(
+        { error: `Unsupported credential fields: ${invalidCredentialNames.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    const decryptedKeys = await getDecryptedApiKeyMap(userEmail);
+    const resolvedKeys = {
+      ...decryptedKeys,
+      ...(providedCredentials as Record<string, string>),
+    };
+
+    if (!Object.values(resolvedKeys).some((value) => value.trim().length > 0)) {
       return NextResponse.json(
         { error: 'No API keys found. Please configure your API keys first.' },
         { status: 404 }
       );
     }
 
-    // Decrypt and map keys
-    const keys: ApiKeys = {};
-    dbKeys.forEach(key => {
-      try {
-        const decryptedValue = decrypt(key.encrypted_key);
-        keys[key.key_name as keyof ApiKeys] = decryptedValue;
-      } catch (error) {
-        console.error(`Failed to decrypt key: ${key.key_name}`, error);
-      }
-    });
+    const keys = resolvedKeys as ApiKeys;
 
     // Test the specific service
     switch (service) {
@@ -92,6 +93,9 @@ export async function POST(request: NextRequest) {
           keys.googleParserLocation,
           keys.googleParserProcessorId
         );
+
+      case 'docling':
+        return await testDocling(keys.doclingEndpoint, keys.doclingApiKey);
 
       case 'supabase':
         return await testSupabase(keys.supabaseUrl, keys.supabaseKey);
@@ -123,16 +127,11 @@ async function testOpenAI(apiKey?: string): Promise<NextResponse> {
   }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
+    const response = await fetch('https://api.openai.com/v1/models', {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        input: 'test',
-        model: 'text-embedding-ada-002',
-      }),
     });
 
     if (!response.ok) {
@@ -198,7 +197,7 @@ async function testLlama(apiKey?: string): Promise<NextResponse> {
 
   try {
     // LlamaParse API check - we'll verify the key with a minimal request
-    const response = await fetch('https://api.cloud.llamaindex.ai/api/parsing/upload', {
+    const response = await fetch(API_ENDPOINTS.LLAMA_PARSE_UPLOAD, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -213,7 +212,15 @@ async function testLlama(apiKey?: string): Promise<NextResponse> {
       );
     }
 
-    return NextResponse.json({ success: true, message: 'LlamaIndex API key is valid' });
+    // Missing multipart fields should produce 400/422 with a valid key.
+    if (!response.ok && response.status !== 400 && response.status !== 422) {
+      return NextResponse.json(
+        { success: false, error: `LlamaParse connection failed (HTTP ${response.status})` },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json({ success: true, message: 'LlamaParse v2 API key is valid' });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Connection failed' },
@@ -308,9 +315,87 @@ async function testGoogle(serviceAccountEmail?: string, privateKey?: string, pro
       );
     }
 
+    const accessToken = await getGoogleServiceAccountAccessToken(
+      serviceAccountEmail,
+      privateKey
+    );
+    const processorUrl = `https://${location}-documentai.googleapis.com/v1/projects/${projectId}/locations/${location}/processors/${processorId}`;
+    const processorResponse = await fetch(processorUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!processorResponse.ok) {
+      const details = await processorResponse.text();
+      return NextResponse.json(
+        { success: false, error: `Google Document AI processor validation failed: ${details}` },
+        { status: 200 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Google API credentials format is valid. Full validation requires document processing.'
+      message: 'Google Document AI credentials and processor are valid.'
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : 'Connection failed' },
+      { status: 200 }
+    );
+  }
+}
+
+async function testDocling(endpoint?: string, apiKey?: string): Promise<NextResponse> {
+  if (!endpoint) {
+    return NextResponse.json(
+      { success: false, error: 'Docling server endpoint not configured' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (apiKey) {
+      headers['X-Api-Key'] = apiKey;
+    }
+
+    const response = await fetch(
+      `${endpoint.replace(/\/+$/, '')}/v1/convert/source`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({}),
+      }
+    );
+
+    if (response.status === 401 || response.status === 403) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Docling API key' },
+        { status: 200 }
+      );
+    }
+
+    if (response.status === 404) {
+      return NextResponse.json(
+        { success: false, error: 'Docling conversion endpoint not found' },
+        { status: 200 }
+      );
+    }
+
+    // An empty conversion request normally returns 400/422. That still proves
+    // that the server and optional API-key boundary are reachable.
+    if (!response.ok && response.status !== 400 && response.status !== 422) {
+      return NextResponse.json(
+        { success: false, error: `Docling connection failed (HTTP ${response.status})` },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Docling server connection successful'
     });
   } catch (error) {
     return NextResponse.json(
@@ -329,29 +414,32 @@ async function testSupabase(url?: string, apiKey?: string): Promise<NextResponse
   }
 
   try {
-    const supabase = createClient(url, apiKey);
+    const normalizedUrl = new URL(url);
+    if (!['http:', 'https:'].includes(normalizedUrl.protocol)) {
+      throw new Error('Supabase URL must use http or https');
+    }
+    // Auth settings is intentionally available to publishable/anon keys and
+    // validates the URL/key pair without requiring a particular public table.
+    const settingsUrl = new URL('/auth/v1/settings', normalizedUrl);
+    const response = await fetch(settingsUrl, {
+      headers: {
+        apikey: apiKey,
+        Accept: 'application/json',
+      },
+    });
 
-    // Test connection by querying pg_catalog
-    const { data, error } = await supabase
-      .from('pg_catalog.pg_tables')
-      .select('tablename')
-      .limit(1);
+    if (response.status === 401 || response.status === 403) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Supabase API key' },
+        { status: 200 }
+      );
+    }
 
-    if (error) {
-      // Try a simpler test - just check if we can initialize the client
-      const { error: authError } = await supabase.auth.getSession();
-
-      if (authError && authError.message.includes('Invalid API key')) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid Supabase API key' },
-          { status: 200 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'Supabase connection successful (limited access)'
-      });
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: `Supabase connection failed (HTTP ${response.status})` },
+        { status: 200 }
+      );
     }
 
     return NextResponse.json({ success: true, message: 'Supabase connection successful' });

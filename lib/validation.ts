@@ -48,7 +48,7 @@ export function validateFile(file: unknown): File {
     throw new ValidationError(`File size must not exceed ${FILE_UPLOAD_CONFIG.MAX_SIZE_BYTES / 1024 / 1024}MB`);
   }
 
-  if (!FILE_UPLOAD_CONFIG.ALLOWED_MIME_TYPES.includes(file.type)) {
+  if (!(FILE_UPLOAD_CONFIG.ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
     throw new ValidationError(`File type ${file.type} is not supported. Allowed types: ${FILE_UPLOAD_CONFIG.ALLOWED_MIME_TYPES.join(', ')}`);
   }
 
@@ -58,12 +58,12 @@ export function validateFile(file: unknown): File {
 /**
  * Validate parser type
  */
-export function validateParserType(parserType: unknown): 'Upstage' | 'LlamaIndex' | 'Azure' | 'Google' {
-  if (!parserType || typeof parserType !== 'string' || !PARSER_TYPES.includes(parserType as any)) {
+export function validateParserType(parserType: unknown): (typeof PARSER_TYPES)[number] {
+  if (!parserType || typeof parserType !== 'string' || !(PARSER_TYPES as readonly string[]).includes(parserType)) {
     throw new ValidationError(`Invalid parser type. Must be one of: ${PARSER_TYPES.join(', ')}`);
   }
 
-  return parserType as 'Upstage' | 'LlamaIndex' | 'Azure' | 'Google';
+  return parserType as (typeof PARSER_TYPES)[number];
 }
 
 /**
@@ -126,7 +126,7 @@ export function sanitizeString(input: unknown, maxLength: number = 1000): string
 export function validateApiKeyName(keyName: unknown): string {
   const validKeyNames = Object.values(API_KEY_NAMES);
 
-  if (!keyName || typeof keyName !== 'string' || !validKeyNames.includes(keyName)) {
+  if (!keyName || typeof keyName !== 'string' || !(validKeyNames as readonly string[]).includes(keyName)) {
     throw new ValidationError(`Invalid API key name. Must be one of: ${validKeyNames.join(', ')}`);
   }
 

@@ -37,9 +37,8 @@ export default function ParseResultDetailPanel({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
-  // For JSON with pages (LlamaParse)
-  const [selectedPageIndex, setSelectedPageIndex] = useState(0);
-  const [pageEditMode, setPageEditMode] = useState<"text" | "markdown">("text");
+  // View mode for switching between different output formats
+  const [viewMode, setViewMode] = useState<"text" | "html" | "markdown" | "json">("text");
 
   useEffect(() => {
     fetchParseResult();
@@ -96,18 +95,22 @@ export default function ParseResultDetailPanel({
       const data: ParseResultDetail = await response.json();
       setResult(data);
 
-      // Initialize edited content - prioritize JSON with pages for LlamaParse
+      // Determine the default view mode based on available content
       if (data.json_content) {
         const jsonData = typeof data.json_content === "string"
           ? JSON.parse(data.json_content)
           : data.json_content;
         setEditedContent(jsonData);
+        setViewMode("json");
       } else if (data.markdown_content) {
         setEditedContent(data.markdown_content);
-      } else if (data.text_content) {
-        setEditedContent(data.text_content);
+        setViewMode("markdown");
       } else if (data.html_content) {
         setEditedContent(data.html_content);
+        setViewMode("html");
+      } else if (data.text_content) {
+        setEditedContent(data.text_content);
+        setViewMode("text");
       }
     } catch (error) {
       console.error("Error fetching parse result:", error);
@@ -117,13 +120,28 @@ export default function ParseResultDetailPanel({
     }
   };
 
-  const handlePageTextChange = (pageIndex: number, field: "text" | "md", value: string) => {
-    if (!editedContent?.pages) return;
+  const handleViewModeChange = useCallback((newMode: "text" | "html" | "markdown" | "json") => {
+    if (!result) return;
 
-    const updatedContent = { ...editedContent };
-    updatedContent.pages[pageIndex][field] = value;
-    setEditedContent(updatedContent);
-  };
+    setViewMode(newMode);
+
+    // Load the content for the selected view mode
+    if (newMode === "json" && result.json_content) {
+      const jsonData = typeof result.json_content === "string"
+        ? JSON.parse(result.json_content)
+        : result.json_content;
+      setEditedContent(jsonData);
+    } else if (newMode === "markdown" && result.markdown_content) {
+      setEditedContent(result.markdown_content);
+    } else if (newMode === "html" && result.html_content) {
+      setEditedContent(result.html_content);
+    } else if (newMode === "text" && result.text_content) {
+      setEditedContent(result.text_content);
+    } else {
+      // No content available for this mode
+      setEditedContent("");
+    }
+  }, [result]);
 
   const handleSave = async () => {
     if (!result) return;
@@ -134,16 +152,15 @@ export default function ParseResultDetailPanel({
         id: result.id,
       };
 
-      // Determine content type and update appropriate field
-      if (result.json_content) {
-        // If original was JSON, save as JSON
+      // Update the specific field based on current view mode
+      if (viewMode === "json") {
         updateData.json_content = JSON.stringify(editedContent);
-      } else if (result.markdown_content) {
+      } else if (viewMode === "markdown") {
         updateData.markdown_content = editedContent;
-      } else if (result.text_content) {
-        updateData.text_content = editedContent;
-      } else if (result.html_content) {
+      } else if (viewMode === "html") {
         updateData.html_content = editedContent;
+      } else if (viewMode === "text") {
+        updateData.text_content = editedContent;
       }
 
       const response = await authFetch("/api/parse-results", {
@@ -350,101 +367,85 @@ export default function ParseResultDetailPanel({
 
         {/* Right Panel - Editable Parse Results */}
         <div className="flex flex-col border border-border rounded-lg overflow-hidden bg-card">
+          {/* Format Selector Tabs */}
+          <div className="flex items-center gap-1 bg-muted border-b border-border p-2">
+            {result.text_content && (
+              <button
+                onClick={() => handleViewModeChange("text")}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-smooth ${
+                  viewMode === "text"
+                    ? "bg-card text-card-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-card-foreground"
+                }`}
+              >
+                Text
+              </button>
+            )}
+            {result.html_content && (
+              <button
+                onClick={() => handleViewModeChange("html")}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-smooth ${
+                  viewMode === "html"
+                    ? "bg-card text-card-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-card-foreground"
+                }`}
+              >
+                HTML
+              </button>
+            )}
+            {result.markdown_content && (
+              <button
+                onClick={() => handleViewModeChange("markdown")}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-smooth ${
+                  viewMode === "markdown"
+                    ? "bg-card text-card-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-card-foreground"
+                }`}
+              >
+                Markdown
+              </button>
+            )}
+            {result.json_content && (
+              <button
+                onClick={() => handleViewModeChange("json")}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-smooth ${
+                  viewMode === "json"
+                    ? "bg-card text-card-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-card-foreground"
+                }`}
+              >
+                JSON
+              </button>
+            )}
+          </div>
           <div className="flex-1 overflow-auto p-4">
-            {editedContent?.pages && Array.isArray(editedContent.pages) ? (
-                // Page-by-page editor for LlamaParse results
-                <div className="h-full flex flex-col gap-4">
-                  {/* Page selector */}
-                  <div className="flex items-center gap-4 pb-4 border-b border-border">
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm font-medium text-surface-foreground">Page:</label>
-                      <select
-                        value={selectedPageIndex}
-                        onChange={(e) => setSelectedPageIndex(Number(e.target.value))}
-                        className="px-3 py-1.5 bg-surface border border-border rounded-md text-sm text-surface-foreground focus-ring"
-                      >
-                        {editedContent.pages.map((page: any, index: number) => (
-                          <option key={index} value={index}>
-                            Page {page.page || index + 1}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="text-xs text-muted-foreground">
-                        of {editedContent.pages.length}
-                      </span>
-                    </div>
-                    <div className="flex gap-1 bg-muted rounded-lg p-1 ml-auto">
-                      <button
-                        onClick={() => setPageEditMode("text")}
-                        className={`px-3 py-1 text-xs font-medium rounded transition-smooth ${
-                          pageEditMode === "text"
-                            ? "bg-card text-card-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-card-foreground"
-                        }`}
-                      >
-                        Text
-                      </button>
-                      <button
-                        onClick={() => setPageEditMode("markdown")}
-                        className={`px-3 py-1 text-xs font-medium rounded transition-smooth ${
-                          pageEditMode === "markdown"
-                            ? "bg-card text-card-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-card-foreground"
-                        }`}
-                      >
-                        Markdown
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Page content editor */}
-                  <div className="flex-1 overflow-hidden flex flex-col">
-                    <div className="mb-2">
-                      <p className="text-xs text-muted-foreground">
-                        Editing {pageEditMode === "text" ? "text" : "markdown"} content for page {editedContent.pages[selectedPageIndex]?.page || selectedPageIndex + 1}
-                      </p>
-                    </div>
-                    <textarea
-                      value={
-                        pageEditMode === "text"
-                          ? editedContent.pages[selectedPageIndex]?.text || ""
-                          : editedContent.pages[selectedPageIndex]?.md || ""
-                      }
-                      onChange={(e) =>
-                        handlePageTextChange(
-                          selectedPageIndex,
-                          pageEditMode === "text" ? "text" : "md",
-                          e.target.value
-                        )
-                      }
-                      className="flex-1 w-full p-4 bg-muted border border-border rounded-lg resize-none font-mono text-sm text-surface-foreground focus-ring"
-                      placeholder="Edit page content here..."
-                    />
-                  </div>
-                </div>
-              ) : (
-                // Simple text editor for non-LlamaParse results (text, markdown, html, or JSON without pages)
-                <textarea
-                  value={typeof editedContent === 'string' ? editedContent : JSON.stringify(editedContent, null, 2)}
-                  onChange={(e) => {
-                    // Try to parse as JSON if original was JSON, otherwise keep as string
-                    if (result.json_content) {
-                      try {
-                        const parsed = JSON.parse(e.target.value);
-                        setEditedContent(parsed);
-                      } catch {
-                        // Keep as string if invalid JSON
-                        setEditedContent(e.target.value);
-                      }
-                    } else {
+            {viewMode === "json" && typeof editedContent === 'object' ? (
+              // JSON viewer with syntax highlighting
+              <div className="h-full overflow-auto">
+                <JsonView value={editedContent} style={darkTheme} />
+              </div>
+            ) : (
+              // Simple text editor for text, markdown, html formats
+              <textarea
+                value={typeof editedContent === 'string' ? editedContent : JSON.stringify(editedContent, null, 2)}
+                onChange={(e) => {
+                  // Try to parse as JSON if viewing JSON mode, otherwise keep as string
+                  if (viewMode === "json") {
+                    try {
+                      const parsed = JSON.parse(e.target.value);
+                      setEditedContent(parsed);
+                    } catch {
+                      // Keep as string if invalid JSON
                       setEditedContent(e.target.value);
                     }
-                  }}
-                  className="w-full h-full p-4 bg-muted border border-border rounded-lg resize-none font-mono text-sm text-surface-foreground focus-ring"
-                  placeholder="Edit content here..."
-                />
-              )
-            }
+                  } else {
+                    setEditedContent(e.target.value);
+                  }
+                }}
+                className="w-full h-full p-4 bg-muted border border-border rounded-lg resize-none font-mono text-sm text-surface-foreground focus-ring"
+                placeholder="Edit content here..."
+              />
+            )}
           </div>
         </div>
       </div>

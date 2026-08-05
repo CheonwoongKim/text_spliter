@@ -1,119 +1,78 @@
-import { NextRequest } from 'next/server';
-import { getUserEmailFromToken, createUnauthorizedResponse } from '@/lib/auth-server';
-import { STORAGE_API_BASE, DEFAULT_BUCKET } from '@/lib/storage-config';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromToken } from '@/lib/auth-server';
+import { assertUserDocumentKey, listUserDocuments } from '@/lib/document-storage';
+import { DOCUMENTS_BUCKET } from '@/lib/storage-config';
+import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
+import { ValidationError } from '@/lib/validation';
 
 export async function GET(request: NextRequest) {
-  const email = getUserEmailFromToken(request);
-
-  if (!email) {
-    return createUnauthorizedResponse();
+  const user = await getUserFromToken(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const authHeader = request.headers.get('authorization');
-    const url = `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/objects`;
+    const documents = await listUserDocuments(getAppSupabase(), user.id);
 
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': authHeader || '',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-
-      let errorData;
-      let errorMessage = 'Failed to fetch files';
-
-      try {
-        errorData = JSON.parse(errorText);
-        // S3 credential 에러를 사용자 친화적인 메시지로 변환
-        if (errorData.error === 's3_error') {
-          errorMessage = 'Storage service error. Please try again later.';
-        } else {
-          errorMessage = errorData.error || errorData.detail || errorData.message || 'Failed to fetch files';
-        }
-      } catch {
-        errorMessage = errorText || 'Failed to fetch files';
-      }
-
-      return new Response(
-        JSON.stringify({ error: errorMessage }),
-        { status: response.status, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const data = await response.json();
-
-    // Transform Storage API response to match frontend expectations
-    const transformedData = {
-      files: (data.objects || []).map((obj: any, index: number) => ({
-        id: index + 1,
-        filename: obj.key,
-        file_size: obj.size,
-        uploaded_at: obj.lastModified,
+    return NextResponse.json({
+      files: documents.map((document) => ({
+        id: document.id,
+        filename: document.name,
+        storage_key: document.key,
+        file_size: document.size,
+        content_type: document.contentType,
+        uploaded_at: document.createdAt,
       })),
-      total: data.count || 0,
-      bucket: data.bucket,
-    };
-
-    return new Response(JSON.stringify(transformedData), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      total: documents.length,
+      bucket: DOCUMENTS_BUCKET,
     });
   } catch (error) {
-    console.error('[Storage API] Error fetching files from storage API:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch files from storage' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    console.error('[Supabase Storage] List failed:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch documents',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
     );
   }
 }
 
 export async function DELETE(request: NextRequest) {
-  const email = getUserEmailFromToken(request);
-  if (!email) {
-    return createUnauthorizedResponse();
+  const user = await getUserFromToken(request);
+  if (!user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const { searchParams } = new URL(request.url);
-    const filename = searchParams.get('filename');
-
-    if (!filename) {
-      return new Response(
-        JSON.stringify({ error: 'Filename is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    const key = new URL(request.url).searchParams.get('filename');
+    if (!key) {
+      return NextResponse.json({ error: 'Document key is required' }, { status: 400 });
     }
 
-    const authHeader = request.headers.get('authorization');
-
-    const response = await fetch(`${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/objects/${encodeURIComponent(filename)}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': authHeader || '',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Failed to delete file' }));
-      return new Response(
-        JSON.stringify({ error: errorData.error || 'Failed to delete file' }),
-        { status: response.status, headers: { 'Content-Type': 'application/json' } }
-      );
+    const safeKey = assertUserDocumentKey(key, user.id);
+    const supabase = getAppSupabase();
+    const { error } = await supabase.storage.from(DOCUMENTS_BUCKET).remove([safeKey]);
+    if (error) {
+      throw new Error(`Failed to delete Supabase Storage document: ${error.message}`);
     }
 
-    const data = await response.json().catch(() => ({ success: true }));
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const { error: referenceError } = await supabase
+      .from('parse_results')
+      .update({ file_storage_key: null })
+      .eq('user_email', user.email)
+      .eq('file_storage_key', safeKey);
+    assertSupabaseResult(referenceError, 'Failed to clear deleted document references');
+
+    return NextResponse.json({ success: true, key: safeKey });
   } catch (error) {
-    console.error('Error deleting file from storage API:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to delete file from storage' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    console.error('[Supabase Storage] Delete failed:', error);
+    return NextResponse.json(
+      {
+        error: error instanceof ValidationError ? error.message : 'Failed to delete document',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: error instanceof ValidationError ? 400 : 500 }
     );
   }
 }

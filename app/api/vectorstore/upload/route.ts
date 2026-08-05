@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserEmailFromToken } from '@/lib/auth-server';
-import { query } from '@/lib/db';
 import { createClient } from '@supabase/supabase-js';
-
-interface ApiKey {
-  key_name: string;
-  encrypted_key: string;
-}
+import { getDecryptedApiKeyMap } from '@/lib/api-key-store';
+import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
 
 interface SplitResult {
   id: number;
@@ -23,7 +19,7 @@ interface SplitResult {
 // POST - Upload split results to Supabase vector database
 export async function POST(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -43,20 +39,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Get split result from database
-    const splitResults = await query<SplitResult[]>(
-      'SELECT * FROM split_results WHERE id = ? AND user_email = ?',
-      [splitResultId, userEmail]
-    );
+    const { data: splitResultData, error: splitResultError } = await getAppSupabase()
+      .from('split_results')
+      .select('*')
+      .eq('id', splitResultId)
+      .eq('user_email', userEmail)
+      .maybeSingle();
+    assertSupabaseResult(splitResultError, 'Failed to load split result');
 
-    if (splitResults.length === 0) {
+    if (!splitResultData) {
       return NextResponse.json(
         { error: 'Split result not found' },
         { status: 404 }
       );
     }
 
-    const splitResult = splitResults[0];
-    const chunks = JSON.parse(splitResult.chunks as any);
+    const splitResult = splitResultData as SplitResult;
+    const chunks = typeof splitResult.chunks === 'string'
+      ? JSON.parse(splitResult.chunks)
+      : splitResult.chunks;
 
     if (!Array.isArray(chunks) || chunks.length === 0) {
       return NextResponse.json(
@@ -66,22 +67,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Get API keys from database
-    const dbKeys = await query<ApiKey[]>(
-      'SELECT key_name, encrypted_key FROM user_api_keys WHERE user_email = ? AND (key_name IN (?, ?, ?))',
-      [userEmail, 'supabaseUrl', 'supabaseKey', 'openaiEmbedding']
+    const keys = await getDecryptedApiKeyMap(
+      userEmail,
+      ['supabaseUrl', 'supabaseKey', 'openaiEmbedding']
     );
 
-    if (dbKeys.length < 3) {
+    if (!keys.supabaseUrl || !keys.supabaseKey || !keys.openaiEmbedding) {
       return NextResponse.json(
         { error: 'Supabase and OpenAI credentials not configured. Please set up in Connect page.' },
         { status: 400 }
       );
     }
 
-    const { decrypt } = await import('@/lib/encryption');
-    const supabaseUrl = decrypt(dbKeys.find(k => k.key_name === 'supabaseUrl')!.encrypted_key);
-    const supabaseKey = decrypt(dbKeys.find(k => k.key_name === 'supabaseKey')!.encrypted_key);
-    const openaiKey = decrypt(dbKeys.find(k => k.key_name === 'openaiEmbedding')!.encrypted_key);
+    const supabaseUrl = keys.supabaseUrl;
+    const supabaseKey = keys.supabaseKey;
+    const openaiKey = keys.openaiEmbedding;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 

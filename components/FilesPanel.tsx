@@ -4,8 +4,9 @@ import { memo, useState, useCallback, useEffect, useRef } from "react";
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 
 interface FileItem {
-  id: number;
+  id: string;
   filename: string;
+  storage_key: string;
   file_size: number;
   uploaded_at: string;
 }
@@ -15,7 +16,7 @@ const FilesPanel = memo(function FilesPanel() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -170,11 +171,11 @@ const FilesPanel = memo(function FilesPanel() {
     [fetchFiles]
   );
 
-  const toggleMenu = useCallback((fileId: number) => {
+  const toggleMenu = useCallback((fileId: string) => {
     setOpenMenuId(prev => prev === fileId ? null : fileId);
   }, []);
 
-  const handleDownload = useCallback(async (filename: string) => {
+  const handleDownload = useCallback(async (storageKey: string, filename: string) => {
     setOpenMenuId(null);
     try {
       const token = getAuthToken();
@@ -183,7 +184,7 @@ const FilesPanel = memo(function FilesPanel() {
       }
 
       const response = await fetch(
-        `/api/storage/download/${encodeURIComponent(filename)}`,
+        `/api/storage/download/${encodeURIComponent(storageKey)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -221,7 +222,7 @@ const FilesPanel = memo(function FilesPanel() {
       }
 
       const response = await fetch(
-        `/api/storage/preview?key=${encodeURIComponent(file.filename)}`,
+        `/api/storage/preview?key=${encodeURIComponent(file.storage_key)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -677,7 +678,10 @@ const FilesPanel = memo(function FilesPanel() {
                     {openMenuId === file.id && (
                       <div className="absolute right-0 top-full mt-1 w-40 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-10">
                         <button
-                          onClick={() => handleDownload(file.filename)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleDownload(file.storage_key, file.filename);
+                          }}
                           className="w-full px-4 py-2.5 text-left text-sm text-card-foreground hover:bg-muted transition-smooth flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -686,7 +690,10 @@ const FilesPanel = memo(function FilesPanel() {
                           Download
                         </button>
                         <button
-                          onClick={() => handleDelete(file.filename)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleDelete(file.storage_key);
+                          }}
                           className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-smooth flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

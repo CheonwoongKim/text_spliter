@@ -34,6 +34,7 @@ export const MODAL_PREVIEW_LENGTH = 200;
  * API Key Names for database storage
  */
 export const API_KEY_NAMES = {
+  OPENAI_EMBEDDING: 'openaiEmbedding',
   UPSTAGE_PARSER: 'upstageParser',
   LLAMA_PARSER: 'llamaParser',
   AZURE_PARSER_KEY: 'azureParserKey',
@@ -43,6 +44,10 @@ export const API_KEY_NAMES = {
   GOOGLE_PARSER_PROJECT_ID: 'googleParserProjectId',
   GOOGLE_PARSER_LOCATION: 'googleParserLocation',
   GOOGLE_PARSER_PROCESSOR_ID: 'googleParserProcessorId',
+  DOCLING_ENDPOINT: 'doclingEndpoint',
+  DOCLING_API_KEY: 'doclingApiKey',
+  SUPABASE_URL: 'supabaseUrl',
+  SUPABASE_KEY: 'supabaseKey',
   CHROMA_URL: 'chroamaUrl',
   CHROMA_API_KEY: 'chroamaApiKey',
   PINECONE_URL: 'pineconeUrl',
@@ -51,14 +56,31 @@ export const API_KEY_NAMES = {
   WEAVIATE_API_KEY: 'weaviateApiKey',
 } as const;
 
+export const CONNECT_KEY_NAMES = [
+  API_KEY_NAMES.OPENAI_EMBEDDING,
+  API_KEY_NAMES.UPSTAGE_PARSER,
+  API_KEY_NAMES.LLAMA_PARSER,
+  API_KEY_NAMES.AZURE_PARSER_KEY,
+  API_KEY_NAMES.AZURE_PARSER_ENDPOINT,
+  API_KEY_NAMES.GOOGLE_PARSER_SERVICE_ACCOUNT_EMAIL,
+  API_KEY_NAMES.GOOGLE_PARSER_PRIVATE_KEY,
+  API_KEY_NAMES.GOOGLE_PARSER_PROJECT_ID,
+  API_KEY_NAMES.GOOGLE_PARSER_LOCATION,
+  API_KEY_NAMES.GOOGLE_PARSER_PROCESSOR_ID,
+  API_KEY_NAMES.DOCLING_ENDPOINT,
+  API_KEY_NAMES.DOCLING_API_KEY,
+  API_KEY_NAMES.SUPABASE_URL,
+  API_KEY_NAMES.SUPABASE_KEY,
+] as const;
+
 /**
  * External API Endpoints
  */
 export const API_ENDPOINTS = {
   UPSTAGE_PARSE: 'https://api.upstage.ai/v1/document-ai/document-parse',
-  LLAMA_UPLOAD: 'https://api.cloud.llamaindex.ai/api/parsing/upload',
-  LLAMA_JOB_RESULT: (jobId: string, resultType: string) =>
-    `https://api.cloud.llamaindex.ai/api/parsing/job/${jobId}/result/${resultType}`,
+  LLAMA_PARSE_UPLOAD: 'https://api.cloud.llamaindex.ai/api/v2/parse/upload',
+  LLAMA_PARSE_JOB: (jobId: string) =>
+    `https://api.cloud.llamaindex.ai/api/v2/parse/${jobId}`,
 } as const;
 
 /**
@@ -109,7 +131,7 @@ export const CHUNK_CONFIG_LIMITS = {
 /**
  * Parser Types
  */
-export const PARSER_TYPES = ['Upstage', 'LlamaIndex', 'Azure', 'Google'] as const;
+export const PARSER_TYPES = ['Upstage', 'LlamaIndex', 'Azure', 'Google', 'Docling'] as const;
 export type ParserType = typeof PARSER_TYPES[number];
 
 /**

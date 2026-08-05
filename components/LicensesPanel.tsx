@@ -18,6 +18,8 @@ interface LicenseKeys {
   googleParserProjectId: string;
   googleParserLocation: string;
   googleParserProcessorId: string;
+  doclingEndpoint: string;
+  doclingApiKey: string;
 
   // Vector Database
   supabaseUrl: string;
@@ -32,7 +34,45 @@ interface TestResults {
   llama: { status: TestStatus; message?: string };
   azure: { status: TestStatus; message?: string };
   google: { status: TestStatus; message?: string };
+  docling: { status: TestStatus; message?: string };
   supabase: { status: TestStatus; message?: string };
+}
+
+function credentialsForService(
+  service: keyof TestResults,
+  keys: LicenseKeys
+): Partial<LicenseKeys> {
+  switch (service) {
+    case 'openai':
+      return { openaiEmbedding: keys.openaiEmbedding };
+    case 'upstage':
+      return { upstageParser: keys.upstageParser };
+    case 'llama':
+      return { llamaParser: keys.llamaParser };
+    case 'azure':
+      return {
+        azureParserKey: keys.azureParserKey,
+        azureParserEndpoint: keys.azureParserEndpoint,
+      };
+    case 'google':
+      return {
+        googleParserServiceAccountEmail: keys.googleParserServiceAccountEmail,
+        googleParserPrivateKey: keys.googleParserPrivateKey,
+        googleParserProjectId: keys.googleParserProjectId,
+        googleParserLocation: keys.googleParserLocation,
+        googleParserProcessorId: keys.googleParserProcessorId,
+      };
+    case 'docling':
+      return {
+        doclingEndpoint: keys.doclingEndpoint,
+        doclingApiKey: keys.doclingApiKey,
+      };
+    case 'supabase':
+      return {
+        supabaseUrl: keys.supabaseUrl,
+        supabaseKey: keys.supabaseKey,
+      };
+  }
 }
 
 export default function LicensesPanel() {
@@ -47,12 +87,15 @@ export default function LicensesPanel() {
     googleParserProjectId: "",
     googleParserLocation: "",
     googleParserProcessorId: "",
+    doclingEndpoint: "",
+    doclingApiKey: "",
     supabaseUrl: "",
     supabaseKey: "",
   });
 
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dirtyKeys, setDirtyKeys] = useState<Set<keyof LicenseKeys>>(new Set());
   const [activeTab, setActiveTab] = useState<"embedding" | "parser" | "database">("embedding");
   const [testResults, setTestResults] = useState<TestResults>({
     openai: { status: 'idle' },
@@ -60,6 +103,7 @@ export default function LicensesPanel() {
     llama: { status: 'idle' },
     azure: { status: 'idle' },
     google: { status: 'idle' },
+    docling: { status: 'idle' },
     supabase: { status: 'idle' },
   });
 
@@ -81,6 +125,7 @@ export default function LicensesPanel() {
         if (response.ok) {
           const data = await response.json();
           setKeys(prev => ({ ...prev, ...data }));
+          setDirtyKeys(new Set());
         } else if (response.status === 401) {
           console.log('User not authenticated');
         }
@@ -96,6 +141,7 @@ export default function LicensesPanel() {
       ...prev,
       [key]: value,
     }));
+    setDirtyKeys((current) => new Set(current).add(key));
     setSaved(false);
   };
 
@@ -109,20 +155,32 @@ export default function LicensesPanel() {
         return;
       }
 
+      if (dirtyKeys.size === 0) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+        return;
+      }
+
+      const payload = Object.fromEntries(
+        Array.from(dirtyKeys).map((keyName) => [keyName, keys[keyName]])
+      );
+
       const response = await fetch('/api/keys', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(keys),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
+        setDirtyKeys(new Set());
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       } else {
-        alert('Failed to save API keys');
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.details || errorData.error || 'Failed to save API keys');
       }
     } catch (error) {
       console.error('Failed to save API keys:', error);
@@ -146,8 +204,7 @@ export default function LicensesPanel() {
         return;
       }
 
-      // Delete all keys by setting them to empty strings
-      const emptyKeys = {
+      const emptyKeys: LicenseKeys = {
         openaiEmbedding: "",
         upstageParser: "",
         llamaParser: "",
@@ -158,23 +215,34 @@ export default function LicensesPanel() {
         googleParserProjectId: "",
         googleParserLocation: "",
         googleParserProcessorId: "",
+        doclingEndpoint: "",
+        doclingApiKey: "",
         supabaseUrl: "",
         supabaseKey: "",
       };
 
-      const response = await fetch('/api/keys', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(emptyKeys),
+      const response = await fetch('/api/keys?all=true', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
         setKeys(emptyKeys);
+        setDirtyKeys(new Set());
+        setTestResults({
+          openai: { status: 'idle' },
+          upstage: { status: 'idle' },
+          llama: { status: 'idle' },
+          azure: { status: 'idle' },
+          google: { status: 'idle' },
+          docling: { status: 'idle' },
+          supabase: { status: 'idle' },
+        });
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
       } else {
-        alert('Failed to reset API keys');
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.details || errorData.error || 'Failed to reset API keys');
       }
     } catch (error) {
       console.error('Failed to reset API keys:', error);
@@ -206,7 +274,10 @@ export default function LicensesPanel() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ service }),
+        body: JSON.stringify({
+          service,
+          credentials: credentialsForService(service, keys),
+        }),
       });
 
       const data = await response.json();
@@ -819,6 +890,76 @@ export default function LicensesPanel() {
                             </svg>
                           )}
                           {testResults.google.message}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Docling Parser Card */}
+                <div className="py-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="text-base font-medium text-card-foreground">Docling (IBM Research)</h4>
+                        <button
+                          onClick={() => handleTestConnection('docling')}
+                          disabled={testResults.docling.status === 'testing' || !keys.doclingEndpoint}
+                          className="text-xs text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {testResults.docling.status === 'testing' ? 'Testing...' : 'Test'}
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Parse documents using Docling server endpoint
+                      </p>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-2">
+                            Docling Server Endpoint
+                          </label>
+                          <input
+                            type="text"
+                            value={keys.doclingEndpoint}
+                            onChange={(e) => handleChange("doclingEndpoint", e.target.value)}
+                            placeholder="http://localhost:5001"
+                            className="w-full h-10 px-3 border border-border rounded-lg
+                                     focus:outline-none focus:ring-2 focus:ring-accent
+                                     bg-surface text-card-foreground text-sm
+                                     placeholder-light"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            URL of your Docling server (default: <code className="text-accent">http://localhost:5001</code>)
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-2">
+                            API Key <span className="text-muted-foreground">(optional)</span>
+                          </label>
+                          <input
+                            type="password"
+                            value={keys.doclingApiKey}
+                            onChange={(e) => handleChange("doclingApiKey", e.target.value)}
+                            placeholder="Required only when X-Api-Key authentication is enabled"
+                            className="w-full h-10 px-3 border border-border rounded-lg
+                                     focus:outline-none focus:ring-2 focus:ring-accent
+                                     bg-surface text-card-foreground text-sm
+                                     placeholder-light"
+                          />
+                        </div>
+                      </div>
+                      {testResults.docling.status !== 'idle' && testResults.docling.status !== 'testing' && (
+                        <div className={`mt-2 text-xs ${
+                          testResults.docling.status === 'success'
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {testResults.docling.message}
                         </div>
                       )}
                     </div>

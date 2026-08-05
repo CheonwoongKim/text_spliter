@@ -13,6 +13,9 @@ interface TextInputProps {
 
 interface ParseResult {
   id: number;
+  run_id?: string | null;
+  document_hash?: string | null;
+  engine_id?: string | null;
   file_name: string;
   parser_type: string;
   file_size: number;
@@ -23,8 +26,11 @@ interface ParseResult {
 
 interface ParseResultDetail {
   id: number;
+  run_id: string | null;
   user_email: string;
+  document_hash: string | null;
   parser_type: string;
+  engine_id: string | null;
   file_name: string;
   file_size: number;
   mime_type: string;
@@ -32,6 +38,8 @@ interface ParseResultDetail {
   html_content: string | null;
   markdown_content: string | null;
   json_content: any | null;
+  normalized_document: any | null;
+  raw_response: any | null;
   processing_time: number | null;
   created_at: string;
 }
@@ -129,9 +137,24 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
 
       let textContent = "";
 
-      // Try to extract text from the parsed result
-      // Priority: text_content > markdown_content > html_content > json_content
-      if (detail.text_content) {
+      // New parse runs carry a provider-independent document representation.
+      // Prefer markdown to preserve headings and tables for the chunking stage.
+      const normalizedDocument = typeof detail.normalized_document === "string"
+        ? JSON.parse(detail.normalized_document)
+        : detail.normalized_document;
+      if (normalizedDocument?.markdown) {
+        textContent = normalizedDocument.markdown;
+      } else if (normalizedDocument?.text) {
+        textContent = normalizedDocument.text;
+      } else if (Array.isArray(normalizedDocument?.pages)) {
+        textContent = normalizedDocument.pages
+          .map((page: any) => page.markdown || page.text || "")
+          .filter((pageText: string) => pageText.trim())
+          .join("\n\n");
+      }
+
+      // Fall back to legacy stored formats when Document IR is unavailable.
+      if (!textContent && detail.text_content) {
         console.log('[TextInput] Using text_content');
         console.log('[TextInput] text_content preview:', detail.text_content.substring(0, 200));
 
@@ -156,6 +179,16 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
                   .filter((text: string) => text.trim())
                   .join("\n\n");
               }
+            } else if (detail.parser_type === "LlamaIndex" && Array.isArray(jsonData.markdown?.pages)) {
+              textContent = jsonData.markdown.pages
+                .map((page: any) => page.markdown || "")
+                .filter((markdown: string) => markdown.trim())
+                .join("\n\n");
+            } else if (detail.parser_type === "LlamaIndex" && Array.isArray(jsonData.text?.pages)) {
+              textContent = jsonData.text.pages
+                .map((page: any) => page.text || "")
+                .filter((text: string) => text.trim())
+                .join("\n\n");
             } else {
               // For other formats, use as-is
               textContent = detail.text_content;
@@ -167,13 +200,13 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
         } else {
           textContent = detail.text_content;
         }
-      } else if (detail.markdown_content) {
+      } else if (!textContent && detail.markdown_content) {
         console.log('[TextInput] Using markdown_content');
         textContent = detail.markdown_content;
-      } else if (detail.html_content) {
+      } else if (!textContent && detail.html_content) {
         console.log('[TextInput] Using html_content');
         textContent = detail.html_content;
-      } else if (detail.json_content) {
+      } else if (!textContent && detail.json_content) {
         console.log('[TextInput] Using json_content');
         // If json_content exists, extract text based on parser type
         const jsonData = typeof detail.json_content === "string"
@@ -210,6 +243,16 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
                 .join("\n\n");
             }
             console.log('[TextInput] Extracted text length:', textContent.length);
+          } else if (Array.isArray(jsonData.markdown?.pages)) {
+            textContent = jsonData.markdown.pages
+              .map((page: any) => page.markdown || "")
+              .filter((markdown: string) => markdown.trim())
+              .join("\n\n");
+          } else if (Array.isArray(jsonData.text?.pages)) {
+            textContent = jsonData.text.pages
+              .map((page: any) => page.text || "")
+              .filter((text: string) => text.trim())
+              .join("\n\n");
           } else {
             console.log('[TextInput] No pages array found, using JSON stringify');
             textContent = JSON.stringify(jsonData, null, 2);
@@ -238,7 +281,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
             textContent = JSON.stringify(jsonData, null, 2);
           }
         }
-      } else {
+      } else if (!textContent) {
         alert("No content found in parse result");
         return;
       }
@@ -252,7 +295,10 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
       const sourceMetadata: SourceMetadata = {
         fileName: detail.file_name,
         parserType: detail.parser_type,
-        originalJson: detail.json_content ?
+        parseRunId: detail.run_id || undefined,
+        documentHash: detail.document_hash || undefined,
+        engineId: detail.engine_id || undefined,
+        originalJson: detail.normalized_document ? normalizedDocument : detail.json_content ?
           (typeof detail.json_content === "string" ? JSON.parse(detail.json_content) : detail.json_content)
           : undefined,
       };

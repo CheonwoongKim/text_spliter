@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserEmailFromToken } from '@/lib/auth-server';
-import { query } from '@/lib/db';
 import { createClient } from '@supabase/supabase-js';
-
-interface ApiKey {
-  key_name: string;
-  encrypted_key: string;
-}
+import { getDecryptedApiKeyMap } from '@/lib/api-key-store';
 
 // POST - Create a new table in Supabase
 export async function POST(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -38,21 +33,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Get Supabase credentials from database
-    const dbKeys = await query<ApiKey[]>(
-      'SELECT key_name, encrypted_key FROM user_api_keys WHERE user_email = ? AND (key_name = ? OR key_name = ?)',
-      [userEmail, 'supabaseUrl', 'supabaseKey']
-    );
+    const keys = await getDecryptedApiKeyMap(userEmail, ['supabaseUrl', 'supabaseKey']);
 
-    if (dbKeys.length < 2) {
+    if (!keys.supabaseUrl || !keys.supabaseKey) {
       return NextResponse.json(
         { error: 'Supabase credentials not configured. Please set up in Connect page.' },
         { status: 400 }
       );
     }
 
-    const { decrypt } = await import('@/lib/encryption');
-    const supabaseUrl = decrypt(dbKeys.find(k => k.key_name === 'supabaseUrl')!.encrypted_key);
-    const supabaseKey = decrypt(dbKeys.find(k => k.key_name === 'supabaseKey')!.encrypted_key);
+    const supabaseUrl = keys.supabaseUrl;
+    const supabaseKey = keys.supabaseKey;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -136,7 +127,7 @@ export async function POST(request: NextRequest) {
 // DELETE - Drop a table from Supabase
 export async function DELETE(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -152,21 +143,17 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get Supabase credentials from database
-    const dbKeys = await query<ApiKey[]>(
-      'SELECT key_name, encrypted_key FROM user_api_keys WHERE user_email = ? AND (key_name = ? OR key_name = ?)',
-      [userEmail, 'supabaseUrl', 'supabaseKey']
-    );
+    const keys = await getDecryptedApiKeyMap(userEmail, ['supabaseUrl', 'supabaseKey']);
 
-    if (dbKeys.length < 2) {
+    if (!keys.supabaseUrl || !keys.supabaseKey) {
       return NextResponse.json(
         { error: 'Supabase credentials not configured. Please set up in Connect page.' },
         { status: 400 }
       );
     }
 
-    const { decrypt } = await import('@/lib/encryption');
-    const supabaseUrl = decrypt(dbKeys.find(k => k.key_name === 'supabaseUrl')!.encrypted_key);
-    const supabaseKey = decrypt(dbKeys.find(k => k.key_name === 'supabaseKey')!.encrypted_key);
+    const supabaseUrl = keys.supabaseUrl;
+    const supabaseKey = keys.supabaseKey;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 

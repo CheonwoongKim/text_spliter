@@ -24,9 +24,16 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 **지원 파서:**
 
 - **Upstage Document AI** - PDF, 이미지 파싱
-- **LlamaIndex (LlamaParse)** - PDF, DOCX, PPTX, 이미지 파싱
+- **LlamaIndex (LlamaParse v2)** - Fast, Cost Effective, Agentic, Agentic Plus 티어 기반 파싱
 - **Azure Document Intelligence** - Microsoft Azure 기반 문서 파싱
 - **Google Document AI** - Google Cloud 기반 문서 파싱
+- **Docling** - 자체 호스팅 가능한 문서 구조·표·레이아웃 파싱
+
+OCR과 문서 파싱은 별도 단계로 취급합니다. 이미지 기반 문서는 필요할 때 OCR로 문자를 인식한 뒤, 선택한 파서가 문서 구조와 표·레이아웃을 해석합니다. Upstage, LlamaParse, Docling의 OCR 관련 항목은 독립 파서가 아니라 해당 파서의 전처리 옵션입니다.
+
+모든 새 파싱 실행은 공급사 응답과 함께 공통 `Document IR`로 정규화됩니다. Document IR은 페이지, 블록 유형, 읽기 순서, 좌표, 표 셀과 신뢰도를 보존하며 향후 원본 오버레이와 다중 엔진 비교의 기준으로 사용됩니다.
+
+같은 문서에 여러 엔진을 체크해 순차 배치 실행할 수 있습니다. 한 엔진이 실패해도 성공한 실행은 비교 후보로 유지되며, 실패 원인은 엔진별로 요약됩니다.
 
 ### 📁 Files (파일 관리)
 
@@ -39,7 +46,7 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 
 ### 💾 Storage (결과 저장 및 관리)
 
-- 파싱 결과 및 분할 결과를 MySQL에 저장
+- 파싱 결과, 분할 결과, 암호화된 공급사 자격 증명을 전용 Supabase PostgreSQL에 저장
 - Parse Results와 Split Results를 탭으로 분리하여 표시
 - **Parse Result Detail 페이지**: 원본 파일과 파싱 결과를 나란히 표시
   - 좌측: 원본 파일 미리보기 (PDF, 이미지)
@@ -48,7 +55,7 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 - **Sync Storage 기능**: Files storage와 Parse Results 동기화
   - 파일명 매칭으로 자동 연결
   - 원본 파일 미리보기 활성화
-- **Check DB 기능**: 데이터베이스 마이그레이션 확인 및 실행
+- **Check DB 기능**: Supabase 애플리케이션 스키마 상태 확인
 - 저장된 결과 조회, 상세보기, 편집, 삭제 기능
 - 페이지네이션 지원 (20개/페이지)
 - Full-height 테이블 레이아웃
@@ -67,9 +74,10 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 
 ### 🔐 API 키 관리
 
-- MySQL 데이터베이스에 암호화된 API 키 및 자격 증명 저장
+- 전용 Supabase 데이터베이스에 암호화된 API 키 및 자격 증명 저장
 - 사용자별 안전한 키 관리
-- 로그인 기반 인증 시스템
+- Supabase Auth 이메일·비밀번호 로그인 및 세션 자동 갱신
+- 모든 보호 API에서 Supabase Auth 서버로 access token 검증
 - Google Document AI: Service Account 인증 (Email + Private Key)
 
 ## 기술 스택
@@ -84,25 +92,25 @@ LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트
 ### Backend
 
 - **API Routes**: Next.js API Routes
-- **Database**: MySQL
-- **Encryption**: Node.js Crypto (AES-256-CBC)
+- **Application Database**: Supabase PostgreSQL
+- **Encryption**: Node.js Crypto (AES-256-GCM, legacy CBC read compatibility)
 - **Authentication**: JWT
 
 ### Libraries
 
 - **Text Processing**: LangChain, @langchain/textsplitters
 - **Token Encoding**: js-tiktoken
-- **Database**: mysql2
-- **Document Parsing**: Upstage, LlamaIndex, Azure AI, Google AI
+- **Database Client**: @supabase/supabase-js
+- **Document Parsing**: Upstage, LlamaParse v2, Azure AI, Google Document AI, Docling
 - **UI Components**: @uiw/react-json-view (JSON 뷰어)
-- **Storage Integration**: External Storage API (S3-compatible)
+- **Storage Integration**: Supabase Storage private bucket with per-user paths
 
 ## 시작하기
 
 ### 필수 요구사항
 
 - Node.js 18 이상
-- MySQL 데이터베이스
+- Supabase CLI와 전용 Supabase 프로젝트
 - npm 또는 yarn
 
 ### 설치
@@ -124,21 +132,16 @@ npm install
 # OpenAI API Key (for embeddings and VDB upload)
 OPENAI_API_KEY=your_openai_api_key
 
-# MySQL Database Configuration (API keys, Parse/Split Results)
-DB_HOST=your_mysql_host
-DB_PORT=3306
-DB_NAME=your_mysql_database
-DB_USER=your_mysql_user
-DB_PASSWORD=your_mysql_password
+# Application Database (server only)
+APP_SUPABASE_URL=https://your-project-ref.supabase.co
+APP_SUPABASE_SECRET_KEY=sb_secret_your_server_secret
 
-# Supabase Configuration (Vector Database - optional)
-# Note: Supabase URL and Key are stored in the database via Connect page
-# No environment variables needed for Supabase
-# OpenAI API Key is also stored in the database and used for VDB uploads
+# Supabase Auth (browser-safe)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_public_key
 
-# Storage API Configuration (External Storage Service)
-STORAGE_API_BASE=http://ywstorage.synology.me:4000
-STORAGE_DEFAULT_BUCKET=loan-agent-files
+# Vector Database target (optional)
+# 별도 VDB의 Supabase URL/Key와 OpenAI Key는 Connect 화면에서 저장합니다.
 
 # Encryption Key (32 bytes)
 ENCRYPTION_KEY=your_32_byte_encryption_key
@@ -146,38 +149,31 @@ ENCRYPTION_KEY=your_32_byte_encryption_key
 
 ### 데이터베이스 설정
 
-MySQL 데이터베이스에 필요한 테이블을 생성합니다.
-
-제공된 SQL 스크립트를 실행합니다:
+애플리케이션 DB와 사용자가 실험 대상으로 연결하는 Vector DB는 서로 분리됩니다. 애플리케이션 DB에는 API 키, 파싱 실행, 청킹 결과를 저장하고, Vector DB는 검증된 청크를 적재하는 대상입니다.
 
 ```bash
-# API 키 관리 테이블
-mysql -h your_host -P 3306 -u your_user -p your_database < scripts/schema.sql
+# 최초 1회 인증 및 프로젝트 연결
+supabase login
+supabase link --project-ref <application-project-ref>
 
-# Parse Results 저장 테이블
-mysql -h your_host -P 3306 -u your_user -p your_database < scripts/parse_results_schema.sql
-
-# Split Results 저장 테이블
-mysql -h your_host -P 3306 -u your_user -p your_database < scripts/split_results_schema.sql
+# 버전 관리되는 스키마 적용
+supabase db push --linked
 ```
 
-또는 Node.js 스크립트로 테이블 생성:
-
-```bash
-# Split Results 테이블 생성
-node scripts/create-split-results-table.js
-```
+스키마 원본은 `supabase/migrations/`에 있습니다. `public` 스키마의 앱 테이블에는 RLS가 활성화되어 있으며 서버 전용 Secret Key를 사용하는 API Route만 접근합니다. 문서 원본은 Supabase Storage의 비공개 `documents` 버킷에 저장되고, 객체 경로의 첫 디렉터리는 Supabase Auth 사용자 UUID로 제한됩니다.
 
 **주요 테이블:**
 
 - `user_api_keys` - 암호화된 API 키 저장
 - `parse_results` - 문서 파싱 결과 저장
 - `split_results` - 텍스트 분할 결과 저장
+- `storage.objects` / `documents` bucket - 사용자별 문서 원본 저장
 
 ### 개발 서버 실행
 
 ```bash
-npm run dev
+# 연결된 Supabase 프로젝트의 서버·브라우저 키를 메모리로만 주입
+npm run dev:supabase
 ```
 
 브라우저에서 [http://localhost:3000](http://localhost:3000)을 엽니다.
@@ -194,10 +190,12 @@ npm start
 
 ## 사용 방법
 
-### 1. 로그인
+### 1. 로그인 및 회원가입
 
-- `/login` 페이지에서 이메일과 비밀번호로 로그인
-- JWT 토큰이 localStorage에 저장됨
+- `/login`에서 Supabase Auth 이메일·비밀번호 로그인 또는 회원가입
+- access token은 보호 API 요청에 전달되며 서버가 Supabase Auth를 통해 사용자를 검증
+- 브라우저에는 publishable key만 제공되고 Supabase Secret Key는 서버에만 유지
+- 로그아웃 시 로컬 Supabase 세션과 호환 토큰을 함께 제거
 
 ### 2. API 키 설정 (Connect 탭)
 
@@ -207,6 +205,8 @@ npm start
   - Private Key (JSON key file의 `private_key`)
   - Project ID, Location, Processor ID
 - **Save** 버튼 클릭으로 데이터베이스에 암호화하여 저장
+- 입력값을 비우고 Save하면 해당 자격 증명을 삭제하며, Reset은 사용자의 Connect 설정 전체를 삭제
+- Test는 저장 전 현재 입력값으로 연결을 검증하므로 테스트만으로 키가 저장되지는 않음
 - 페이지 새로고침 시 자동으로 불러옴
 
 ### 3. Text Splitter 사용
@@ -223,8 +223,10 @@ npm start
 2. **API 키 입력**: 해당 파서의 API 키 입력 (저장된 키 자동 로드)
    - Google Document AI는 Service Account 정보가 자동으로 로드됨
 3. **파일 업로드**: PDF, 이미지 등 문서 파일 선택
-4. **Parse Document 실행**: 파싱 결과를 Preview, HTML, JSON으로 확인
-5. **결과 저장**: Save 버튼으로 파싱 결과를 데이터베이스에 저장
+4. **Parse Document 실행**: 파싱 결과와 공통 Document IR, 원본 응답 확인
+5. **Experiment batch**: 비교할 엔진을 여러 개 선택해 같은 파일에 순차 실행하거나, 옵션을 바꿔 실행 결과 누적
+6. **Compare**: 원본과 결과 A/B를 나란히 비교하고 우수 결과 선택
+7. **결과 저장**: 선택한 결과를 Save 버튼으로 데이터베이스에 저장
 
 ### 5. Files (파일 관리)
 
@@ -264,7 +266,7 @@ npm start
 1. **Storage 탭 → Parse Results**: Parse Results 탭 선택
 2. **Sync Storage 버튼**: 파일 동기화 실행
 3. **동기화 프로세스**:
-   - Parse Results의 파일명과 Files storage의 파일 매칭
+   - Parse Results의 파일명과 Supabase Storage 문서 매칭
    - `file_storage_key` 자동 설정
    - 원본 파일 미리보기 활성화
 4. **동기화 결과**: 성공한 매칭 수와 세부 정보 표시
@@ -274,8 +276,9 @@ npm start
 1. **Storage 탭 → Parse Results**: Parse Results 탭 선택
 2. **Check DB 버튼**: 데이터베이스 마이그레이션 확인
 3. **자동 마이그레이션**:
-   - `file_storage_key` 컬럼 존재 여부 확인
-   - 없으면 자동으로 컬럼 추가
+   - 파일 저장 키와 Parse Run 컬럼·인덱스 존재 여부 확인
+   - 실행 ID, 문서 해시, 엔진·모델·버전, 설정 스냅샷 추가
+   - 공통 Document IR과 원본 공급사 응답 저장 컬럼 추가
 4. **완료 후**: Sync Storage 실행 가능
 
 ### 10. Vector Database (VDB)
@@ -373,8 +376,12 @@ text_spliter/
 │   └── ...
 ├── lib/
 │   ├── types.ts               # TypeScript 타입
+│   ├── document-engines.ts    # 엔진 capability registry
+│   ├── document-ir.ts         # 공통 문서 표현 타입
+│   ├── normalize-document.ts  # 공급사 응답 정규화
 │   ├── splitters.ts           # 스플리터 로직
-│   ├── db.ts                  # 데이터베이스 연결
+│   ├── supabase-server.ts     # 애플리케이션 DB 서버 클라이언트
+│   ├── api-key-store.ts       # 암호화 자격 증명 조회
 │   ├── encryption.ts          # 암호화 유틸리티
 │   ├── auth.ts                # 클라이언트 인증 유틸리티
 │   ├── auth-server.ts         # 서버 인증 유틸리티
@@ -383,10 +390,10 @@ text_spliter/
 │   ├── validation.ts          # 입력 검증
 │   └── hooks/                 # Custom React hooks
 ├── scripts/
-│   ├── schema.sql             # API 키 테이블 스키마
-│   ├── parse_results_schema.sql   # Parse Results 스키마
-│   ├── split_results_schema.sql   # Split Results 스키마
-│   └── create-split-results-table.js  # 테이블 생성 스크립트
+│   └── dev-with-supabase.mjs  # 로컬 서버용 안전한 Supabase 환경 주입
+├── supabase/
+│   ├── config.toml
+│   └── migrations/            # 애플리케이션 DB 스키마
 ├── docs/                      # 문서
 │   ├── PRD.md
 │   ├── IMPLEMENTATION_PLAN.md
@@ -425,9 +432,12 @@ text_spliter/
 **Request:** `multipart/form-data`
 
 - `file`: 파싱할 문서 파일
-- `parserType`: 사용할 파서 (Upstage, LlamaIndex, Azure, Google)
-- `apiKey`: 파서 API 키
-- 추가 파서별 파라미터
+- `parserType`: 사용할 파서 (Upstage, LlamaIndex, Azure, Google, Docling)
+- 파서 자격 증명과 엔드포인트는 Connect 화면에 저장된 사용자 설정을 사용
+- LlamaParse v2: `llamaTier`, `llamaVersion`, `pageRange`, `language`(OCR 옵션)
+- Docling: `doclingOutputFormat`, `doclingPipeline`, `doclingTableMode`, `doclingOcrMode`, `language`(OCR 옵션)
+
+응답에는 가능한 출력 형식(`text`, `html`, `markdown`, `json`)과 공통 `metadata`가 포함됩니다. LlamaParse처럼 페이지 정보를 제공하는 파서는 정규화된 `pages` 배열도 반환합니다.
 
 ### Parse Results (Storage)
 
@@ -490,7 +500,7 @@ Parse Results를 Storage의 파일과 동기화합니다.
 }
 ```
 
-**Note:** 파일명 매칭을 통해 `file_storage_key`를 자동으로 설정하여 원본 파일 미리보기를 활성화합니다.
+**Note:** 사용자 UUID 경로 안의 파일명을 매칭해 `file_storage_key`를 설정하고 원본 미리보기를 활성화합니다.
 
 #### GET /api/parse-results/migrate
 
@@ -520,7 +530,9 @@ Parse Results를 Storage의 파일과 동기화합니다.
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?id=123`
 
-### Storage API (파일 관리)
+### Supabase Storage API (파일 관리)
+
+모든 파일 API는 비공개 `documents` 버킷을 사용하며, 인증 사용자는 자신의 UUID 경로에 있는 문서만 조회하거나 변경할 수 있습니다.
 
 #### GET /api/storage/files
 
@@ -534,14 +546,15 @@ Parse Results를 Storage의 파일과 동기화합니다.
 {
   "files": [
     {
-      "id": 1,
+      "id": "storage-object-uuid",
       "filename": "document.pdf",
+      "storage_key": "auth-user-uuid/sha256-document.pdf",
       "file_size": 1024000,
       "uploaded_at": "2024-01-01T00:00:00Z"
     }
   ],
   "total": 100,
-  "bucket": "loan-agent-files"
+  "bucket": "documents"
 }
 ```
 
@@ -550,7 +563,7 @@ Parse Results를 Storage의 파일과 동기화합니다.
 파일을 삭제합니다.
 
 **Headers:** `Authorization: Bearer <token>`
-**Query:** `?filename=document.pdf`
+**Query:** `?filename=<storage_key>`
 
 #### POST /api/storage/upload
 
@@ -586,7 +599,7 @@ Parse Results를 Storage의 파일과 동기화합니다.
 
 #### POST /api/storage/buckets
 
-사용자별 버킷을 생성합니다.
+공용 비공개 `documents` 버킷이 준비되었는지 확인합니다. 문서는 버킷을 사용자마다 나누지 않고 UUID 경로와 RLS로 격리합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -594,14 +607,15 @@ Parse Results를 Storage의 파일과 동기화합니다.
 
 ```json
 {
-  "bucket": "user-email-com",
-  "message": "Bucket ready"
+  "bucket": "documents",
+  "private": true,
+  "ready": true
 }
 ```
 
 #### GET /api/storage/buckets
 
-사용자의 버킷 이름을 조회합니다.
+문서 버킷과 현재 사용자의 전용 객체 경로를 조회합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -729,7 +743,7 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 
 **Process:**
 
-1. Split Result를 MySQL에서 조회
+1. Split Result를 애플리케이션 Supabase DB에서 조회
 2. 각 chunk에 대해 OpenAI embedding 생성 (text-embedding-ada-002)
 3. 메타데이터 생성:
 
@@ -789,7 +803,7 @@ Private Key는 PEM 형식의 전체 키를 포함해야 합니다.
 
 ## 보안
 
-- **암호화**: 모든 API 키 및 자격 증명은 AES-256-CBC로 암호화되어 저장
+- **암호화**: 모든 API 키 및 자격 증명은 인증 태그가 포함된 AES-256-GCM으로 암호화되어 저장
 - **민감 정보 마스킹**: UI에서 모든 API 키와 Private Key는 마스킹 처리
 - **Service Account 보안**: Google Document AI Private Key는 PEM 형식으로 암호화 저장
 - **인증**: JWT 토큰 기반 사용자 인증

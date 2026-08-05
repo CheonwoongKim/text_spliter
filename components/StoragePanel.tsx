@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState, useEffect, useCallback } from "react";
+import type { CSSProperties } from "react";
 import JsonView from '@uiw/react-json-view';
 import { darkTheme } from '@uiw/react-json-view/dark';
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
@@ -848,7 +849,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                 style={{
                   ...darkTheme,
                   '--w-rjv-background-color': 'transparent',
-                }}
+                } as CSSProperties}
                 collapsed={false}
                 displayDataTypes={false}
                 enableClipboard={true}

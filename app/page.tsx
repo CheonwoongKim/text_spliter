@@ -22,6 +22,7 @@ import type {
   SplitResponse,
   SplitRequest,
   ParserConfig,
+  ParserType,
   ParseResponse,
   VectorStoreConfig,
   DatabaseSchema,
@@ -56,12 +57,19 @@ export default function Home() {
   const [parserConfig, setParserConfig] = useState<ParserConfig>({
     parserType: "Upstage",
     upstageOutputFormat: "markdown",
+    llamaTier: "agentic",
+    llamaVersion: "latest",
+    doclingOutputFormat: "markdown",
+    doclingOcrMode: "auto",
+    doclingPipeline: "standard",
+    doclingTableMode: "accurate",
     extractImages: false,
     extractTables: false,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileStorageKey, setSelectedFileStorageKey] = useState<string | null>(null);
   const [parseResult, setParseResult] = useState<ParseResponse | null>(null);
+  const [parseRuns, setParseRuns] = useState<ParseResponse[]>([]);
   const [parserLoading, setParserLoading] = useState(false);
   const [parserError, setParserError] = useState<string | null>(null);
 
@@ -145,12 +153,14 @@ export default function Home() {
     setSelectedFile(file);
     setSelectedFileStorageKey(storageKey || null);
     setParseResult(null);
+    setParseRuns([]);
   }, []);
 
   const handleParserReset = useCallback(() => {
     setSelectedFile(null);
     setSelectedFileStorageKey(null);
     setParseResult(null);
+    setParseRuns([]);
     setParserError(null);
   }, []);
 
@@ -160,9 +170,15 @@ export default function Home() {
     setError(null);
   }, []);
 
-  const handleParse = useCallback(async () => {
+  const handleParse = useCallback(async (parserTypes: ParserType[]) => {
     if (!selectedFile) {
       alert("Please select a file to parse.");
+      return;
+    }
+
+    const engines = Array.from(new Set(parserTypes));
+    if (engines.length === 0) {
+      alert("Please select at least one parser.");
       return;
     }
 
@@ -170,73 +186,85 @@ export default function Home() {
     setParserError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("parserType", parserConfig.parserType);
-
-      // Common settings
-      if (parserConfig.language) {
-        formData.append("language", parserConfig.language);
-      }
-      if (parserConfig.extractImages !== undefined) {
-        formData.append("extractImages", String(parserConfig.extractImages));
-      }
-      if (parserConfig.extractTables !== undefined) {
-        formData.append("extractTables", String(parserConfig.extractTables));
-      }
-      if (parserConfig.pageRange) {
-        formData.append("pageRange", parserConfig.pageRange);
-      }
-
-      // Upstage specific
-      if (parserConfig.upstageOutputFormat) {
-        formData.append("upstageOutputFormat", parserConfig.upstageOutputFormat);
-      }
-
-      // Azure specific
-      if (parserConfig.azureModelId) {
-        formData.append("azureModelId", parserConfig.azureModelId);
-      }
-      if (parserConfig.azureOutputFormat) {
-        formData.append("azureOutputFormat", parserConfig.azureOutputFormat);
-      }
-
-      // LlamaIndex specific
-      if (parserConfig.llamaResultType) {
-        formData.append("llamaResultType", parserConfig.llamaResultType);
-      }
-      if (parserConfig.llamaGpt4oMode !== undefined) {
-        formData.append("llamaGpt4oMode", String(parserConfig.llamaGpt4oMode));
-      }
-
-      // Google specific
-      if (parserConfig.googleProcessorId) {
-        formData.append("googleProcessorId", parserConfig.googleProcessorId);
-      }
-      if (parserConfig.googleLocation) {
-        formData.append("googleLocation", parserConfig.googleLocation);
-      }
-
       const token = getAuthToken();
       if (!token) {
         throw new Error("Please login to use the parser");
       }
 
-      const response = await fetch("/api/parse", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const failures: string[] = [];
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to parse document");
+      // Run sequentially to avoid provider rate spikes and retain successful
+      // candidates even when one of the configured engines fails.
+      for (const parserType of engines) {
+        try {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+          formData.append("parserType", parserType);
+
+          if (parserConfig.language) formData.append("language", parserConfig.language);
+          if (parserConfig.extractImages !== undefined) {
+            formData.append("extractImages", String(parserConfig.extractImages));
+          }
+          if (parserConfig.extractTables !== undefined) {
+            formData.append("extractTables", String(parserConfig.extractTables));
+          }
+          if (parserConfig.pageRange) formData.append("pageRange", parserConfig.pageRange);
+          if (parserConfig.upstageOutputFormat) {
+            formData.append("upstageOutputFormat", parserConfig.upstageOutputFormat);
+          }
+          if (parserConfig.azureModelId) formData.append("azureModelId", parserConfig.azureModelId);
+          if (parserConfig.azureOutputFormat) {
+            formData.append("azureOutputFormat", parserConfig.azureOutputFormat);
+          }
+          if (parserConfig.llamaTier) formData.append("llamaTier", parserConfig.llamaTier);
+          if (parserConfig.llamaVersion) formData.append("llamaVersion", parserConfig.llamaVersion);
+          if (parserConfig.doclingOutputFormat) {
+            formData.append("doclingOutputFormat", parserConfig.doclingOutputFormat);
+          }
+          if (parserConfig.doclingOcrMode) {
+            formData.append("doclingOcrMode", parserConfig.doclingOcrMode);
+          }
+          if (parserConfig.doclingPipeline) {
+            formData.append("doclingPipeline", parserConfig.doclingPipeline);
+          }
+          if (parserConfig.doclingTableMode) {
+            formData.append("doclingTableMode", parserConfig.doclingTableMode);
+          }
+          if (parserConfig.googleProcessorId) {
+            formData.append("googleProcessorId", parserConfig.googleProcessorId);
+          }
+          if (parserConfig.googleLocation) {
+            formData.append("googleLocation", parserConfig.googleLocation);
+          }
+
+          const response = await fetch("/api/parse", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || "Failed to parse document");
+          }
+
+          const data: ParseResponse = await response.json();
+          setParseResult(data);
+          setParseRuns((previousRuns) => [...previousRuns, data]);
+        } catch (engineError) {
+          const message = engineError instanceof Error
+            ? engineError.message
+            : "Unknown parser error";
+          failures.push(`${parserType}: ${message}`);
+          console.warn(`[Parser experiment] ${parserType} failed:`, engineError);
+        }
       }
 
-      const data: ParseResponse = await response.json();
-      setParseResult(data);
+      if (failures.length > 0) {
+        setParserError(
+          `${engines.length - failures.length}/${engines.length} parsers completed. ${failures.join(" | ")}`
+        );
+      }
     } catch (err) {
       console.error("Error parsing document:", err);
       setParserError(
@@ -246,6 +274,16 @@ export default function Home() {
       setParserLoading(false);
     }
   }, [selectedFile, parserConfig]);
+
+  const handleSelectParseRun = useCallback((runId: string) => {
+    const selectedRun = parseRuns.find((run) => run.run?.id === runId);
+    if (selectedRun) setParseResult(selectedRun);
+  }, [parseRuns]);
+
+  const handleClearParseRuns = useCallback(() => {
+    setParseRuns([]);
+    setParseResult(null);
+  }, []);
 
   // VectorStore handlers
   const handleVectorStoreConfigChange = useCallback(
@@ -360,7 +398,10 @@ export default function Home() {
   return (
     <div className="h-screen flex bg-surface">
       {/* Sidebar */}
-      <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} />
+      <Sidebar
+        activeMenu={activeMenu === "parse-detail" ? "storage" : activeMenu}
+        onMenuChange={setActiveMenu}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -489,9 +530,12 @@ export default function Home() {
               <div className="h-full overflow-hidden lg:col-span-7">
                 <ParserRightPanel
                   result={parseResult}
+                  runs={parseRuns}
                   selectedFile={selectedFile}
                   selectedFileStorageKey={selectedFileStorageKey}
                   config={parserConfig}
+                  onSelectRun={handleSelectParseRun}
+                  onClearRuns={handleClearParseRuns}
                 />
               </div>
             </div>

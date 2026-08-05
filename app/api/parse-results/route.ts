@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
-import { getUserEmailFromToken } from '@/lib/auth-server';
+import { randomUUID } from 'node:crypto';
+import { getUserEmailFromToken, getUserFromToken } from '@/lib/auth-server';
+import { assertUserDocumentKey, uploadDocument } from '@/lib/document-storage';
 import type { ParseResponse } from '@/lib/types';
+import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
 import { validateParserType, validatePagination, validateId, ValidationError } from '@/lib/validation';
 import { PAGINATION_API_CONFIG } from '@/lib/constants';
-import { STORAGE_API_BASE, DEFAULT_BUCKET } from '@/lib/storage-config';
 
 interface ParseResult {
   id: number;
+  run_id: string | null;
   user_email: string;
+  document_hash: string | null;
   parser_type: string;
+  engine_id: string | null;
+  parser_model: string | null;
+  parser_version: string | null;
+  run_status: string;
+  run_config: any | null;
   file_name: string;
   file_size: number;
   mime_type: string;
@@ -18,33 +26,21 @@ interface ParseResult {
   html_content: string | null;
   markdown_content: string | null;
   json_content: any | null;
+  normalized_document: any | null;
+  raw_response: any | null;
   processing_time: number | null;
+  started_at: string | null;
+  completed_at: string | null;
   created_at: string;
 }
 
 // POST - Save parse result
 export async function POST(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
-    if (!userEmail) {
+    const user = await getUserFromToken(request);
+    const userEmail = user?.email;
+    if (!user || !userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if file_storage_key column exists, if not, add it
-    try {
-      const columns = await query<any[]>(
-        "SHOW COLUMNS FROM parse_results LIKE 'file_storage_key'"
-      );
-
-      if (columns.length === 0) {
-        await query(
-          `ALTER TABLE parse_results
-           ADD COLUMN file_storage_key VARCHAR(500) DEFAULT NULL AFTER mime_type,
-           ADD INDEX idx_storage_key (file_storage_key)`
-        );
-      }
-    } catch (migrationError) {
-      // Continue anyway - column might already exist
     }
 
     // Parse FormData to support file upload
@@ -64,7 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = JSON.parse(resultStr);
+    const result = JSON.parse(resultStr) as ParseResponse;
 
     if (!result.metadata) {
       return NextResponse.json(
@@ -73,65 +69,74 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const runId = result.run?.id || randomUUID();
+
+    // Saving the same completed run twice is idempotent.
+    const supabase = getAppSupabase();
+    const { data: existingRun, error: existingRunError } = await supabase
+      .from('parse_results')
+      .select('id, file_storage_key')
+      .eq('run_id', runId)
+      .eq('user_email', userEmail)
+      .maybeSingle();
+    assertSupabaseResult(existingRunError, 'Failed to check existing parse run');
+
+    if (existingRun) {
+      return NextResponse.json({
+        success: true,
+        id: existingRun.id,
+        fileStorageKey: existingRun.file_storage_key,
+        duplicate: true,
+      });
+    }
+
     // Determine file storage key
     let fileStorageKey: string | null = null;
 
     // If storage key is provided (file from Files storage), use it directly
     if (providedFileStorageKey) {
-      fileStorageKey = providedFileStorageKey;
+      fileStorageKey = assertUserDocumentKey(providedFileStorageKey, user.id);
     }
-    // Otherwise, upload file to Storage if provided
+    // Otherwise, store the source document in the user's Supabase Storage path.
     else if (file) {
-      try {
-        const storageFormData = new FormData();
-        storageFormData.append('file', file);
-
-        const authHeader = request.headers.get('authorization');
-
-        const uploadResponse = await fetch(
-          `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/upload`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': authHeader || '',
-            },
-            body: storageFormData,
-          }
-        );
-
-        if (uploadResponse.ok) {
-          const uploadData = await uploadResponse.json();
-          fileStorageKey = uploadData.key || file.name;
-        }
-      } catch (uploadError) {
-        // Continue without storage key - not critical
-      }
+      const uploaded = await uploadDocument(supabase, user.id, file);
+      fileStorageKey = uploaded.key;
     }
 
     // Insert into database
-    const insertResult = await query(
-      `INSERT INTO parse_results
-       (user_email, parser_type, file_name, file_size, mime_type, file_storage_key,
-        text_content, html_content, markdown_content, json_content, processing_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        userEmail,
-        parserType,
-        result.metadata.fileName,
-        result.metadata.fileSize,
-        result.metadata.mimeType,
-        fileStorageKey,
-        result.text || null,
-        result.html || null,
-        result.markdown || null,
-        result.json ? JSON.stringify(result.json) : null,
-        result.metadata.processingTime || null,
-      ]
-    );
+    const { data: insertedRun, error: insertError } = await supabase
+      .from('parse_results')
+      .insert({
+        run_id: runId,
+        user_email: userEmail,
+        document_hash: result.metadata.documentHash || null,
+        parser_type: parserType,
+        engine_id: result.run?.engineId || null,
+        parser_model: result.run?.model || null,
+        parser_version: result.run?.version || result.metadata.parserVersion || null,
+        run_status: result.run?.status || 'succeeded',
+        run_config: result.run?.config || null,
+        file_name: result.metadata.fileName,
+        file_size: result.metadata.fileSize,
+        mime_type: result.metadata.mimeType,
+        file_storage_key: fileStorageKey,
+        text_content: result.text || null,
+        html_content: result.html || null,
+        markdown_content: result.markdown || null,
+        json_content: result.json || null,
+        normalized_document: result.document || null,
+        raw_response: result.raw || null,
+        processing_time: result.metadata.processingTime || null,
+        started_at: result.run?.startedAt || null,
+        completed_at: result.run?.completedAt || null,
+      })
+      .select('id')
+      .single();
+    assertSupabaseResult(insertError, 'Failed to save parse result');
 
     return NextResponse.json({
       success: true,
-      id: (insertResult as any).insertId,
+      id: insertedRun?.id,
       fileStorageKey,
     });
   } catch (error) {
@@ -157,7 +162,7 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve parse results
 export async function GET(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
 
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -172,38 +177,37 @@ export async function GET(request: NextRequest) {
       // Get specific result
       const id = validateId(rawId);
 
-      const results = await query<ParseResult[]>(
-        'SELECT * FROM parse_results WHERE id = ? AND user_email = ?',
-        [id, userEmail]
-      );
+      const { data, error } = await getAppSupabase()
+        .from('parse_results')
+        .select('*')
+        .eq('id', id)
+        .eq('user_email', userEmail)
+        .maybeSingle();
+      assertSupabaseResult(error, 'Failed to load parse result');
 
-      if (results.length === 0) {
+      if (!data) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
 
-      return NextResponse.json(results[0]);
+      return NextResponse.json(data as ParseResult);
     } else {
       // Get all results with pagination
       const { limit, offset } = validatePagination(rawLimit, rawOffset);
 
-      const [results, countResult] = await Promise.all([
-        query<ParseResult[]>(
-          `SELECT id, parser_type, file_name, file_size, mime_type, processing_time, created_at
-           FROM parse_results
-           WHERE user_email = ?
-           ORDER BY created_at DESC
-           LIMIT ${limit} OFFSET ${offset}`,
-          [userEmail]
-        ),
-        query<{ total: number }[]>(
-          'SELECT COUNT(*) as total FROM parse_results WHERE user_email = ?',
-          [userEmail]
-        ),
-      ]);
+      const { data, error, count } = await getAppSupabase()
+        .from('parse_results')
+        .select(
+          'id, run_id, document_hash, parser_type, engine_id, parser_model, parser_version, run_status, file_name, file_size, mime_type, processing_time, started_at, completed_at, created_at',
+          { count: 'exact' }
+        )
+        .eq('user_email', userEmail)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+      assertSupabaseResult(error, 'Failed to list parse results');
 
       return NextResponse.json({
-        results,
-        total: countResult[0]?.total || 0,
+        results: (data || []) as ParseResult[],
+        total: count || 0,
       });
     }
   } catch (error) {
@@ -229,7 +233,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update parse result
 export async function PUT(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -243,41 +247,34 @@ export async function PUT(request: NextRequest) {
 
     const validatedId = validateId(String(id));
 
-    // Build update query dynamically based on provided fields
-    const updates: string[] = [];
-    const values: any[] = [];
+    const updates: Record<string, unknown> = {};
 
     if (text_content !== undefined) {
-      updates.push('text_content = ?');
-      values.push(text_content);
+      updates.text_content = text_content;
     }
     if (html_content !== undefined) {
-      updates.push('html_content = ?');
-      values.push(html_content);
+      updates.html_content = html_content;
     }
     if (markdown_content !== undefined) {
-      updates.push('markdown_content = ?');
-      values.push(markdown_content);
+      updates.markdown_content = markdown_content;
     }
     if (json_content !== undefined) {
-      updates.push('json_content = ?');
-      values.push(json_content);
+      updates.json_content = json_content;
     }
 
-    if (updates.length === 0) {
+    if (Object.keys(updates).length === 0) {
       return NextResponse.json(
         { error: 'No content fields provided for update' },
         { status: 400 }
       );
     }
 
-    // Add WHERE clause parameters
-    values.push(validatedId, userEmail);
-
-    await query(
-      `UPDATE parse_results SET ${updates.join(', ')} WHERE id = ? AND user_email = ?`,
-      values
-    );
+    const { error } = await getAppSupabase()
+      .from('parse_results')
+      .update(updates)
+      .eq('id', validatedId)
+      .eq('user_email', userEmail);
+    assertSupabaseResult(error, 'Failed to update parse result');
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -303,7 +300,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete parse result
 export async function DELETE(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -317,10 +314,12 @@ export async function DELETE(request: NextRequest) {
 
     const id = validateId(rawId);
 
-    await query(
-      'DELETE FROM parse_results WHERE id = ? AND user_email = ?',
-      [id, userEmail]
-    );
+    const { error } = await getAppSupabase()
+      .from('parse_results')
+      .delete()
+      .eq('id', id)
+      .eq('user_email', userEmail);
+    assertSupabaseResult(error, 'Failed to delete parse result');
 
     return NextResponse.json({ success: true });
   } catch (error) {

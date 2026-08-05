@@ -1,33 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { User } from '@supabase/supabase-js';
 import { ValidationError } from './validation';
+import { getAppSupabase } from './supabase-server';
+
+function accessTokenFromRequest(request: NextRequest): string | null {
+  const authHeader = request.headers.get('authorization');
+  return authHeader?.replace(/^Bearer\s+/i, '') || request.cookies.get('auth_token')?.value || null;
+}
+
+export async function getUserFromToken(request: NextRequest): Promise<User | null> {
+  const token = accessTokenFromRequest(request);
+
+  if (!token) {
+    return null;
+  }
+
+  const { data, error } = await getAppSupabase().auth.getUser(token);
+
+  if (error || !data.user) {
+    if (error) {
+      console.warn('[Auth] Supabase rejected access token:', error.message);
+    }
+    return null;
+  }
+
+  return data.user;
+}
 
 /**
  * Extract user email from JWT token in server-side API routes
  * @param request - Next.js request object
  * @returns User email or null if token is invalid or expired
  */
-export function getUserEmailFromToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization');
-  const token = authHeader?.replace('Bearer ', '') || request.cookies.get('auth_token')?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-
-    // Check if token is expired
-    if (payload.exp && payload.exp < Date.now() / 1000) {
-      console.log('[Auth] Token expired:', { exp: payload.exp, now: Date.now() / 1000 });
-      return null;
-    }
-
-    return payload.email || null;
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
+export async function getUserEmailFromToken(request: NextRequest): Promise<string | null> {
+  const user = await getUserFromToken(request);
+  return user?.email || null;
 }
 
 /**
@@ -56,7 +63,7 @@ export function withAuth<T = any>(
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
     try {
-      const userEmail = getUserEmailFromToken(request);
+      const userEmail = await getUserEmailFromToken(request);
 
       if (!userEmail) {
         return NextResponse.json(

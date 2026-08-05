@@ -1,25 +1,73 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { ParseResponse } from "@/lib/types";
-import { query } from "@/lib/db";
-import { decrypt } from "@/lib/encryption";
+import { createHash, randomUUID } from "node:crypto";
+import type {
+  JsonObject,
+  JsonValue,
+  LlamaParseTier,
+  ParseResponse,
+  ParserType,
+} from "@/lib/types";
+import { getDocumentEngine } from "@/lib/document-engines";
+import { normalizeDocument } from "@/lib/normalize-document";
+import { getDecryptedApiKeyMap } from "@/lib/api-key-store";
 import { getUserEmailFromToken } from "@/lib/auth-server";
-import { API_KEY_NAMES, API_ENDPOINTS, POLLING_CONFIG } from "@/lib/constants";
+import { getGoogleServiceAccountAccessToken } from "@/lib/google-auth";
+import {
+  API_KEY_NAMES,
+  API_ENDPOINTS,
+  PARSER_TYPES,
+  POLLING_CONFIG,
+} from "@/lib/constants";
 
-interface ApiKey {
-  id: number;
-  user_email: string;
-  key_name: string;
-  encrypted_key: string;
-  created_at: string;
-  updated_at: string;
+interface LlamaParseResult {
+  job?: {
+    status?: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+    error_message?: string | null;
+  };
+  text?: { pages?: Array<{ page_number: number; text?: string }> };
+  markdown?: { pages?: Array<{ page_number: number; markdown?: string }> };
+  items?: {
+    pages?: Array<{
+      page_number: number;
+      page_width?: number;
+      page_height?: number;
+      items?: JsonValue[];
+    }>;
+  };
+  metadata?: { version?: string };
+  [key: string]: unknown;
 }
+
+interface DoclingResult {
+  document?: {
+    md_content?: string;
+    html_content?: string;
+    text_content?: string;
+    json_content?: JsonValue;
+  };
+  status?: "success" | "partial_success" | "skipped" | "failure";
+  errors?: unknown[];
+  [key: string]: unknown;
+}
+
+const LLAMA_PARSE_TIERS: LlamaParseTier[] = [
+  "fast",
+  "cost_effective",
+  "agentic",
+  "agentic_plus",
+];
+const DOCLING_OUTPUT_FORMATS = ["markdown", "html", "json"] as const;
+const DOCLING_OCR_MODES = ["disabled", "auto", "force"] as const;
+const DOCLING_PIPELINES = ["standard", "vlm"] as const;
+const DOCLING_TABLE_MODES = ["fast", "accurate"] as const;
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+  const startedAt = new Date(startTime).toISOString();
 
   try {
     // Authenticate user
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -27,7 +75,7 @@ export async function POST(request: NextRequest) {
     // Get form data
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const parserType = formData.get("parserType") as string;
+    const parserType = formData.get("parserType") as ParserType;
 
     // Get parser settings
     const language = formData.get("language") as string | null;
@@ -35,16 +83,34 @@ export async function POST(request: NextRequest) {
     const extractTables = formData.get("extractTables") === "true";
     const pageRange = formData.get("pageRange") as string | null;
 
-    // Upstage specific
-    const upstageOutputFormat = formData.get("upstageOutputFormat") as string | null;
-
     // Azure specific
     const azureModelId = formData.get("azureModelId") as string | null;
     const azureOutputFormat = formData.get("azureOutputFormat") as string | null;
 
     // LlamaIndex specific
-    const llamaResultType = formData.get("llamaResultType") as string | null;
-    const llamaGpt4oMode = formData.get("llamaGpt4oMode") === "true";
+    const requestedLlamaTier = (formData.get("llamaTier") || "agentic") as string;
+    const llamaTier = LLAMA_PARSE_TIERS.includes(requestedLlamaTier as LlamaParseTier)
+      ? (requestedLlamaTier as LlamaParseTier)
+      : "agentic";
+    const llamaVersion = (formData.get("llamaVersion") as string | null) || "latest";
+
+    // Docling specific
+    const requestedDoclingOutputFormat = (formData.get("doclingOutputFormat") || "markdown") as string;
+    const doclingOutputFormat = DOCLING_OUTPUT_FORMATS.includes(
+      requestedDoclingOutputFormat as (typeof DOCLING_OUTPUT_FORMATS)[number]
+    ) ? requestedDoclingOutputFormat : "markdown";
+    const requestedDoclingOcrMode = (formData.get("doclingOcrMode") || "auto") as string;
+    const doclingOcrMode = DOCLING_OCR_MODES.includes(
+      requestedDoclingOcrMode as (typeof DOCLING_OCR_MODES)[number]
+    ) ? requestedDoclingOcrMode : "auto";
+    const requestedDoclingPipeline = (formData.get("doclingPipeline") || "standard") as string;
+    const doclingPipeline = DOCLING_PIPELINES.includes(
+      requestedDoclingPipeline as (typeof DOCLING_PIPELINES)[number]
+    ) ? requestedDoclingPipeline : "standard";
+    const requestedDoclingTableMode = (formData.get("doclingTableMode") || "accurate") as string;
+    const doclingTableMode = DOCLING_TABLE_MODES.includes(
+      requestedDoclingTableMode as (typeof DOCLING_TABLE_MODES)[number]
+    ) ? requestedDoclingTableMode : "accurate";
 
     // Google specific
     const googleProcessorId = formData.get("googleProcessorId") as string | null;
@@ -57,22 +123,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch API keys from database
-    const keys = await query<ApiKey[]>(
-      "SELECT * FROM user_api_keys WHERE user_email = ?",
-      [userEmail]
-    );
+    if (!PARSER_TYPES.includes(parserType)) {
+      return NextResponse.json(
+        { error: `Unsupported parser type: ${parserType || "missing"}` },
+        { status: 400 }
+      );
+    }
 
-    // Decrypt and map keys
-    const apiKeys: Record<string, string> = {};
-    keys.forEach((key) => {
-      apiKeys[key.key_name] = decrypt(key.encrypted_key);
-    });
+    // A stable source fingerprint is the join key for comparing multiple runs
+    // of the same document. Reuse this buffer for providers that need base64.
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const documentHash = createHash("sha256").update(fileBuffer).digest("hex");
+    const runId = randomUUID();
+    const engine = getDocumentEngine(parserType);
+
+    const apiKeys = await getDecryptedApiKeyMap(userEmail);
 
     // Get the appropriate API key based on parser type
     let apiKey: string | undefined;
     let endpoint: string | undefined;
     let projectId: string | undefined;
+    let googleServiceAccountEmail: string | undefined;
+    let googlePrivateKey: string | undefined;
+    let doclingApiKey: string | undefined;
 
     if (parserType === "Upstage") {
       apiKey = apiKeys[API_KEY_NAMES.UPSTAGE_PARSER];
@@ -99,13 +172,23 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+    } else if (parserType === "Docling") {
+      endpoint = apiKeys[API_KEY_NAMES.DOCLING_ENDPOINT];
+      doclingApiKey = apiKeys[API_KEY_NAMES.DOCLING_API_KEY];
+      if (!endpoint) {
+        return NextResponse.json(
+          { error: "Docling endpoint not found. Please add it in the APIs page (e.g., http://localhost:5001)." },
+          { status: 400 }
+        );
+      }
     } else if (parserType === "Google") {
-      apiKey = apiKeys[API_KEY_NAMES.GOOGLE_PARSER_KEY];
+      googleServiceAccountEmail = apiKeys[API_KEY_NAMES.GOOGLE_PARSER_SERVICE_ACCOUNT_EMAIL];
+      googlePrivateKey = apiKeys[API_KEY_NAMES.GOOGLE_PARSER_PRIVATE_KEY];
       projectId = apiKeys[API_KEY_NAMES.GOOGLE_PARSER_PROJECT_ID];
 
-      if (!apiKey || !projectId) {
+      if (!googleServiceAccountEmail || !googlePrivateKey || !projectId) {
         return NextResponse.json(
-          { error: "Google Document AI API key or Project ID not found. Please add them in the APIs page." },
+          { error: "Google Document AI service account credentials or Project ID not found. Please add them in the APIs page." },
           { status: 400 }
         );
       }
@@ -115,6 +198,10 @@ export async function POST(request: NextRequest) {
     let parsedHtml = "";
     let parsedMarkdown = "";
     let parsedJson: any = null;
+    let rawProviderResponse: unknown;
+    let normalizedPages: ParseResponse["pages"];
+    let parserVersion: string | undefined;
+    let parserModel: string | undefined;
 
     // Parse based on parser type
     if (parserType === "Upstage") {
@@ -149,29 +236,38 @@ export async function POST(request: NextRequest) {
       }
 
       const data = await response.json();
+      rawProviderResponse = data;
+      parsedJson = data;
+      parserModel = "document-parse";
 
       // Extract all formats from response
       parsedText = data.content?.text || "";
       parsedHtml = data.content?.html || "";
       parsedMarkdown = data.content?.markdown || "";
     } else if (parserType === "LlamaIndex") {
-      // Use LlamaParse API
+      // LlamaParse v2: upload and create a parse job in one request.
       const llamaFormData = new FormData();
       llamaFormData.append("file", file);
+      const configuration: Record<string, unknown> = {
+        tier: llamaTier,
+        version: llamaVersion,
+      };
 
-      // Always use JSON result type as it includes text, markdown, and structured data
-      const resultType = "json";
-      if (llamaGpt4oMode) {
-        llamaFormData.append("gpt4o_mode", "true");
+      if (pageRange) {
+        configuration.page_ranges = { target_pages: pageRange };
       }
+
       if (language) {
-        llamaFormData.append("language", language);
+        configuration.processing_options = {
+          ocr_parameters: { languages: [language] },
+        };
       }
+
+      llamaFormData.append("configuration", JSON.stringify(configuration));
 
       // Upload document
-      console.log('[LlamaParse] Uploading document...');
       const uploadResponse = await fetch(
-        API_ENDPOINTS.LLAMA_UPLOAD,
+        API_ENDPOINTS.LLAMA_PARSE_UPLOAD,
         {
           method: "POST",
           headers: {
@@ -183,27 +279,29 @@ export async function POST(request: NextRequest) {
 
       if (!uploadResponse.ok) {
         const errorText = await uploadResponse.text();
-        console.error('[LlamaParse] Upload failed:', uploadResponse.status, errorText);
         throw new Error(
           `Failed to upload document to LlamaParse: ${errorText}`
         );
       }
 
-      const uploadData = await uploadResponse.json();
+      const uploadData = (await uploadResponse.json()) as { id?: string };
       const jobId = uploadData.id;
-      console.log('[LlamaParse] Upload successful, jobId:', jobId);
+      if (!jobId) {
+        throw new Error("LlamaParse did not return a parse job ID");
+      }
 
-      // Poll for results with appropriate endpoint based on result type
-      let parseComplete = false;
-      let maxRetries = POLLING_CONFIG.MAX_RETRIES;
+      // Fast tier only supports plain text. Other tiers also return markdown and items.
+      const expand = llamaTier === "fast"
+        ? "text,metadata"
+        : "text,markdown,items,metadata";
+      let finalResult: LlamaParseResult | null = null;
       let retryCount = 0;
 
-      console.log('[LlamaParse] Polling for results, resultType:', resultType);
-      while (!parseComplete && retryCount < maxRetries) {
+      while (!finalResult && retryCount < POLLING_CONFIG.MAX_RETRIES) {
         await new Promise((resolve) => setTimeout(resolve, POLLING_CONFIG.RETRY_DELAY_MS));
 
         const resultResponse = await fetch(
-          API_ENDPOINTS.LLAMA_JOB_RESULT(jobId, resultType),
+          `${API_ENDPOINTS.LLAMA_PARSE_JOB(jobId)}?expand=${encodeURIComponent(expand)}`,
           {
             method: "GET",
             headers: {
@@ -212,50 +310,62 @@ export async function POST(request: NextRequest) {
           }
         );
 
-        console.log(`[LlamaParse] Poll attempt ${retryCount + 1}/${maxRetries}, status: ${resultResponse.status}`);
-
-        if (resultResponse.ok) {
-          const resultData = await resultResponse.json();
-          console.log('[LlamaParse] === NEW CODE RUNNING ===');
-          console.log('[LlamaParse] Response type:', typeof resultData);
-          console.log('[LlamaParse] Response keys:', Object.keys(resultData || {}));
-          console.log('[LlamaParse] Response data:', JSON.stringify(resultData, null, 2));
-
-          // Check if result has actual content
-          let hasContent = false;
-
-          // JSON type includes pages array with text and md fields
-          if (resultData.pages && Array.isArray(resultData.pages) && resultData.pages.length > 0) {
-            // Extract text and markdown from all pages
-            parsedText = resultData.pages.map((page: any) => page.text || "").join("\n\n");
-            parsedMarkdown = resultData.pages.map((page: any) => page.md || "").join("\n\n");
-            // Store full JSON for raw view
-            parsedJson = resultData;
-            parsedHtml = ""; // No HTML format
-            hasContent = true;
-          }
-
-          if (hasContent) {
-            console.log('[LlamaParse] Job completed successfully, content found');
-            parseComplete = true;
-          } else {
-            console.log('[LlamaParse] No content yet, continuing to poll...');
-          }
-        } else if (resultResponse.status === 404 || resultResponse.status === 202) {
-          // Job still processing
-          console.log('[LlamaParse] Job still processing...');
-        } else {
+        if (!resultResponse.ok) {
           const errorText = await resultResponse.text();
-          console.error('[LlamaParse] Poll request failed:', resultResponse.status, errorText);
           throw new Error(`LlamaParse polling failed: ${errorText}`);
+        }
+
+        const resultData = (await resultResponse.json()) as LlamaParseResult;
+        const status = resultData.job?.status;
+
+        if (status === "COMPLETED") {
+          finalResult = resultData;
+        } else if (status === "FAILED" || status === "CANCELLED") {
+          throw new Error(
+            resultData.job?.error_message || `LlamaParse job ended with status ${status}`
+          );
         }
 
         retryCount++;
       }
 
-      if (!parseComplete) {
+      if (!finalResult) {
         throw new Error("LlamaParse job timed out");
       }
+
+      const textPages = finalResult.text?.pages || [];
+      const markdownPages = finalResult.markdown?.pages || [];
+      parsedText = textPages.map((page) => page.text || "").join("\n\n");
+      parsedMarkdown = markdownPages
+        .map((page) => page.markdown || "")
+        .join("\n\n");
+      parsedJson = finalResult;
+      rawProviderResponse = finalResult;
+      parserVersion = finalResult.metadata?.version || llamaVersion;
+      parserModel = llamaTier;
+
+      const pageNumbers = new Set<number>();
+      textPages.forEach((page) => pageNumbers.add(page.page_number));
+      markdownPages.forEach((page) => pageNumbers.add(page.page_number));
+      (finalResult.items?.pages || []).forEach((page) => pageNumbers.add(page.page_number));
+      normalizedPages = Array.from(pageNumbers)
+        .sort((a, b) => a - b)
+        .map((pageNumber) => {
+          const textPage = textPages.find((page) => page.page_number === pageNumber);
+          const markdownPage = markdownPages.find((page) => page.page_number === pageNumber);
+          const itemsPage = finalResult.items?.pages?.find(
+            (page) => page.page_number === pageNumber
+          );
+
+          return {
+            pageNumber,
+            text: textPage?.text,
+            markdown: markdownPage?.markdown,
+            width: itemsPage?.page_width,
+            height: itemsPage?.page_height,
+            items: itemsPage?.items,
+          };
+        });
     } else if (parserType === "Azure") {
       // Use Azure Document Intelligence API
       if (!endpoint || !apiKey) {
@@ -263,11 +373,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Convert file to base64
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
       // Determine model ID (use setting or default to prebuilt-layout for better markdown support)
       const modelId = azureModelId || "prebuilt-layout";
+      parserModel = modelId;
+      parserVersion = "2024-11-30";
 
       // Determine output format
       const outputContentFormat = azureOutputFormat || "markdown";
@@ -281,7 +390,7 @@ export async function POST(request: NextRequest) {
           "Content-Type": file.type,
           "Ocp-Apim-Subscription-Key": apiKey,
         },
-        body: buffer,
+        body: fileBuffer,
       });
 
       if (!analyzeResponse.ok) {
@@ -319,6 +428,8 @@ export async function POST(request: NextRequest) {
         const resultData = await resultResponse.json();
 
         if (resultData.status === "succeeded") {
+          rawProviderResponse = resultData;
+          parsedJson = resultData;
           // Check if content field is available (API version 2024+ with outputContentFormat)
           if (resultData.analyzeResult?.content) {
             parsedText = resultData.analyzeResult.content;
@@ -350,8 +461,8 @@ export async function POST(request: NextRequest) {
       }
     } else if (parserType === "Google") {
       // Use Google Document AI API
-      if (!projectId || !apiKey) {
-        throw new Error("Google Document AI requires projectId and API key");
+      if (!projectId || !googleServiceAccountEmail || !googlePrivateKey) {
+        throw new Error("Google Document AI requires service account credentials and a project ID");
       }
 
       // Get location and processor ID from settings or database
@@ -363,17 +474,21 @@ export async function POST(request: NextRequest) {
       }
 
       // Convert file to base64
-      const bytes = await file.arrayBuffer();
-      const base64 = Buffer.from(bytes).toString("base64");
+      const base64 = fileBuffer.toString("base64");
+      parserModel = processorId;
 
       // Process document
       const processUrl = `https://${location}-documentai.googleapis.com/v1/projects/${projectId}/locations/${location}/processors/${processorId}:process`;
+      const googleAccessToken = await getGoogleServiceAccountAccessToken(
+        googleServiceAccountEmail,
+        googlePrivateKey
+      );
 
       const processResponse = await fetch(processUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
+          "Authorization": `Bearer ${googleAccessToken}`,
         },
         body: JSON.stringify({
           rawDocument: {
@@ -391,27 +506,142 @@ export async function POST(request: NextRequest) {
       }
 
       const processData = await processResponse.json();
+      rawProviderResponse = processData;
 
       // Extract text from document
       parsedText = processData.document?.text || "";
+      parsedJson = processData;
 
       // Create simple HTML from text
       parsedHtml = `<pre>${parsedText}</pre>`;
+    } else if (parserType === "Docling") {
+      // Use Docling API
+      if (!endpoint) {
+        throw new Error("Docling endpoint is required");
+      }
+
+      // Convert file to base64
+      const base64 = fileBuffer.toString("base64");
+
+      const outputFormat = doclingOutputFormat;
+      parserModel = doclingPipeline;
+      const toFormat = outputFormat === "markdown" ? "md" : outputFormat;
+      const doclingUrl = `${endpoint.replace(/\/+$/, "")}/v1/convert/source`;
+      const doclingHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      };
+
+      if (doclingApiKey) {
+        doclingHeaders["X-Api-Key"] = doclingApiKey;
+      }
+
+      const doclingResponse = await fetch(doclingUrl, {
+        method: "POST",
+        headers: doclingHeaders,
+        body: JSON.stringify({
+          file_sources: [
+            {
+              base64_string: base64,
+              filename: file.name,
+            },
+          ],
+          options: {
+            to_formats: [toFormat],
+            pipeline: doclingPipeline,
+            do_ocr: doclingOcrMode !== "disabled",
+            force_ocr: doclingOcrMode === "force",
+            ...(language ? { ocr_lang: [language] } : {}),
+            table_mode: doclingTableMode,
+            image_export_mode: extractImages ? "embedded" : "placeholder",
+          },
+        }),
+      });
+
+      if (!doclingResponse.ok) {
+        const errorData = await doclingResponse.text();
+        throw new Error(
+          `Failed to process document with Docling: ${errorData}`
+        );
+      }
+
+      const doclingData = (await doclingResponse.json()) as DoclingResult;
+      rawProviderResponse = doclingData;
+      if (doclingData.status === "failure") {
+        throw new Error(`Docling conversion failed: ${JSON.stringify(doclingData.errors || [])}`);
+      }
+
+      const document = doclingData.document || {};
+      parsedMarkdown = document.md_content || "";
+      parsedHtml = document.html_content || "";
+      parsedText = document.text_content || parsedMarkdown;
+      parsedJson = document.json_content ?? (doclingData as unknown as JsonValue);
+
+      if (!parsedText && parsedHtml) {
+        parsedText = parsedHtml.replace(/<[^>]*>/g, "");
+      }
     } else {
       throw new Error(`Unsupported parser type: ${parserType}`);
     }
 
     const processingTime = Date.now() - startTime;
+    const runConfig: JsonObject = {
+      language: language || null,
+      pageRange: pageRange || null,
+      extractImages,
+      extractTables,
+      upstageOutputFormat: (formData.get("upstageOutputFormat") as string | null) || null,
+      llamaTier,
+      llamaVersion,
+      azureModelId: azureModelId || null,
+      azureOutputFormat: azureOutputFormat || null,
+      googleProcessorId: googleProcessorId || null,
+      googleLocation: googleLocation || null,
+      doclingOutputFormat,
+      doclingOcrMode,
+      doclingPipeline,
+      doclingTableMode,
+    };
+
+    const normalizedDocument = normalizeDocument({
+      parserType,
+      raw: rawProviderResponse,
+      text: parsedText || undefined,
+      markdown: parsedMarkdown || undefined,
+      html: parsedHtml || undefined,
+      pages: normalizedPages,
+    });
 
     // Build response based on parser type and format
     const result: ParseResponse = {
+      document: normalizedDocument,
+      raw: rawProviderResponse as JsonValue | undefined,
+      run: {
+        id: runId,
+        engineId: engine.id,
+        provider: engine.provider,
+        model: parserModel,
+        version: parserVersion,
+        status: "succeeded",
+        config: runConfig,
+        startedAt,
+        completedAt: new Date().toISOString(),
+      },
       metadata: {
         fileName: file.name,
         fileSize: file.size,
         mimeType: file.type,
+        pageCount: normalizedDocument.statistics.pageCount || normalizedPages?.length,
         processingTime,
+        parserType,
+        parserVersion,
+        documentHash,
       },
     };
+
+    if (normalizedPages?.length) {
+      result.pages = normalizedPages;
+    }
 
     // Map output based on parser type and selected format
     if (parserType === "Upstage") {
@@ -432,13 +662,14 @@ export async function POST(request: NextRequest) {
       } else {
         result.text = parsedText;
       }
+    } else if (parserType === "Docling") {
+      // Store all available formats
+      if (parsedText) result.text = parsedText;
+      if (parsedHtml) result.html = parsedHtml;
+      if (parsedMarkdown) result.markdown = parsedMarkdown;
+      if (parsedJson) result.json = parsedJson;
     } else if (parserType === "Google") {
-      // Google returns JSON only
-      try {
-        result.json = JSON.parse(parsedText);
-      } catch {
-        result.json = parsedText;
-      }
+      if (parsedJson) result.json = parsedJson;
       result.text = parsedText; // Fallback
     } else {
       // Default: return both text and html

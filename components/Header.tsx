@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback } from "react";
-import { clearAuthTokens } from "@/lib/auth";
+import { signOut } from "@/lib/auth";
 
 interface HeaderProps {
   title: string;
@@ -10,15 +9,10 @@ interface HeaderProps {
 }
 
 export default function Header({ title, isLoggedIn = true }: HeaderProps) {
-  const router = useRouter();
-
-  const handleLogout = useCallback(() => {
-    // JWT 토큰 제거
-    clearAuthTokens();
-
-    // 로그인 페이지로 이동
-    router.push("/login");
-  }, [router]);
+  const handleLogout = useCallback(async () => {
+    await signOut();
+    window.location.replace("/login");
+  }, []);
 
   return (
     <header className="border-b border-border bg-card shadow-sm">

@@ -1,48 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decrypt } from '@/lib/encryption';
-import { query } from '@/lib/db';
-
-interface ApiKey {
-  encrypted_key: string;
-}
-
-// Get user email from JWT token
-function getUserEmailFromToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization');
-  const token = authHeader?.replace('Bearer ', '') || request.cookies.get('auth_token')?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.email || null;
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
-}
+import { getUserEmailFromToken } from '@/lib/auth-server';
+import { getDecryptedApiKeyMap } from '@/lib/api-key-store';
 
 export async function GET(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get Supabase credentials from database
-    const [urlResult, keyResult] = await Promise.all([
-      query<ApiKey[]>('SELECT encrypted_key FROM user_api_keys WHERE user_email = ? AND key_name = ?', [userEmail, 'supabaseUrl']),
-      query<ApiKey[]>('SELECT encrypted_key FROM user_api_keys WHERE user_email = ? AND key_name = ?', [userEmail, 'supabaseKey']),
-    ]);
+    const keys = await getDecryptedApiKeyMap(userEmail, ['supabaseUrl', 'supabaseKey']);
 
-    if (!urlResult.length || !keyResult.length) {
+    if (!keys.supabaseUrl || !keys.supabaseKey) {
       return NextResponse.json({ error: 'Supabase credentials not found. Please configure them in the Connect page.' }, { status: 404 });
     }
 
-    const supabaseUrl = decrypt(urlResult[0].encrypted_key);
-    const supabaseKey = decrypt(keyResult[0].encrypted_key);
+    const supabaseUrl = keys.supabaseUrl;
+    const supabaseKey = keys.supabaseKey;
 
     // Use PostgREST API to get table information
     const response = await fetch(`${supabaseUrl}/rest/v1/`, {

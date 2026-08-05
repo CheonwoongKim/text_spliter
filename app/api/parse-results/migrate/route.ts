@@ -1,43 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
 import { getUserEmailFromToken } from '@/lib/auth-server';
+import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
 
-// GET - Check if migration is needed and execute
+// GET - Check whether the Supabase application schema is available.
 export async function GET(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if column exists
-    const columns = await query<any[]>(
-      "SHOW COLUMNS FROM parse_results LIKE 'file_storage_key'"
-    );
+    const supabase = getAppSupabase();
+    const tables = ['user_api_keys', 'parse_results', 'split_results'];
+    const checks = await Promise.all(tables.map(async (table) => {
+      const { error } = await supabase.from(table).select('id').limit(0);
+      assertSupabaseResult(error, `Supabase table ${table} is unavailable`);
+      return table;
+    }));
 
-    if (columns.length === 0) {
-      // Column doesn't exist, run migration
-      console.log('[Migration] Adding file_storage_key column...');
-
-      await query(
-        `ALTER TABLE parse_results
-         ADD COLUMN file_storage_key VARCHAR(500) DEFAULT NULL AFTER mime_type,
-         ADD INDEX idx_storage_key (file_storage_key)`
-      );
-
-      console.log('[Migration] Migration completed successfully');
-
-      return NextResponse.json({
-        message: 'Migration executed successfully',
-        migrated: true,
-      });
-    } else {
-      // Column already exists
-      return NextResponse.json({
-        message: 'Migration not needed, column already exists',
-        migrated: false,
-      });
-    }
+    return NextResponse.json({
+      message: 'Supabase application database is ready',
+      migrated: false,
+      ready: true,
+      tables: checks,
+    });
   } catch (error) {
     console.error('Error during migration:', error);
     return NextResponse.json(

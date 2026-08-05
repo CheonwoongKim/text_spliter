@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
-import { getUserEmailFromToken } from '@/lib/auth-server';
-import { STORAGE_API_BASE, DEFAULT_BUCKET } from '@/lib/storage-config';
+import { getUserFromToken } from '@/lib/auth-server';
+import { fileNameFromDocumentKey, listUserDocuments } from '@/lib/document-storage';
+import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
 
 interface ParseResult {
   id: number;
@@ -9,110 +9,56 @@ interface ParseResult {
   file_storage_key: string | null;
 }
 
-interface StorageFile {
-  key: string;
-  name?: string;  // name might not exist, use key as fallback
-  size: number;
-  lastModified: string;
-  contentType: string;
-}
-
-// POST - Sync parse results with storage files by matching file names
+// Backfill source-document references for results created before Supabase Storage was enabled.
 export async function POST(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
-    if (!userEmail) {
+    const user = await getUserFromToken(request);
+    if (!user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get all parse results without storage key
-    const parseResults = await query<ParseResult[]>(
-      'SELECT id, file_name, file_storage_key FROM parse_results WHERE user_email = ? AND file_storage_key IS NULL',
-      [userEmail]
-    );
+    const supabase = getAppSupabase();
+    const { data, error } = await supabase
+      .from('parse_results')
+      .select('id, file_name, file_storage_key')
+      .eq('user_email', user.email)
+      .is('file_storage_key', null);
+    assertSupabaseResult(error, 'Failed to load parse results for storage sync');
+    const parseResults = (data || []) as ParseResult[];
 
     if (parseResults.length === 0) {
-      return NextResponse.json({
-        message: 'No parse results to sync',
-        updated: 0,
-      });
+      return NextResponse.json({ message: 'No parse results to sync', updated: 0, total: 0 });
     }
 
-    // Get all files from storage
-    const authHeader = request.headers.get('authorization');
-    const storageResponse = await fetch(
-      `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/objects`,
-      {
-        headers: {
-          'Authorization': authHeader || '',
-        },
-      }
-    );
-
-    if (!storageResponse.ok) {
-      throw new Error('Failed to fetch storage files');
+    const documents = await listUserDocuments(supabase, user.id);
+    const keysByName = new Map<string, string>();
+    for (const document of documents) {
+      keysByName.set(fileNameFromDocumentKey(document.key), document.key);
     }
 
-    const storageData = await storageResponse.json();
-    const storageFiles: StorageFile[] = storageData.objects || [];
-
-    // Create a map of file names to storage keys
-    // Extract basename from both file.name and file.key for matching
-    const fileNameMap = new Map<string, string>();
-    storageFiles.forEach((file) => {
-      // Get basename from key (file.name might not exist)
-      const keyBasename = file.key.split('/').pop() || file.key;
-
-      // Add key and basename to map
-      fileNameMap.set(keyBasename, file.key);
-      fileNameMap.set(file.key, file.key);
-
-      // If name exists and is different from key, also add it
-      if (file.name && file.name !== file.key) {
-        const nameBasename = file.name.split('/').pop() || file.name;
-        fileNameMap.set(nameBasename, file.key);
-        fileNameMap.set(file.name, file.key);
-      }
+    const updates = parseResults.flatMap((result) => {
+      const fileName = result.file_name.split('/').pop() || result.file_name;
+      const key = keysByName.get(fileName);
+      return key ? [{ id: result.id, key, fileName: result.file_name }] : [];
     });
 
-    // Update parse results with matching storage keys
-    let updatedCount = 0;
-    const updates: Array<{ id: number; key: string; fileName: string }> = [];
-
-    for (const result of parseResults) {
-      // Try exact match first
-      let storageKey = fileNameMap.get(result.file_name);
-
-      // If no exact match, try basename match
-      if (!storageKey) {
-        const basename = result.file_name.split('/').pop() || result.file_name;
-        storageKey = fileNameMap.get(basename);
-      }
-
-      if (storageKey) {
-        updates.push({ id: result.id, key: storageKey, fileName: result.file_name });
-      }
-    }
-
-    // Batch update
-    if (updates.length > 0) {
-      for (const update of updates) {
-        await query(
-          'UPDATE parse_results SET file_storage_key = ? WHERE id = ?',
-          [update.key, update.id]
-        );
-        updatedCount++;
-      }
+    for (const update of updates) {
+      const { error: updateError } = await supabase
+        .from('parse_results')
+        .update({ file_storage_key: update.key })
+        .eq('id', update.id)
+        .eq('user_email', user.email);
+      assertSupabaseResult(updateError, `Failed to sync parse result ${update.id}`);
     }
 
     return NextResponse.json({
-      message: `Successfully synced ${updatedCount} parse results`,
-      updated: updatedCount,
+      message: `Successfully synced ${updates.length} parse results`,
+      updated: updates.length,
       total: parseResults.length,
-      matches: updates.map(u => ({ id: u.id, key: u.key, fileName: u.fileName })),
+      matches: updates,
     });
   } catch (error) {
-    console.error('Error syncing parse results with storage:', error);
+    console.error('Error syncing parse results with Supabase Storage:', error);
     return NextResponse.json(
       {
         error: 'Failed to sync parse results',

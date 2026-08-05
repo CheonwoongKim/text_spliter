@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
 import { getUserEmailFromToken } from '@/lib/auth-server';
 import type { SplitResponse, SplitterConfig } from '@/lib/types';
 import { PAGINATION_API_CONFIG } from '@/lib/constants';
 import { validatePagination, validateId, ValidationError } from '@/lib/validation';
+import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
 
 interface SplitResult {
   id: number;
@@ -26,7 +26,7 @@ interface SplitResult {
 // POST - Save split result
 export async function POST(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -45,33 +45,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert into database
-    const insertResult = await query(
-      `INSERT INTO split_results
-       (\`user_email\`, \`splitter_type\`, \`original_text\`, \`chunk_size\`, \`chunk_overlap\`,
-        \`separator\`, \`separators\`, \`encoding_name\`, \`language\`, \`breakpoint_type\`,
-        \`chunks\`, \`chunk_count\`, \`processing_time\`)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        userEmail,
-        config.splitterType,
-        originalText,
-        config.chunkSize || null,
-        config.chunkOverlap || null,
-        config.separator || null,
-        config.separators ? JSON.stringify(config.separators) : null,
-        config.encodingName || null,
-        config.language || null,
-        config.breakpointType || null,
-        JSON.stringify(result.chunks),
-        result.chunks.length,
-        result.statistics.processingTime || null,
-      ]
-    );
+    const { data: insertedResult, error } = await getAppSupabase()
+      .from('split_results')
+      .insert({
+        user_email: userEmail,
+        splitter_type: config.splitterType,
+        original_text: originalText,
+        chunk_size: config.chunkSize || null,
+        chunk_overlap: config.chunkOverlap || null,
+        separator: config.separator || null,
+        separators: config.separators || null,
+        encoding_name: config.encodingName || null,
+        language: config.language || null,
+        breakpoint_type: config.breakpointType || null,
+        chunks: result.chunks,
+        chunk_count: result.chunks.length,
+        processing_time: result.statistics.processingTime || null,
+      })
+      .select('id')
+      .single();
+    assertSupabaseResult(error, 'Failed to save split result');
 
     return NextResponse.json({
       success: true,
-      id: (insertResult as any).insertId,
+      id: insertedResult?.id,
     });
   } catch (error) {
     console.error('Error saving split result:', error);
@@ -88,7 +85,7 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve split results
 export async function GET(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
 
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -103,39 +100,37 @@ export async function GET(request: NextRequest) {
       // Get specific result
       const id = validateId(rawId);
 
-      const results = await query<SplitResult[]>(
-        'SELECT * FROM split_results WHERE id = ? AND user_email = ?',
-        [id, userEmail]
-      );
+      const { data, error } = await getAppSupabase()
+        .from('split_results')
+        .select('*')
+        .eq('id', id)
+        .eq('user_email', userEmail)
+        .maybeSingle();
+      assertSupabaseResult(error, 'Failed to load split result');
 
-      if (results.length === 0) {
+      if (!data) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
 
-      return NextResponse.json(results[0]);
+      return NextResponse.json(data as SplitResult);
     } else {
       // Get all results with pagination
       const { limit, offset } = validatePagination(rawLimit, rawOffset);
 
-      const [results, countResult] = await Promise.all([
-        query<SplitResult[]>(
-          `SELECT id, splitter_type, chunk_size, chunk_overlap, chunk_count, processing_time, created_at,
-                  LEFT(original_text, 100) as original_text_preview
-           FROM split_results
-           WHERE user_email = ?
-           ORDER BY created_at DESC
-           LIMIT ${limit} OFFSET ${offset}`,
-          [userEmail]
-        ),
-        query<{ total: number }[]>(
-          'SELECT COUNT(*) as total FROM split_results WHERE user_email = ?',
-          [userEmail]
-        ),
-      ]);
+      const { data, error, count } = await getAppSupabase()
+        .from('split_results')
+        .select(
+          'id, splitter_type, chunk_size, chunk_overlap, chunk_count, processing_time, created_at, original_text_preview',
+          { count: 'exact' }
+        )
+        .eq('user_email', userEmail)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+      assertSupabaseResult(error, 'Failed to list split results');
 
       return NextResponse.json({
-        results,
-        total: countResult[0]?.total || 0,
+        results: data || [],
+        total: count || 0,
       });
     }
   } catch (error) {
@@ -161,7 +156,7 @@ export async function GET(request: NextRequest) {
 // DELETE - Delete split result
 export async function DELETE(request: NextRequest) {
   try {
-    const userEmail = getUserEmailFromToken(request);
+    const userEmail = await getUserEmailFromToken(request);
     if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -175,10 +170,12 @@ export async function DELETE(request: NextRequest) {
 
     const id = validateId(rawId);
 
-    await query(
-      'DELETE FROM split_results WHERE id = ? AND user_email = ?',
-      [id, userEmail]
-    );
+    const { error } = await getAppSupabase()
+      .from('split_results')
+      .delete()
+      .eq('id', id)
+      .eq('user_email', userEmail);
+    assertSupabaseResult(error, 'Failed to delete split result');
 
     return NextResponse.json({ success: true });
   } catch (error) {

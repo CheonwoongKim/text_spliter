@@ -1,76 +1,48 @@
-import { NextRequest } from 'next/server';
-import { getUserEmailFromToken, createUnauthorizedResponse } from '@/lib/auth-server';
-import { STORAGE_API_BASE, DEFAULT_BUCKET } from '@/lib/storage-config';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromToken } from '@/lib/auth-server';
+import { assertUserDocumentKey } from '@/lib/document-storage';
+import { DOCUMENTS_BUCKET } from '@/lib/storage-config';
+import { getAppSupabase } from '@/lib/supabase-server';
+import { ValidationError } from '@/lib/validation';
 
 export async function GET(request: NextRequest) {
-  const email = getUserEmailFromToken(request);
-
-  if (!email) {
-    return createUnauthorizedResponse();
+  const user = await getUserFromToken(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const { searchParams } = new URL(request.url);
-    const key = searchParams.get('key');
-
+    const key = new URL(request.url).searchParams.get('key');
     if (!key) {
-      return new Response(
-        JSON.stringify({ error: 'File key is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      return NextResponse.json({ error: 'Document key is required' }, { status: 400 });
+    }
+
+    const safeKey = assertUserDocumentKey(key, user.id);
+    const { data, error } = await getAppSupabase().storage
+      .from(DOCUMENTS_BUCKET)
+      .download(safeKey);
+
+    if (error || !data) {
+      return NextResponse.json(
+        { error: error?.message || 'Document not found' },
+        { status: 404 }
       );
     }
 
-    const authHeader = request.headers.get('authorization');
-    // Use mode=view to open file in browser (for PDF, images)
-    const url = `${STORAGE_API_BASE}/v1/storage/buckets/${DEFAULT_BUCKET}/preview/${encodeURIComponent(key)}?mode=view`;
-
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': authHeader || '',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[Storage Preview API] Error response:', errorText);
-
-      let errorMessage = 'Failed to fetch preview';
-      let errorData: any = {};
-
-      try {
-        errorData = JSON.parse(errorText);
-
-        // Handle specific error cases
-        if (errorData.error === 'file_too_large') {
-          errorMessage = `File is too large for preview (${(errorData.fileSize / 1024 / 1024).toFixed(2)}MB). Maximum size is ${(errorData.maxSize / 1024 / 1024).toFixed(0)}MB.`;
-        } else {
-          errorMessage = errorData.message || errorData.error || 'Failed to fetch preview';
-        }
-      } catch {
-        errorMessage = errorText || 'Failed to fetch preview';
-      }
-
-      return new Response(
-        JSON.stringify({ error: errorMessage }),
-        { status: response.status, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Forward the response with the same content type
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
-    const blob = await response.blob();
-
-    return new Response(blob, {
+    return new Response(data, {
       status: 200,
       headers: {
-        'Content-Type': contentType,
+        'Content-Type': data.type || 'application/octet-stream',
+        'Content-Length': String(data.size),
+        'Cache-Control': 'private, no-store',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (error) {
-    console.error('[Storage Preview API] Error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch preview' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    console.error('[Supabase Storage] Preview failed:', error);
+    return NextResponse.json(
+      { error: error instanceof ValidationError ? error.message : 'Failed to load document preview' },
+      { status: error instanceof ValidationError ? 400 : 500 }
     );
   }
 }

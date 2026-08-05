@@ -1,219 +1,137 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { setAuthToken, setRefreshToken } from "@/lib/auth";
+import { useCallback, useState } from "react";
+import { syncAuthSession } from "@/lib/auth";
+import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const handleEmailChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setEmail(e.target.value);
-      setError(null);
-    },
-    []
-  );
-
-  const handlePasswordChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPassword(e.target.value);
-      setError(null);
-    },
-    []
-  );
+  const [message, setMessage] = useState<string | null>(null);
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-
-      if (!email || !password) {
-        setError("Please enter email and password.");
-        return;
-      }
-
+    async (event: React.FormEvent) => {
+      event.preventDefault();
       setLoading(true);
       setError(null);
+      setMessage(null);
 
       try {
-        const response = await fetch("/api/storage/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        });
+        const supabase = getBrowserSupabase();
+        const credentials = { email: email.trim(), password };
+        const { data, error: authError } = mode === "signin"
+          ? await supabase.auth.signInWithPassword(credentials)
+          : await supabase.auth.signUp(credentials);
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.error || errorData.message || "Login failed. Please check your credentials."
-          );
+        if (authError) throw authError;
+
+        if (data.session) {
+          syncAuthSession(data.session);
+          window.location.replace("/");
+          return;
         }
 
-        const data = await response.json();
-
-        // JWT 토큰 저장
-        if (data.token || data.access_token || data.accessToken) {
-          const token = data.token || data.access_token || data.accessToken;
-          setAuthToken(token);
-
-          // Refresh token도 있다면 저장
-          if (data.refresh_token || data.refreshToken) {
-            const refreshToken = data.refresh_token || data.refreshToken;
-            setRefreshToken(refreshToken);
-          }
-        }
-
-        // 로그인 성공 - 메인 페이지로 이동
-        router.push("/");
-      } catch (err) {
-        console.error("Login error:", err);
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred"
-        );
+        setMessage("계정 확인 메일을 보냈습니다. 이메일 인증 후 로그인해 주세요.");
+      } catch (authError) {
+        setError(authError instanceof Error ? authError.message : "인증에 실패했습니다.");
       } finally {
         setLoading(false);
       }
     },
-    [email, password, router]
+    [email, mode, password]
   );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface px-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-card-foreground mb-2">
             BGK
           </h1>
           <p className="text-sm text-muted-foreground">
-            Welcome back, please sign in to continue
+            Supabase Authentication
           </p>
         </div>
 
-        {/* Login Form */}
-        <div>
-          <form onSubmit={handleSubmit}>
-            {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <div className="flex items-center">
-                  <svg
-                    className="h-5 w-5 text-red-400 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span className="text-sm text-red-800 dark:text-red-200">
-                    {error}
-                  </span>
-                </div>
-              </div>
-            )}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-surface-foreground mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
+              className="w-full h-12 px-0 border-0 border-b border-border
+                       focus:outline-none focus:ring-0 focus:ring-offset-0
+                       focus:border-0 focus:border-b-2 focus:border-accent
+                       bg-transparent text-card-foreground
+                       placeholder-light focus:placeholder-transparent"
+              autoComplete="email"
+              required
+            />
+          </div>
 
-            {/* Email Input */}
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-surface-foreground mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={handleEmailChange}
-                disabled={loading}
-                placeholder="Enter your email"
-                className="w-full h-12 px-0 border-0 border-b border-border
-                         focus:outline-none focus:ring-0 focus:ring-offset-0
-                         focus:border-0 focus:border-b-2 focus:border-accent
-                         bg-transparent text-card-foreground
-                         placeholder-light focus:placeholder-transparent
-                         disabled:opacity-disabled disabled:cursor-not-allowed"
-                autoComplete="email"
-              />
-            </div>
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-surface-foreground mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Password"
+              className="w-full h-12 px-0 border-0 border-b border-border
+                       focus:outline-none focus:ring-0 focus:ring-offset-0
+                       focus:border-0 focus:border-b-2 focus:border-accent
+                       bg-transparent text-card-foreground
+                       placeholder-light focus:placeholder-transparent"
+              autoComplete="current-password"
+              minLength={6}
+              required
+            />
+          </div>
 
-            {/* Password Input */}
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-surface-foreground mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={handlePasswordChange}
-                disabled={loading}
-                placeholder="Enter your password"
-                className="w-full h-12 px-0 border-0 border-b border-border
-                         focus:outline-none focus:ring-0 focus:ring-offset-0
-                         focus:border-0 focus:border-b-2 focus:border-accent
-                         bg-transparent text-card-foreground
-                         placeholder-light focus:placeholder-transparent
-                         disabled:opacity-disabled disabled:cursor-not-allowed"
-                autoComplete="current-password"
-              />
-            </div>
-
-            {/* Login Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 bg-card hover:bg-muted
-                       disabled:bg-muted disabled:text-muted-foreground
-                       text-card-foreground font-medium rounded-lg
-                       border border-border
-                       transition-smooth disabled:cursor-not-allowed
-                       flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <svg
-                    className="animate-spin h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Signing in...
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </button>
-
-            {/* Admin Contact Message */}
-            <p className="text-center text-xs text-muted-foreground mt-14">
-              For login assistance, please contact your administrator
+          {error && (
+            <p className="mb-5 text-sm text-red-400" role="alert">
+              {error}
             </p>
-          </form>
-        </div>
+          )}
+
+          {message && (
+            <p className="mb-5 text-sm text-emerald-400" role="status">
+              {message}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-12 bg-card hover:bg-muted
+                     text-card-foreground font-medium rounded-lg
+                     border border-border transition-smooth
+                     flex items-center justify-center gap-2
+                     disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "처리 중..." : mode === "signin" ? "로그인" : "계정 생성"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMode((current) => current === "signin" ? "signup" : "signin");
+              setError(null);
+              setMessage(null);
+            }}
+            className="mt-14 w-full text-center text-sm text-muted-foreground hover:text-card-foreground"
+          >
+            {mode === "signin" ? "계정이 없나요? 회원가입" : "이미 계정이 있나요? 로그인"}
+          </button>
+        </form>
       </div>
     </div>
   );
