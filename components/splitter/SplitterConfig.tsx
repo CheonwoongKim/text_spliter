@@ -141,7 +141,7 @@ function SplitterConfig({
             className={`${INPUT_BASE_CLASS} font-mono text-sm`}
           />
           <p className={HELP_TEXT_CLASS}>
-            Enter separators separated by commas. Leave empty to use default: ["\n\n", "\n", " ", ""]
+            Enter separators separated by commas. Leave empty to use default: [&quot;\n\n&quot;, &quot;\n&quot;, &quot; &quot;, &quot;&quot;]
           </p>
         </div>
       )}

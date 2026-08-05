@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ParseResponse } from "@/lib/types";
 
 interface ParseComparisonWorkbenchProps {

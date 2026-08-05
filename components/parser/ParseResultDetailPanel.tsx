@@ -40,46 +40,7 @@ export default function ParseResultDetailPanel({
   // View mode for switching between different output formats
   const [viewMode, setViewMode] = useState<"text" | "html" | "markdown" | "json">("text");
 
-  useEffect(() => {
-    fetchParseResult();
-  }, [resultId]);
-
-  useEffect(() => {
-    // Load preview if storage key exists
-    if (result?.file_storage_key) {
-      loadPreview(result.file_storage_key);
-    }
-
-    // Cleanup: revoke object URL when component unmounts or result changes
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [result?.file_storage_key]);
-
-  const loadPreview = async (storageKey: string) => {
-    setPreviewLoading(true);
-    try {
-      const response = await authFetch(`/api/storage/preview?key=${encodeURIComponent(storageKey)}`);
-
-      if (!response.ok) {
-        console.error('Failed to load preview:', response.status);
-        setPreviewLoading(false);
-        return;
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      setPreviewUrl(url);
-    } catch (error) {
-      console.error('Error loading preview:', error);
-    } finally {
-      setPreviewLoading(false);
-    }
-  };
-
-  const fetchParseResult = async () => {
+  const fetchParseResult = useCallback(async () => {
     setLoading(true);
     try {
       const response = await authFetch(`/api/parse-results?id=${resultId}`);
@@ -118,7 +79,57 @@ export default function ParseResultDetailPanel({
     } finally {
       setLoading(false);
     }
-  };
+  }, [resultId]);
+
+  useEffect(() => {
+    void fetchParseResult();
+  }, [fetchParseResult]);
+
+  useEffect(() => {
+    const storageKey = result?.file_storage_key;
+    let disposed = false;
+    let objectUrl: string | null = null;
+
+    const loadPreview = async () => {
+      if (!storageKey) {
+        setPreviewUrl(null);
+        return;
+      }
+
+      setPreviewLoading(true);
+      try {
+        const response = await authFetch(
+          `/api/storage/preview?key=${encodeURIComponent(storageKey)}`,
+        );
+
+        if (!response.ok) {
+          console.error("Failed to load preview:", response.status);
+          return;
+        }
+
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        if (!disposed) {
+          setPreviewUrl(objectUrl);
+        }
+      } catch (error) {
+        console.error("Error loading preview:", error);
+      } finally {
+        if (!disposed) {
+          setPreviewLoading(false);
+        }
+      }
+    };
+
+    void loadPreview();
+
+    return () => {
+      disposed = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [result?.file_storage_key]);
 
   const handleViewModeChange = useCallback((newMode: "text" | "html" | "markdown" | "json") => {
     if (!result) return;

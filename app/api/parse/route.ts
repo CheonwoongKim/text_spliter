@@ -408,7 +408,7 @@ export async function POST(request: NextRequest) {
 
       // Poll for results
       let analysisComplete = false;
-      let maxRetries = 30;
+      const maxRetries = 30;
       let retryCount = 0;
 
       while (!analysisComplete && retryCount < maxRetries) {

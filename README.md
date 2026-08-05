@@ -84,10 +84,10 @@ OCR과 문서 파싱은 별도 단계로 취급합니다. 이미지 기반 문�
 
 ### Frontend
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **UI**: React 18
+- **UI**: React 19
 
 ### Backend
 
@@ -109,7 +109,7 @@ OCR과 문서 파싱은 별도 단계로 취급합니다. 이미지 기반 문�
 
 ### 필수 요구사항
 
-- Node.js 18 이상
+- Node.js 20.9 이상
 - Supabase CLI와 전용 Supabase 프로젝트
 - npm 또는 yarn
 

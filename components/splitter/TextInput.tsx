@@ -197,7 +197,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
               // For other formats, use as-is
               textContent = detail.text_content;
             }
-          } catch (e) {
+          } catch {
             console.log('[TextInput] Failed to parse as JSON, using as-is');
             textContent = detail.text_content;
           }
@@ -323,7 +323,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
     } finally {
       setLoading(false);
     }
-  }, [onChange]);
+  }, [onChange, onSourceMetadataChange]);
 
   return (
     <div className="flex flex-col h-full">

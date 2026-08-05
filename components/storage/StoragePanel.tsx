@@ -126,7 +126,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, rowsPerPage]);
 
   const fetchSplitResults = useCallback(async () => {
     setSplitLoading(true);
@@ -168,7 +168,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
     } finally {
       setSplitLoading(false);
     }
-  }, [splitPage]);
+  }, [rowsPerPage, splitPage]);
 
   const handleDelete = useCallback(async (id: number) => {
     if (!confirm('Are you sure you want to delete this result?')) {
