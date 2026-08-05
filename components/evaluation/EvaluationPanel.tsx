@@ -22,6 +22,7 @@ import type {
   RagasMetricKey,
   ReviewerDecision,
 } from "@/lib/types";
+import { evaluationCaseSelectionLabel } from "@/lib/evaluation-accessibility";
 import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 
 const NEW_CASE_ID = "__new_case__";
@@ -615,7 +616,13 @@ export default function EvaluationPanel() {
                 {versionCases.map((evaluationCase, index) => (
                   <div key={evaluationCase.id} className={`flex items-start border-b border-border ${selectedCaseId === evaluationCase.id ? "bg-accent/10" : "hover:bg-muted/30"}`}>
                     <label className="pl-4 pt-4 cursor-pointer">
-                      <input type="checkbox" checked={selectedCaseIds.has(evaluationCase.id)} onChange={() => toggleCaseSelection(evaluationCase.id)} className="rounded border-border text-accent focus:ring-accent" />
+                      <input
+                        type="checkbox"
+                        checked={selectedCaseIds.has(evaluationCase.id)}
+                        onChange={() => toggleCaseSelection(evaluationCase.id)}
+                        aria-label={evaluationCaseSelectionLabel(evaluationCase)}
+                        className="rounded border-border text-accent focus:ring-accent"
+                      />
                     </label>
                     <button type="button" onClick={() => setSelectedCaseId(evaluationCase.id)} className="flex-1 min-w-0 text-left px-3 py-4">
                       <div className="flex items-center justify-between gap-2">
