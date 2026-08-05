@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import type {
   EvaluationCaseRun,
   EvaluationRun,
@@ -28,11 +29,47 @@ interface EvaluationRunsViewProps {
 }
 
 function statusClass(status: string): string {
-  if (status === "completed" || status === "succeeded" || status === "pass") return "text-green-500 bg-green-500/10";
+  if (status === "completed" || status === "succeeded" || status === "pass" || status === "passed") return "text-green-500 bg-green-500/10";
   if (status === "failed" || status === "fail") return "text-red-500 bg-red-500/10";
   if (status === "running") return "text-blue-500 bg-blue-500/10";
   return "text-muted-foreground bg-muted";
 }
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function signedPercent(value: unknown): string {
+  if (typeof value !== "number") return "—";
+  const rounded = Math.round(value * 1000) / 10;
+  return `${rounded > 0 ? "+" : ""}${rounded}%p`;
+}
+
+const METRIC_COLUMNS = [
+  ["recallAtK", "Recall@K"],
+  ["precisionAtK", "Precision@K"],
+  ["hitRate", "Hit rate"],
+  ["mrr", "MRR"],
+  ["ndcgAtK", "nDCG@K"],
+  ["citationPrecision", "Citation precision"],
+  ["citationRecall", "Citation recall"],
+] as const;
+
+const BREAKDOWN_LABELS = {
+  documentType: "Document type",
+  language: "Language",
+  difficulty: "Difficulty",
+  answerable: "Answerability",
+  tags: "Tags",
+  parser: "Parser",
+  chunker: "Chunker",
+  embeddingModel: "Embedding",
+  generator: "Generator",
+} as const;
+
+type BreakdownDimension = keyof typeof BREAKDOWN_LABELS;
 
 function percent(value: unknown): string {
   return typeof value === "number" ? `${Math.round(value * 100)}%` : "—";
@@ -92,6 +129,7 @@ export default function EvaluationRunsView({
   const [citationQuality, setCitationQuality] = useState<number | undefined>();
   const [decision, setDecision] = useState<ReviewerDecision>("pending");
   const [notes, setNotes] = useState("");
+  const [breakdownDimension, setBreakdownDimension] = useState<BreakdownDimension>("documentType");
 
   useEffect(() => {
     setSelectedCaseRunId((current) =>
@@ -122,9 +160,20 @@ export default function EvaluationRunsView({
 
   const metrics = (selectedRun?.aggregate_metrics || {}) as Record<string, unknown>;
   const manualAverages = (metrics.manualAverages || {}) as Record<string, unknown>;
+  const deterministic = asRecord(metrics.deterministic);
+  const breakdowns = asRecord(metrics.breakdowns);
+  const breakdownRows = Array.isArray(breakdowns[breakdownDimension])
+    ? breakdowns[breakdownDimension].map(asRecord)
+    : [];
+  const comparison = asRecord(metrics.comparison);
+  const comparisonDeltas = asRecord(comparison.deltas);
+  const selectedCaseMetrics = asRecord(selectedCaseRun?.deterministic_metrics);
+  const relevanceByRank = Array.isArray(selectedCaseMetrics.relevanceByRank)
+    ? selectedCaseMetrics.relevanceByRank.map(asRecord)
+    : [];
 
   return (
-    <div className="h-full grid grid-cols-1 xl:grid-cols-[280px_minmax(0,1fr)]">
+    <div className="h-full grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="h-full overflow-y-auto border-r border-border bg-card/30">
         <div className="px-5 py-4 border-b border-border sticky top-0 bg-card z-10">
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Run history</p>
@@ -163,18 +212,30 @@ export default function EvaluationRunsView({
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 font-mono">{selectedRun.id}</p>
               </div>
-              <div className="flex items-center gap-5 text-center">
+              <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-3 text-center">
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Success</p>
                   <p className="text-sm font-semibold text-card-foreground mt-1">{percent(metrics.successRate)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Reviewed</p>
-                  <p className="text-sm font-semibold text-card-foreground mt-1">{String(metrics.reviewedCount ?? 0)}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recall@K</p>
+                  <p className="text-sm font-semibold text-card-foreground mt-1">{percent(deterministic.recallAtK)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Pass</p>
-                  <p className="text-sm font-semibold text-card-foreground mt-1">{percent(metrics.passRate)}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">MRR</p>
+                  <p className="text-sm font-semibold text-card-foreground mt-1">{numberMetric(deterministic.mrr)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">nDCG@K</p>
+                  <p className="text-sm font-semibold text-card-foreground mt-1">{numberMetric(deterministic.ndcgAtK)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Citation recall</p>
+                  <p className="text-sm font-semibold text-card-foreground mt-1">{percent(deterministic.citationRecall)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Reviewed</p>
+                  <p className="text-sm font-semibold text-card-foreground mt-1">{String(metrics.reviewedCount ?? 0)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Correctness</p>
@@ -182,6 +243,54 @@ export default function EvaluationRunsView({
                 </div>
               </div>
             </div>
+            {!!comparison.baselineRunId && (
+              <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-border">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusClass(String(comparison.status || "pending"))}`}>{String(comparison.status || "pending")}</span>
+                  <p className="text-xs text-muted-foreground truncate">{String(comparison.baselineRunName || comparison.baselineRunId)}</p>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                  {METRIC_COLUMNS.filter(([key]) => ["recallAtK", "mrr", "ndcgAtK", "citationRecall"].includes(key)).map(([key, label]) => (
+                    <span key={key}>{label} <strong className={typeof comparisonDeltas[key] === "number" && Number(comparisonDeltas[key]) < 0 ? "text-red-500" : "text-card-foreground"}>{signedPercent(comparisonDeltas[key])}</strong></span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <details className="mt-4 pt-4 border-t border-border group">
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-xs font-medium text-card-foreground">
+                <span>Metric breakdown</span>
+                <span className="text-[11px] font-normal text-muted-foreground group-open:hidden">문서·파서·모델별 결과 보기</span>
+              </summary>
+              <div className="mt-4">
+                <div className="flex items-center justify-between gap-4 mb-3">
+                  <select value={breakdownDimension} onChange={(event) => setBreakdownDimension(event.target.value as BreakdownDimension)} className="h-9 min-w-44 px-3 border border-border rounded-md bg-surface text-xs text-card-foreground focus:outline-none focus:ring-2 focus:ring-accent">
+                    {Object.entries(BREAKDOWN_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                  </select>
+                  <span className="text-[11px] text-muted-foreground">점수 없는 케이스는 평균에서 제외됩니다.</span>
+                </div>
+                <div className="overflow-x-auto border border-border rounded-lg">
+                  <table className="w-full min-w-[680px] text-xs">
+                    <thead className="bg-muted/50 text-muted-foreground">
+                      <tr><th className="px-3 py-2 text-left font-medium">{BREAKDOWN_LABELS[breakdownDimension]}</th><th className="px-3 py-2 text-right font-medium">Cases</th><th className="px-3 py-2 text-right font-medium">Success</th><th className="px-3 py-2 text-right font-medium">Recall@K</th><th className="px-3 py-2 text-right font-medium">MRR</th><th className="px-3 py-2 text-right font-medium">nDCG@K</th><th className="px-3 py-2 text-right font-medium">Citation recall</th></tr>
+                    </thead>
+                    <tbody>
+                      {breakdownRows.map((row) => (
+                        <tr key={String(row.key)} className="border-t border-border">
+                          <td className="px-3 py-2 text-card-foreground font-medium">{String(row.key)}</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">{String(row.caseCount ?? 0)}</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">{percent(row.successRate)}</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">{percent(row.recallAtK)}</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">{numberMetric(row.mrr)}</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">{numberMetric(row.ndcgAtK)}</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">{percent(row.citationRecall)}</td>
+                        </tr>
+                      ))}
+                      {!breakdownRows.length && <tr><td colSpan={7} className="px-3 py-5 text-center text-muted-foreground">분류 가능한 실행 데이터가 없습니다.</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </details>
           </div>
         )}
 
@@ -256,6 +365,14 @@ export default function EvaluationRunsView({
                     </div>
                     <span className="text-xs text-muted-foreground">{selectedCaseRun.retrieved_contexts?.length || 0} retrieved</span>
                   </div>
+                  <div className="flex flex-wrap mb-5 border border-border rounded-lg overflow-hidden">
+                    {METRIC_COLUMNS.map(([key, label]) => (
+                      <div key={key} className="flex-[1_1_120px] min-w-[120px] px-3 py-2.5 border-r border-b border-border last:border-r-0">
+                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</p>
+                        <p className="text-xs font-semibold text-card-foreground mt-1">{key === "mrr" || key === "ndcgAtK" ? numberMetric(selectedCaseMetrics[key]) : percent(selectedCaseMetrics[key])}</p>
+                      </div>
+                    ))}
+                  </div>
                   {!!selectedCaseRun.expected_evidence_snapshot.length && (
                     <div className="mb-5">
                       <p className="text-xs font-medium text-muted-foreground mb-2">Expected</p>
@@ -269,16 +386,19 @@ export default function EvaluationRunsView({
                     </div>
                   )}
                   <div className="space-y-3">
-                    {(selectedCaseRun.retrieved_contexts || []).map((context) => (
-                      <details key={`${context.rank}-${context.chunkId}`} className="border-b border-border pb-3">
-                        <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-xs">
-                          <span className="text-card-foreground"><strong className="text-accent mr-2">[{context.rank}]</strong>chunk {context.chunkId}</span>
-                          <span className="text-muted-foreground">cosine {context.similarity.toFixed(4)}</span>
-                        </summary>
-                        <p className="mt-3 text-xs leading-5 text-card-foreground whitespace-pre-wrap max-h-56 overflow-y-auto">{context.content}</p>
-                        <pre className="mt-3 text-[10px] text-muted-foreground whitespace-pre-wrap break-all">{JSON.stringify(context.metadata, null, 2)}</pre>
-                      </details>
-                    ))}
+                    {(selectedCaseRun.retrieved_contexts || []).map((context) => {
+                      const relevance = relevanceByRank.find((item) => Number(item.rank) === context.rank);
+                      return (
+                        <details key={`${context.rank}-${context.chunkId}`} className={`border-b pb-3 ${relevance?.relevant ? "border-green-500/30" : "border-border"}`}>
+                          <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-xs">
+                            <span className="text-card-foreground"><strong className="text-accent mr-2">[{context.rank}]</strong>chunk {context.chunkId}</span>
+                            <span className="flex items-center gap-2 text-muted-foreground">{Boolean(relevance?.relevant) && <span className="text-green-500">matched</span>}{Boolean(relevance?.cited) && <span className="text-accent">cited</span>}<span>cosine {context.similarity.toFixed(4)}</span></span>
+                          </summary>
+                          <p className="mt-3 text-xs leading-5 text-card-foreground whitespace-pre-wrap max-h-56 overflow-y-auto">{context.content}</p>
+                          <pre className="mt-3 text-[10px] text-muted-foreground whitespace-pre-wrap break-all">{JSON.stringify(context.metadata, null, 2)}</pre>
+                        </details>
+                      );
+                    })}
                   </div>
                 </section>
 
@@ -318,7 +438,7 @@ export default function EvaluationRunsView({
                         notes,
                       })}
                       disabled={reviewSaving || selectedCaseRun.status === "pending" || selectedCaseRun.status === "running"}
-                      className="px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/90 disabled:opacity-50"
+                      className={styles.primaryButton}
                     >
                       {reviewSaving ? "Saving..." : "Save review"}
                     </button>

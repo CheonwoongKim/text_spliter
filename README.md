@@ -750,7 +750,7 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 
 #### POST /api/evaluation
 
-데이터셋·케이스 CRUD, 버전 복제, 평가 실행 생성, RAG 실행 연결, 수동 리뷰 저장을 `action` 단위로 처리합니다. 모든 행은 Supabase Auth 사용자 UUID로 범위를 제한합니다.
+데이터셋·케이스 CRUD, 버전 복제, 평가 실행 생성, RAG 실행 연결, 수동 리뷰 저장을 `action` 단위로 처리합니다. RAG 결과를 연결하면 Recall@K, Precision@K, Hit Rate, MRR, nDCG@K와 인용 정밀도·재현율을 계산하고, 선택한 기준 실행 대비 회귀도 판정합니다. 모든 행은 Supabase Auth 사용자 UUID로 범위를 제한합니다.
 
 ### API 키 관리
 

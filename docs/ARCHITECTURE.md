@@ -92,6 +92,9 @@ Application persistence uses the server-only Supabase secret client. Every API r
 - Starting an evaluation run freezes the selected dataset version and snapshots every selected case before execution.
 - Browser-side orchestration executes each case through the authenticated RAG API; each result is linked by `rag_run_id` and copied into the case-run snapshot for review.
 - Manual correctness, faithfulness, and citation-quality scores remain separate from pass/fail decisions and future automatic metrics.
+- Successful case runs calculate versioned deterministic retrieval metrics from expected evidence identifiers and retrieved chunk provenance. Evidence notes without document, page, block, or chunk identifiers remain unscored rather than becoming false failures.
+- Run summaries keep macro averages, metric sample counts, and breakdowns for document type, language, difficulty, answerability, tags, parser, chunker, embedding model, and generator.
+- An optional completed run from the same dataset can be selected as a baseline. Per-metric allowed drops are stored with the candidate run, and regressions are recorded without overwriting human-review results.
 - Frozen versions are never edited in place. The next version clones the golden cases into a new draft.
 
 ## Change rules

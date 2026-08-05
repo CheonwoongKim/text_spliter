@@ -20,13 +20,13 @@
 - [x] execute selected cases against a frozen dataset version and RAG configuration
 - [x] record reviewer scores, notes, pass/fail decisions, and source/evidence links
 
-### Stage 2 — Deterministic retrieval metrics (next)
+### Stage 2 — Deterministic retrieval metrics (completed)
 
-- [ ] calculate Recall@K, Precision@K, MRR, nDCG, hit rate, citation precision, and citation recall
-- [ ] report scores by document type, language, difficulty, parser, chunker, embedding model, and generator
-- [ ] support baseline-vs-candidate comparisons and regression thresholds
+- [x] calculate Recall@K, Precision@K, MRR, nDCG, hit rate, citation precision, and citation recall
+- [x] report scores by document type, language, difficulty, parser, chunker, embedding model, and generator
+- [x] support baseline-vs-candidate comparisons and regression thresholds
 
-### Stage 3 — Ragas evaluator worker
+### Stage 3 — Ragas evaluator worker (next)
 
 - [ ] add an isolated Python worker for Ragas metrics and evaluator-model configuration
 - [ ] persist faithfulness, answer relevancy, context precision/recall, metric versions, prompts, and evaluator usage

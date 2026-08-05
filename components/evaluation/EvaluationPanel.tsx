@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import EvaluationRunsView from "@/components/evaluation/EvaluationRunsView";
 import GoldenCaseEditor, { type GoldenCasePayload } from "@/components/evaluation/GoldenCaseEditor";
+import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import { getAuthToken } from "@/lib/auth";
 import type {
   DatabaseSchema,
@@ -88,6 +89,8 @@ export default function EvaluationPanel() {
   const [embeddingModel, setEmbeddingModel] = useState("text-embedding-3-small");
   const [generationModel, setGenerationModel] = useState<RagGenerationModel>("gpt-5.6-terra");
   const [reasoningEffort, setReasoningEffort] = useState<RagReasoningEffort>("low");
+  const [baselineRunId, setBaselineRunId] = useState("");
+  const [regressionTolerance, setRegressionTolerance] = useState(5);
   const [executing, setExecuting] = useState(false);
   const [executionProgress, setExecutionProgress] = useState({ completed: 0, total: 0 });
 
@@ -287,6 +290,8 @@ export default function EvaluationPanel() {
     if (!selectedCaseIds.size) return;
     setRunName(`${selectedDataset?.name || "Evaluation"} · v${selectedVersion?.version_number || 1}`);
     setExecutionProgress({ completed: 0, total: selectedCaseIds.size });
+    setBaselineRunId("");
+    setRegressionTolerance(5);
     setRunModalOpen(true);
     try {
       await fetchSchemas();
@@ -319,6 +324,12 @@ export default function EvaluationPanel() {
         caseIds: Array.from(selectedCaseIds),
         name: runName.trim(),
         pipelineConfig,
+        baselineRunId: baselineRunId || null,
+        regressionThresholds: baselineRunId
+          ? Object.fromEntries([
+              "recallAtK", "precisionAtK", "hitRate", "mrr", "ndcgAtK", "citationPrecision", "citationRecall",
+            ].map((key) => [key, regressionTolerance / 100]))
+          : {},
       });
       setExecutionProgress({ completed: 0, total: created.tasks.length });
 
@@ -417,11 +428,11 @@ export default function EvaluationPanel() {
           <div className="flex items-center gap-2">
             {selectedDataset && (
               <>
-                <button type="button" onClick={() => openDatasetModal(selectedDataset)} className="px-3 py-2 text-xs text-muted-foreground hover:text-card-foreground">Edit</button>
-                <button type="button" onClick={handleDeleteDataset} disabled={saving} className="px-3 py-2 text-xs text-muted-foreground hover:text-red-500 disabled:opacity-50">Delete</button>
+                <button type="button" onClick={() => openDatasetModal(selectedDataset)} className={styles.textButton}>Edit</button>
+                <button type="button" onClick={handleDeleteDataset} disabled={saving} className={styles.dangerTextButton}>Delete</button>
               </>
             )}
-            <button type="button" onClick={() => openDatasetModal()} className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/90">New dataset</button>
+            <button type="button" onClick={() => openDatasetModal()} className={styles.primaryButton}>New dataset</button>
           </div>
         </div>
         <div className="flex items-center justify-between gap-4 mt-4 -mb-4">
@@ -432,9 +443,9 @@ export default function EvaluationPanel() {
           {activeTab === "golden" && selectedVersion && (
             <div className="flex items-center gap-2 pb-2">
               {selectedVersion.status !== "draft" && (
-                <button type="button" onClick={handleCloneVersion} disabled={saving} className="px-3 py-2 border border-border rounded-lg text-xs font-medium text-card-foreground hover:bg-muted disabled:opacity-50">Create next version</button>
+                <button type="button" onClick={handleCloneVersion} disabled={saving} className={styles.secondaryButton}>Create next version</button>
               )}
-              <button type="button" onClick={openRunModal} disabled={!selectedCaseIds.size || executing} className="px-4 py-2 bg-card-foreground text-card rounded-lg text-xs font-medium disabled:opacity-40">
+              <button type="button" onClick={openRunModal} disabled={!selectedCaseIds.size || executing} className={styles.compactPrimaryButton}>
                 Run selected · {selectedCaseIds.size}
               </button>
             </div>
@@ -444,7 +455,7 @@ export default function EvaluationPanel() {
 
       {error && (
         <div className="px-7 py-3 border-b border-red-500/20 bg-red-500/10 flex items-center justify-between gap-4 text-sm text-red-500">
-          <span>{error}</span><button type="button" onClick={() => setError(null)} className="text-xs">Dismiss</button>
+          <span>{error}</span><button type="button" onClick={() => setError(null)} className="text-xs transition-smooth hover:text-red-400">Dismiss</button>
         </div>
       )}
 
@@ -454,7 +465,7 @@ export default function EvaluationPanel() {
             <div>
               <p className="text-base font-semibold text-card-foreground">첫 골든셋을 만드세요</p>
               <p className="text-sm text-muted-foreground mt-2 max-w-md">질문, 기준 답변, 기대 근거를 버전으로 관리하고 같은 파이프라인에서 반복 평가할 수 있습니다.</p>
-              <button type="button" onClick={() => openDatasetModal()} className="mt-5 px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-medium">Create dataset</button>
+              <button type="button" onClick={() => openDatasetModal()} className={`mt-5 ${styles.primaryButton}`}>Create dataset</button>
             </div>
           </div>
         ) : activeTab === "runs" ? (
@@ -476,7 +487,7 @@ export default function EvaluationPanel() {
                     <p className="text-[11px] text-muted-foreground mt-1">{versionCases.length} total · {selectedCaseIds.size} selected</p>
                   </div>
                   {selectedVersion?.status === "draft" && (
-                    <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className="w-8 h-8 rounded-lg bg-accent/10 text-accent text-lg hover:bg-accent/20" title="Add case">+</button>
+                    <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className={`${styles.softIconButton} text-lg`} title="Add case">+</button>
                   )}
                 </div>
                 {!!versionCases.length && (
@@ -513,7 +524,7 @@ export default function EvaluationPanel() {
                 {!versionCases.length && (
                   <div className="px-5 py-10 text-center">
                     <p className="text-xs text-muted-foreground">이 버전에 케이스가 없습니다.</p>
-                    {selectedVersion?.status === "draft" && <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className="mt-3 text-xs font-medium text-accent">Add first case</button>}
+                    {selectedVersion?.status === "draft" && <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className="mt-3 text-xs font-medium text-accent hover:text-accent/80 transition-smooth">Add first case</button>}
                   </div>
                 )}
               </div>
@@ -538,10 +549,10 @@ export default function EvaluationPanel() {
             <h3 className="text-lg font-semibold text-card-foreground">{editingDataset ? "Edit dataset" : "New evaluation dataset"}</h3>
             <p className="text-xs text-muted-foreground mt-1">골든 케이스를 같은 목적과 버전으로 묶습니다.</p>
             <div className="space-y-4 mt-6">
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Name *</span><input autoFocus value={datasetName} onChange={(event) => setDatasetName(event.target.value)} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground" placeholder="Korean financial reports" /></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Description</span><textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} className="w-full px-3 py-2.5 border border-border rounded-lg bg-surface text-sm text-card-foreground" placeholder="평가 목적과 포함 문서 범위" /></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Name *</span><input autoFocus value={datasetName} onChange={(event) => setDatasetName(event.target.value)} className={styles.field} placeholder="Korean financial reports" /></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Description</span><textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} className={styles.textArea} placeholder="평가 목적과 포함 문서 범위" /></label>
             </div>
-            <div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setDatasetModalOpen(false)} disabled={saving} className="px-4 py-2 text-sm text-muted-foreground">Cancel</button><button type="button" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()} className="px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-medium disabled:opacity-50">{saving ? "Saving..." : "Save dataset"}</button></div>
+            <div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setDatasetModalOpen(false)} disabled={saving} className={styles.textButton}>Cancel</button><button type="button" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()} className={styles.primaryButton}>{saving ? "Saving..." : "Save dataset"}</button></div>
           </div>
         </div>
       )}
@@ -554,19 +565,35 @@ export default function EvaluationPanel() {
               <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[11px]">Version will freeze</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Run name</span><input value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground" /></label>
+              <label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Run name</span><input value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing} className={styles.field} /></label>
               <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Schema</span><select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground">{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</select></label>
               <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Vector table</span><select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value="">Select table</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</select></label>
               <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Embedding</span><select value={embeddingModel} onChange={(event) => setEmbeddingModel(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value="text-embedding-3-small">3-small · recommended</option><option value="text-embedding-ada-002">ada-002 · legacy</option></select></label>
               <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Answer model</span><select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></select></label>
               <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Reasoning</span><select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value="none">None</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Top K</span><input type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground" /></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Top K</span><input type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing} className={styles.field} /></label>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5 pt-5 border-t border-border">
+              <label className="block">
+                <span className="block text-xs font-medium text-muted-foreground mb-2">Baseline run</span>
+                <select value={baselineRunId} onChange={(event) => setBaselineRunId(event.target.value)} disabled={executing} className={styles.field}>
+                  <option value="">No baseline</option>
+                  {datasetRuns.filter((run) => run.status === "completed").map((run) => (
+                    <option key={run.id} value={run.id}>{run.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="block text-xs font-medium text-muted-foreground mb-2">Allowed metric drop (%)</span>
+                <input type="number" min={0} max={100} step={1} value={regressionTolerance} onChange={(event) => setRegressionTolerance(Number(event.target.value))} disabled={executing || !baselineRunId} className={styles.field} />
+              </label>
+              <p className="md:col-span-2 text-[11px] leading-5 text-muted-foreground">기준 실행을 선택하면 자동 검색·인용 지표가 허용 범위보다 낮아질 때 회귀로 기록합니다.</p>
             </div>
             <div className="mt-5 px-4 py-3 bg-muted/50 border-l-2 border-accent text-xs leading-5 text-muted-foreground">각 케이스는 OpenAI embedding 1회와 Responses API 1회를 호출합니다. 대상 VDB 테이블에는 먼저 Search Setup이 완료되어 있어야 합니다.</div>
             {executing && (
               <div className="mt-5"><div className="flex items-center justify-between text-xs text-muted-foreground mb-2"><span>Executing cases</span><span>{executionProgress.completed}/{executionProgress.total}</span></div><div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-accent transition-all duration-300" style={{ width: `${executionProgress.total ? (executionProgress.completed / executionProgress.total) * 100 : 0}%` }} /></div></div>
             )}
-            <div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setRunModalOpen(false)} disabled={executing} className="px-4 py-2 text-sm text-muted-foreground disabled:opacity-50">Cancel</button><button type="button" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20} className="px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-medium disabled:opacity-50">{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</button></div>
+            <div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setRunModalOpen(false)} disabled={executing} className={styles.textButton}>Cancel</button><button type="button" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20 || regressionTolerance < 0 || regressionTolerance > 100} className={styles.primaryButton}>{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</button></div>
           </div>
         </div>
       )}

@@ -315,6 +315,38 @@ export interface ExpectedEvidence {
   note?: string;
 }
 
+export type DeterministicMetricKey =
+  | "recallAtK"
+  | "precisionAtK"
+  | "hitRate"
+  | "mrr"
+  | "ndcgAtK"
+  | "citationPrecision"
+  | "citationRecall";
+
+export interface DeterministicEvaluationMetrics {
+  version: "retrieval-v1";
+  k: number;
+  scorableEvidenceCount: number;
+  matchedEvidenceCount: number;
+  relevantRetrievedCount: number;
+  retrievedCount: number;
+  citationCount: number;
+  recallAtK: number | null;
+  precisionAtK: number | null;
+  hitRate: number | null;
+  mrr: number | null;
+  ndcgAtK: number | null;
+  citationPrecision: number | null;
+  citationRecall: number | null;
+  relevanceByRank: Array<{
+    rank: number;
+    relevant: boolean;
+    matchedEvidenceIndices: number[];
+    cited: boolean;
+  }>;
+}
+
 export interface EvaluationDataset {
   id: string;
   owner_id: string;
@@ -367,6 +399,8 @@ export interface EvaluationRun {
   succeeded_count: number;
   failed_count: number;
   aggregate_metrics: Record<string, JsonValue>;
+  baseline_run_id: string | null;
+  regression_thresholds: Partial<Record<DeterministicMetricKey, number>>;
   started_at: string;
   completed_at: string | null;
   created_at: string;
@@ -390,6 +424,14 @@ export interface EvaluationCaseRun {
   rag_usage: Record<string, JsonValue> | null;
   rag_timings: Record<string, JsonValue> | null;
   rag_pipeline_config: Record<string, JsonValue> | null;
+  deterministic_metrics: DeterministicEvaluationMetrics | Record<string, never>;
+  case_attributes_snapshot: {
+    caseKey?: string;
+    answerable?: boolean;
+    tags?: string[];
+    language?: string | null;
+    difficulty?: "easy" | "medium" | "hard";
+  };
   error: Record<string, JsonValue> | null;
   manual_score: {
     correctness?: number;

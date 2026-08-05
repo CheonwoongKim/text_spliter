@@ -23,6 +23,18 @@ interface SplitResult {
   created_at: string;
 }
 
+function sourceSnapshot(result: SplitResponse): Record<string, unknown> | null {
+  const source = result.chunks.find((chunk) => chunk.metadata?.source)?.metadata.source;
+  if (!source) return null;
+  return {
+    fileName: source.fileName || null,
+    parserType: source.parserType || null,
+    parseRunId: source.parseRunId || null,
+    documentHash: source.documentHash || null,
+    engineId: source.engineId || null,
+  };
+}
+
 // POST - Save split result
 export async function POST(request: NextRequest) {
   try {
@@ -45,10 +57,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const sourceMetadata = sourceSnapshot(result);
     const { data: insertedResult, error } = await getAppSupabase()
       .from('split_results')
       .insert({
         user_email: userEmail,
+        parse_run_id: sourceMetadata?.parseRunId || null,
+        document_hash: sourceMetadata?.documentHash || null,
         splitter_type: config.splitterType,
         original_text: originalText,
         chunk_size: config.chunkSize || null,
@@ -58,6 +73,7 @@ export async function POST(request: NextRequest) {
         encoding_name: config.encodingName || null,
         language: config.language || null,
         breakpoint_type: config.breakpointType || null,
+        source_metadata: sourceMetadata,
         chunks: result.chunks,
         chunk_count: result.chunks.length,
         processing_time: result.statistics.processingTime || null,

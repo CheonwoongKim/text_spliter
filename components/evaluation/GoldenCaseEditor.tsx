@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import type { EvaluationCase, ExpectedEvidence } from "@/lib/types";
 
 export interface GoldenCasePayload {
@@ -284,18 +285,18 @@ export default function GoldenCaseEditor({
           <div className="flex items-center justify-between gap-4 pt-5 border-t border-border">
             <div>
               {!isNew && (
-                <button type="button" onClick={onDelete} disabled={saving} className="text-xs font-medium text-red-500 hover:text-red-400 disabled:opacity-50">
+                <button type="button" onClick={onDelete} disabled={saving} className={styles.dangerButton}>
                   Delete case
                 </button>
               )}
             </div>
             <div className="flex items-center gap-3">
               {isNew && (
-                <button type="button" onClick={onCancelNew} disabled={saving} className="px-4 py-2 text-sm text-muted-foreground hover:text-card-foreground disabled:opacity-50">
+                <button type="button" onClick={onCancelNew} disabled={saving} className={styles.textButton}>
                   Cancel
                 </button>
               )}
-              <button type="button" onClick={handleSubmit} disabled={saving || !question.trim()} className="px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/90 disabled:opacity-50">
+              <button type="button" onClick={handleSubmit} disabled={saving || !question.trim()} className={styles.primaryButton}>
                 {saving ? "Saving..." : isNew ? "Add case" : "Save changes"}
               </button>
             </div>

@@ -16,6 +16,7 @@ interface SplitResult {
   user_email: string;
   parse_run_id: string | null;
   document_hash: string | null;
+  source_metadata: Record<string, unknown> | null;
   splitter_type: string;
   original_text: string;
   chunk_size: number | null;
@@ -143,6 +144,16 @@ export async function POST(request: NextRequest) {
         const chunkMetadata = typeof chunk === 'object' && chunk.metadata
           ? chunk.metadata
           : {};
+        const embeddedSource = chunkMetadata.source && typeof chunkMetadata.source === 'object'
+          ? chunkMetadata.source as Record<string, unknown>
+          : {};
+        const sourceMetadata = splitResult.source_metadata || embeddedSource;
+        const sourceFileName = typeof sourceMetadata.fileName === 'string'
+          ? sourceMetadata.fileName
+          : null;
+        const documentType = sourceFileName?.includes('.')
+          ? sourceFileName.split('.').pop()?.toLowerCase() || null
+          : null;
 
         return {
           content,
@@ -150,9 +161,13 @@ export async function POST(request: NextRequest) {
           metadata: {
             ...chunkMetadata,
             source: `split_result_${splitResultId}`,
+            source_metadata: sourceMetadata,
             split_result_id: splitResultId,
-            parse_run_id: splitResult.parse_run_id,
-            document_hash: splitResult.document_hash,
+            parse_run_id: splitResult.parse_run_id || sourceMetadata.parseRunId || null,
+            document_hash: splitResult.document_hash || sourceMetadata.documentHash || null,
+            parser_type: sourceMetadata.parserType || null,
+            engine_id: sourceMetadata.engineId || null,
+            document_type: documentType,
             splitter_type: splitResult.splitter_type,
             chunk_size: splitResult.chunk_size,
             chunk_overlap: splitResult.chunk_overlap,

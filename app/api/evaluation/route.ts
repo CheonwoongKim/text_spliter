@@ -2,7 +2,18 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getUserFromToken } from "@/lib/auth-server";
+import {
+  aggregateDeterministicMetrics,
+  buildMetricBreakdowns,
+  calculateDeterministicMetrics,
+  DETERMINISTIC_METRIC_KEYS,
+  type EvaluationMetricRow,
+} from "@/lib/evaluation-metrics";
 import { assertSupabaseResult, getAppSupabase } from "@/lib/supabase-server";
+import type {
+  DeterministicMetricKey,
+  ExpectedEvidence,
+} from "@/lib/types";
 
 class EvaluationRequestError extends Error {
   constructor(message: string, public readonly status = 400) {
@@ -18,6 +29,8 @@ interface ExpectedEvidenceInput {
   chunkKey?: unknown;
   note?: unknown;
 }
+
+const DEFAULT_REGRESSION_THRESHOLD = 0.05;
 
 function requiredText(value: unknown, label: string, maxLength: number): string {
   if (typeof value !== "string" || !value.trim()) {
@@ -89,6 +102,32 @@ function jsonObject(value: unknown, label: string): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function regressionThresholds(value: unknown, enabled: boolean): Partial<Record<DeterministicMetricKey, number>> {
+  if (!enabled) return {};
+  const raw = value === undefined || value === null ? {} : jsonObject(value, "Regression thresholds");
+  return Object.fromEntries(DETERMINISTIC_METRIC_KEYS.map((key) => {
+    const threshold = raw[key] === undefined ? DEFAULT_REGRESSION_THRESHOLD : Number(raw[key]);
+    if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
+      throw new EvaluationRequestError(`${key} regression threshold must be between 0 and 1.`);
+    }
+    return [key, threshold];
+  })) as Partial<Record<DeterministicMetricKey, number>>;
+}
+
+function runTopK(
+  casePipelineConfig: Record<string, unknown> | null,
+  runPipelineConfig: Record<string, unknown>
+): number {
+  const retrieval = casePipelineConfig?.retrieval;
+  const nestedTopK = retrieval && typeof retrieval === "object" && !Array.isArray(retrieval)
+    ? Number((retrieval as Record<string, unknown>).topK)
+    : NaN;
+  const flatTopK = Number(runPipelineConfig.topK);
+  return Number.isInteger(nestedTopK) && nestedTopK > 0
+    ? nestedTopK
+    : Number.isInteger(flatTopK) && flatTopK > 0 ? flatTopK : 1;
+}
+
 async function ownedVersion(ownerId: string, versionId: string) {
   const { data, error } = await getAppSupabase()
     .from("evaluation_dataset_versions")
@@ -98,6 +137,18 @@ async function ownedVersion(ownerId: string, versionId: string) {
     .maybeSingle();
   assertSupabaseResult(error, "Failed to load evaluation dataset version");
   if (!data) throw new EvaluationRequestError("Dataset version not found.", 404);
+  return data;
+}
+
+async function ownedRun(ownerId: string, runId: string) {
+  const { data, error } = await getAppSupabase()
+    .from("evaluation_runs")
+    .select("*")
+    .eq("id", runId)
+    .eq("owner_id", ownerId)
+    .maybeSingle();
+  assertSupabaseResult(error, "Failed to load evaluation run");
+  if (!data) throw new EvaluationRequestError("Evaluation run not found.", 404);
   return data;
 }
 
@@ -114,14 +165,47 @@ async function draftVersion(ownerId: string, versionId: string) {
 
 async function refreshRunSummary(ownerId: string, runId: string) {
   const supabase = getAppSupabase();
+  const run = await ownedRun(ownerId, runId);
   const { data: rows, error } = await supabase
     .from("evaluation_case_runs")
-    .select("status,manual_score,reviewer_decision")
+    .select("id,status,manual_score,reviewer_decision,expected_evidence_snapshot,retrieved_contexts,citations,rag_pipeline_config,deterministic_metrics,case_attributes_snapshot")
     .eq("evaluation_run_id", runId)
     .eq("owner_id", ownerId);
   assertSupabaseResult(error, "Failed to summarize evaluation case runs");
 
-  const caseRuns = rows || [];
+  const caseRuns = (rows || []).map((row) => {
+    const deterministicMetrics = row.status === "succeeded"
+      ? calculateDeterministicMetrics({
+          expectedEvidence: (Array.isArray(row.expected_evidence_snapshot)
+            ? row.expected_evidence_snapshot
+            : []) as ExpectedEvidence[],
+          retrievedContexts: Array.isArray(row.retrieved_contexts) ? row.retrieved_contexts : [],
+          citations: Array.isArray(row.citations) ? row.citations : [],
+          topK: runTopK(
+            row.rag_pipeline_config && typeof row.rag_pipeline_config === "object"
+              ? row.rag_pipeline_config as Record<string, unknown>
+              : null,
+            run.pipeline_config as Record<string, unknown>
+          ),
+        })
+      : null;
+    return { ...row, calculatedMetrics: deterministicMetrics };
+  });
+
+  const metricUpdates = caseRuns.filter((row) => {
+    const next = row.calculatedMetrics || {};
+    return JSON.stringify(row.deterministic_metrics || {}) !== JSON.stringify(next);
+  });
+  if (metricUpdates.length) {
+    await Promise.all(metricUpdates.map(async (row) => {
+      const { error: metricError } = await supabase
+        .from("evaluation_case_runs")
+        .update({ deterministic_metrics: row.calculatedMetrics || {} })
+        .eq("id", row.id)
+        .eq("owner_id", ownerId);
+      assertSupabaseResult(metricError, "Failed to save deterministic evaluation metrics");
+    }));
+  }
   const completedCount = caseRuns.filter((row) => ["succeeded", "failed"].includes(row.status)).length;
   const succeededCount = caseRuns.filter((row) => row.status === "succeeded").length;
   const failedCount = caseRuns.filter((row) => row.status === "failed").length;
@@ -136,6 +220,63 @@ async function refreshRunSummary(ownerId: string, runId: string) {
     if (!values.length) return null;
     return Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(2));
   };
+  const metricRows: EvaluationMetricRow[] = caseRuns.map((row) => ({
+    status: row.status,
+    deterministicMetrics: row.calculatedMetrics,
+    attributes: row.case_attributes_snapshot && typeof row.case_attributes_snapshot === "object"
+      ? row.case_attributes_snapshot as Record<string, unknown>
+      : {},
+    pipelineConfig: row.rag_pipeline_config && typeof row.rag_pipeline_config === "object"
+      ? row.rag_pipeline_config as Record<string, unknown>
+      : run.pipeline_config as Record<string, unknown>,
+    retrievedContexts: Array.isArray(row.retrieved_contexts) ? row.retrieved_contexts : [],
+  }));
+  const deterministic = aggregateDeterministicMetrics(
+    metricRows.map((row) => row.deterministicMetrics)
+  );
+  const isComplete = caseRuns.length > 0 && completedCount === caseRuns.length;
+  const thresholds = (run.regression_thresholds || {}) as Partial<Record<DeterministicMetricKey, number>>;
+  let comparison: Record<string, unknown> | null = null;
+  if (run.baseline_run_id) {
+    const { data: baseline, error: baselineError } = await supabase
+      .from("evaluation_runs")
+      .select("id,name,status,aggregate_metrics")
+      .eq("id", run.baseline_run_id)
+      .eq("owner_id", ownerId)
+      .maybeSingle();
+    assertSupabaseResult(baselineError, "Failed to load baseline evaluation run");
+    const baselineAggregate = baseline?.aggregate_metrics && typeof baseline.aggregate_metrics === "object"
+      ? baseline.aggregate_metrics as Record<string, unknown>
+      : {};
+    const baselineDeterministic = baselineAggregate.deterministic && typeof baselineAggregate.deterministic === "object"
+      ? baselineAggregate.deterministic as Record<string, unknown>
+      : {};
+    const deltas: Partial<Record<DeterministicMetricKey, number | null>> = {};
+    const regressions: Array<Record<string, unknown>> = [];
+    let comparableMetricCount = 0;
+    for (const key of DETERMINISTIC_METRIC_KEYS) {
+      const candidateValue = deterministic[key];
+      const baselineValue = baselineDeterministic[key];
+      const delta = typeof candidateValue === "number" && typeof baselineValue === "number"
+        ? Number((candidateValue - baselineValue).toFixed(6))
+        : null;
+      deltas[key] = delta;
+      if (delta !== null) comparableMetricCount += 1;
+      const allowedDrop = thresholds[key] ?? DEFAULT_REGRESSION_THRESHOLD;
+      if (delta !== null && delta < -allowedDrop) {
+        regressions.push({ metric: key, baseline: baselineValue, candidate: candidateValue, delta, allowedDrop });
+      }
+    }
+    const baselineReady = baseline?.status === "completed" && comparableMetricCount > 0;
+    comparison = {
+      baselineRunId: run.baseline_run_id,
+      baselineRunName: baseline?.name || null,
+      status: !isComplete ? "pending" : !baselineReady ? "unavailable" : regressions.length ? "failed" : "passed",
+      thresholds,
+      deltas,
+      regressions,
+    };
+  }
   const aggregateMetrics = {
     completionRate: caseRuns.length ? completedCount / caseRuns.length : 0,
     successRate: completedCount ? succeededCount / completedCount : 0,
@@ -148,8 +289,10 @@ async function refreshRunSummary(ownerId: string, runId: string) {
       faithfulness: average("faithfulness"),
       citationQuality: average("citationQuality"),
     },
+    deterministic,
+    breakdowns: buildMetricBreakdowns(metricRows),
+    comparison,
   };
-  const isComplete = caseRuns.length > 0 && completedCount === caseRuns.length;
   const { error: updateError } = await supabase
     .from("evaluation_runs")
     .update({
@@ -390,6 +533,19 @@ export async function POST(request: NextRequest) {
     if (action === "create_run") {
       const versionId = requiredText(body.versionId, "Dataset version ID", 80);
       const version = await ownedVersion(user.id, versionId);
+      const baselineRunId = optionalText(body.baselineRunId, 80);
+      const thresholds = regressionThresholds(body.regressionThresholds, Boolean(baselineRunId));
+      if (baselineRunId) {
+        const baseline = await ownedRun(user.id, baselineRunId);
+        if (baseline.status !== "completed") {
+          throw new EvaluationRequestError("The baseline run must be completed.", 409);
+        }
+        const baselineVersion = await ownedVersion(user.id, baseline.dataset_version_id);
+        if (baselineVersion.dataset_id !== version.dataset_id) {
+          throw new EvaluationRequestError("The baseline run must belong to the same evaluation dataset.", 409);
+        }
+        await refreshRunSummary(user.id, baselineRunId);
+      }
       const caseIds = [...new Set(textArray(body.caseIds, "Case IDs", 20))];
       if (!caseIds.length) throw new EvaluationRequestError("Select at least one evaluation case.");
       const pipelineConfig = jsonObject(body.pipelineConfig, "Pipeline config");
@@ -443,6 +599,8 @@ export async function POST(request: NextRequest) {
           name: runName,
           status: "running",
           pipeline_config: pipelineConfig,
+          baseline_run_id: baselineRunId,
+          regression_thresholds: thresholds,
           case_count: cases.length,
           started_at: new Date().toISOString(),
         })
@@ -464,6 +622,13 @@ export async function POST(request: NextRequest) {
           reference_facts_snapshot: evaluationCase.reference_facts,
           expected_evidence_snapshot: evaluationCase.expected_evidence,
           rubric_snapshot: evaluationCase.rubric,
+          case_attributes_snapshot: {
+            caseKey: evaluationCase.case_key,
+            answerable: evaluationCase.answerable,
+            tags: evaluationCase.tags,
+            language: evaluationCase.language,
+            difficulty: evaluationCase.difficulty,
+          },
         })))
         .select("id,evaluation_case_id,question_snapshot");
       if (caseRunError || !caseRuns) {
@@ -472,6 +637,13 @@ export async function POST(request: NextRequest) {
         throw new Error("Evaluation case runs were not returned after creation.");
       }
       return NextResponse.json({ run, tasks: caseRuns });
+    }
+
+    if (action === "recalculate_run_metrics") {
+      const runId = requiredText(body.runId, "Evaluation run ID", 80);
+      await ownedRun(user.id, runId);
+      const aggregateMetrics = await refreshRunSummary(user.id, runId);
+      return NextResponse.json({ success: true, aggregateMetrics });
     }
 
     if (action === "start_case_run") {
@@ -543,8 +715,8 @@ export async function POST(request: NextRequest) {
         .eq("id", caseRunId)
         .eq("owner_id", user.id);
       assertSupabaseResult(updateError, "Failed to attach RAG result to evaluation case");
-      await refreshRunSummary(user.id, caseRun.evaluation_run_id);
-      return NextResponse.json({ success: true });
+      const aggregateMetrics = await refreshRunSummary(user.id, caseRun.evaluation_run_id);
+      return NextResponse.json({ success: true, aggregateMetrics });
     }
 
     if (action === "review_case_run") {
