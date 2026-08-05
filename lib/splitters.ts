@@ -1,11 +1,11 @@
 import {
   CharacterTextSplitter,
   RecursiveCharacterTextSplitter,
-  TokenTextSplitter,
   MarkdownTextSplitter,
   LatexTextSplitter,
 } from "@langchain/textsplitters";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { getEncoding } from "@langchain/core/utils/tiktoken";
 import type {
   SplitterConfig,
   ChunkResult,
@@ -21,6 +21,129 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
   const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
   return dotProduct / (magnitudeA * magnitudeB);
+}
+
+async function splitTextByGraphemeTokenCount(
+  text: string,
+  chunkSize: number,
+  chunkOverlap: number,
+  encodingName = "cl100k_base"
+): Promise<string[]> {
+  if (!text) return [];
+
+  const tokenizer = await getEncoding(
+    encodingName as Parameters<typeof getEncoding>[0]
+  );
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+  const offsets = [0];
+  for (const part of segmenter.segment(text)) {
+    offsets.push(part.index + part.segment.length);
+  }
+
+  const tokenCount = (start: number, end: number) =>
+    tokenizer.encode(text.slice(offsets[start], offsets[end])).length;
+  const chunks: string[] = [];
+  let start = 0;
+
+  while (start < offsets.length - 1) {
+    let low = start + 1;
+    let high = offsets.length - 1;
+    let end = start + 1;
+
+    while (low <= high) {
+      const candidate = Math.floor((low + high) / 2);
+      if (tokenCount(start, candidate) <= chunkSize) {
+        end = candidate;
+        low = candidate + 1;
+      } else {
+        high = candidate - 1;
+      }
+    }
+
+    chunks.push(text.slice(offsets[start], offsets[end]));
+    if (end === offsets.length - 1) break;
+
+    if (chunkOverlap === 0) {
+      start = end;
+      continue;
+    }
+
+    let nextStart = end;
+    for (let candidate = end - 1; candidate > start; candidate -= 1) {
+      if (tokenCount(candidate, end) > chunkOverlap) break;
+      nextStart = candidate;
+    }
+    start = nextStart > start ? nextStart : start + 1;
+  }
+
+  return chunks;
+}
+
+/**
+ * Keep token-sized chunks on valid UTF-8 boundaries. The upstream token
+ * splitter decodes arbitrary token slices, which can split a multibyte
+ * character and insert Unicode replacement characters into CJK or emoji text.
+ */
+export async function splitTextByTokensSafely(
+  text: string,
+  chunkSize: number,
+  chunkOverlap: number,
+  encodingName = "cl100k_base"
+): Promise<string[]> {
+  if (!text) return [];
+
+  // Preserve an intentional replacement character without confusing it with
+  // a decoder error. This rare path is slower but operates on graphemes only.
+  if (text.includes("�")) {
+    return splitTextByGraphemeTokenCount(
+      text,
+      chunkSize,
+      chunkOverlap,
+      encodingName
+    );
+  }
+
+  const tokenizer = await getEncoding(
+    encodingName as Parameters<typeof getEncoding>[0]
+  );
+  const tokenIds = tokenizer.encode(text);
+  const chunks: string[] = [];
+  let start = 0;
+
+  while (start < tokenIds.length) {
+    let end = Math.min(start + chunkSize, tokenIds.length);
+    let chunk = tokenizer.decode(tokenIds.slice(start, end));
+
+    // Prefer shrinking to stay within the requested token limit.
+    while (end > start + 1 && chunk.includes("�")) {
+      end -= 1;
+      chunk = tokenizer.decode(tokenIds.slice(start, end));
+    }
+
+    // A single grapheme can span more tokens than a very small chunk limit.
+    // In that case, preserve the grapheme even if it exceeds the limit.
+    while (chunk.includes("�") && end < tokenIds.length) {
+      end += 1;
+      chunk = tokenizer.decode(tokenIds.slice(start, end));
+    }
+
+    chunks.push(chunk);
+    if (end === tokenIds.length) break;
+
+    let nextStart = chunkOverlap === 0
+      ? end
+      : Math.max(start + 1, end - chunkOverlap);
+    while (nextStart < end) {
+      const overlapPrefix = tokenizer.decode(
+        tokenIds.slice(nextStart, Math.min(end, nextStart + 8))
+      );
+      if (!overlapPrefix.startsWith("�")) break;
+      nextStart += 1;
+    }
+    start = nextStart;
+  }
+
+  return chunks;
 }
 
 /**
@@ -72,12 +195,12 @@ export async function splitText(
         break;
 
       case "TokenTextSplitter":
-        splitter = new TokenTextSplitter({
-          chunkSize: config.chunkSize,
-          chunkOverlap: config.chunkOverlap,
-          encodingName: (config.encodingName as any) || "cl100k_base",
-        });
-        chunks = await splitter.splitText(text);
+        chunks = await splitTextByTokensSafely(
+          text,
+          config.chunkSize,
+          config.chunkOverlap,
+          config.encodingName || "cl100k_base"
+        );
         break;
 
 
@@ -204,19 +327,20 @@ export async function splitText(
 
     // Build chunk results with metadata
     const chunkResults: ChunkResult[] = [];
-    let currentIndex = 0;
+    let previousStartIndex = -1;
+    let previousEndIndex = 0;
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      let startIndex = text.indexOf(chunk, currentIndex);
+      let startIndex = text.indexOf(chunk, Math.max(0, previousStartIndex + 1));
 
       // If exact match not found (e.g., SemanticChunker modifies text),
       // use the current position as fallback
       if (startIndex === -1) {
-        startIndex = currentIndex;
+        startIndex = Math.min(previousEndIndex, text.length);
       }
 
-      const endIndex = startIndex + chunk.length;
+      const endIndex = Math.min(startIndex + chunk.length, text.length);
 
       chunkResults.push({
         index: i,
@@ -231,7 +355,8 @@ export async function splitText(
         },
       });
 
-      currentIndex = endIndex;
+      previousStartIndex = startIndex;
+      previousEndIndex = endIndex;
     }
 
     // Calculate statistics
