@@ -4,14 +4,13 @@ import { memo, useState, useCallback } from "react";
 import type { TableDataResponse } from "@/lib/types";
 import { VDB_ROWS_PER_PAGE } from "@/lib/constants";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
-import Pagination from "./Pagination";
+import Pagination from "@/components/shared/Pagination";
 
 interface VectorStoreRightPanelProps {
   selectedSchema: string | undefined;
   selectedTable: string | undefined;
   tableData: TableDataResponse | null;
   loading: boolean;
-  onLoadTable: () => void;
   onRefresh: () => void;
 }
 
@@ -26,7 +25,6 @@ function VectorStoreRightPanel({
   selectedTable,
   tableData,
   loading,
-  onLoadTable,
   onRefresh,
 }: VectorStoreRightPanelProps) {
   const [page, setPage] = useState(0);

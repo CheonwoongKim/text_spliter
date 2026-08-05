@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert into Supabase
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from(tableName)
       .insert(embeddedChunks);
 

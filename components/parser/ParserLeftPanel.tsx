@@ -73,13 +73,6 @@ function ParserLeftPanel({
     [onConfigChange]
   );
 
-  const handleUpstageOutputFormatChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      onConfigChange({ upstageOutputFormat: e.target.value as 'text' | 'html' | 'markdown' });
-    },
-    [onConfigChange]
-  );
-
   const handleAzureOutputFormatChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       onConfigChange({ azureOutputFormat: e.target.value as 'text' | 'markdown' });

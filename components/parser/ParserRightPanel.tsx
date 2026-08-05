@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 import JsonView from '@uiw/react-json-view';
 import { darkTheme } from '@uiw/react-json-view/dark';
 import type { ParseResponse, ParserViewMode, ParserConfig } from "@/lib/types";
-import ParseComparisonWorkbench from "@/components/ParseComparisonWorkbench";
+import ParseComparisonWorkbench from "@/components/parser/ParseComparisonWorkbench";
 
 interface ParserRightPanelProps {
   result: ParseResponse | null;

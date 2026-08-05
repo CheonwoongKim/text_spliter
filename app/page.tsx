@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
-import LeftPanel from "@/components/LeftPanel";
-import RightPanel from "@/components/RightPanel";
-import ParserLeftPanel from "@/components/ParserLeftPanel";
-import ParserRightPanel from "@/components/ParserRightPanel";
-import LicensesPanel from "@/components/LicensesPanel";
-import VectorStoreLeftPanel from "@/components/VectorStoreLeftPanel";
-import VectorStoreRightPanel from "@/components/VectorStoreRightPanel";
-import StoragePanel from "@/components/StoragePanel";
-import FilesPanel from "@/components/FilesPanel";
-import ParseResultDetailPanel from "@/components/ParseResultDetailPanel";
+import ErrorBoundary from "@/components/layout/ErrorBoundary";
+import Sidebar from "@/components/layout/Sidebar";
+import Header from "@/components/layout/Header";
+import LeftPanel from "@/components/splitter/LeftPanel";
+import RightPanel from "@/components/splitter/RightPanel";
+import ParserLeftPanel from "@/components/parser/ParserLeftPanel";
+import ParserRightPanel from "@/components/parser/ParserRightPanel";
+import LicensesPanel from "@/components/connect/LicensesPanel";
+import VectorStoreLeftPanel from "@/components/vectorstore/VectorStoreLeftPanel";
+import VectorStoreRightPanel from "@/components/vectorstore/VectorStoreRightPanel";
+import StoragePanel from "@/components/storage/StoragePanel";
+import FilesPanel from "@/components/storage/FilesPanel";
+import ParseResultDetailPanel from "@/components/parser/ParseResultDetailPanel";
 import { getAuthToken } from "@/lib/auth";
 import type {
   SplitterConfig,
@@ -506,7 +506,6 @@ export default function Home() {
                   selectedTable={vectorStoreConfig.selectedTable}
                   tableData={tableData}
                   loading={vectorLoading}
-                  onLoadTable={handleLoadTableData}
                   onRefresh={handleRefreshTableData}
                 />
               </div>

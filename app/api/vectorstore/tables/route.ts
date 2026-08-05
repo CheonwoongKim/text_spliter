@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Create table with pgvector support
     // Note: Supabase JS client doesn't support DDL directly, so we use RPC or raw SQL
-    const { data, error } = await supabase.rpc('exec_sql', {
+    const { error } = await supabase.rpc('exec_sql', {
       sql: `
         -- Enable pgvector extension if not already enabled
         CREATE EXTENSION IF NOT EXISTS vector;

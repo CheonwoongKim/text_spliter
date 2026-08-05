@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import mammoth from "mammoth";
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import type pdfParseType from "pdf-parse";
+
+// The package root includes a CLI-style self-test that webpack can execute
+// during route collection. Import the library entry directly instead.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfParse: typeof pdfParseType = require("pdf-parse/lib/pdf-parse.js");
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,11 +23,8 @@ export async function POST(request: NextRequest) {
     let text = "";
 
     if (fileName.endsWith(".pdf")) {
-      // Parse PDF using LangChain PDFLoader
-      const blob = new Blob([buffer], { type: "application/pdf" });
-      const loader = new PDFLoader(blob);
-      const docs = await loader.load();
-      text = docs.map(doc => doc.pageContent).join("\n\n");
+      const parsed = await pdfParse(buffer);
+      text = parsed.text;
     } else if (fileName.endsWith(".txt")) {
       // Parse TXT
       text = buffer.toString("utf-8");

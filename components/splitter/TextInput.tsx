@@ -53,6 +53,10 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
   const [parseResults, setParseResults] = useState<ParseResult[]>([]);
   const [loadingResults, setLoadingResults] = useState(false);
 
+  useEffect(() => {
+    setPlaintextValue(value);
+  }, [value]);
+
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

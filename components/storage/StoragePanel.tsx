@@ -6,7 +6,7 @@ import JsonView from '@uiw/react-json-view';
 import { darkTheme } from '@uiw/react-json-view/dark';
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 import { DEFAULT_ROWS_PER_PAGE } from "@/lib/constants";
-import Pagination from "./Pagination";
+import Pagination from "@/components/shared/Pagination";
 
 interface ParseResult {
   id: number;
@@ -37,13 +37,6 @@ interface SplitResult {
 interface SplitResultsResponse {
   results: SplitResult[];
   total: number;
-}
-
-interface FullParseResult extends ParseResult {
-  text_content: string | null;
-  html_content: string | null;
-  markdown_content: string | null;
-  json_content: any | null;
 }
 
 interface FullSplitResult extends SplitResult {
@@ -77,7 +70,6 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
   const [splitError, setSplitError] = useState<string | null>(null);
   const [splitPage, setSplitPage] = useState(0);
   const [splitViewModalData, setSplitViewModalData] = useState<FullSplitResult | null>(null);
-  const [splitCopied, setSplitCopied] = useState(false);
 
   // Sync state
   const [syncing, setSyncing] = useState(false);
@@ -378,7 +370,6 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
 
       const data: FullSplitResult = await response.json();
       setSplitViewModalData(data);
-      setSplitCopied(false);
     } catch (err) {
       console.error('Error fetching split result:', err);
       alert(err instanceof Error ? err.message : 'Failed to fetch result');

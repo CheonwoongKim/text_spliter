@@ -124,7 +124,6 @@ function ScorePicker({
 function ResultColumn({
   label,
   run,
-  runIndex,
   runs,
   selectedId,
   blockedId,
@@ -134,7 +133,6 @@ function ResultColumn({
 }: {
   label: "A" | "B";
   run?: ParseResponse;
-  runIndex: number;
   runs: ParseResponse[];
   selectedId: string;
   blockedId?: string;
@@ -353,7 +351,6 @@ export default function ParseComparisonWorkbench({
         <ResultColumn
           label="A"
           run={runAEntry?.run}
-          runIndex={runAEntry?.index ?? 0}
           runs={runs}
           selectedId={runAId}
           blockedId={runBId}
@@ -364,7 +361,6 @@ export default function ParseComparisonWorkbench({
         <ResultColumn
           label="B"
           run={runBEntry?.run}
-          runIndex={runBEntry?.index ?? 1}
           runs={runs}
           selectedId={runBId}
           blockedId={runAId}

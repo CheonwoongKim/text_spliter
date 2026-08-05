@@ -263,16 +263,6 @@ const FilesPanel = memo(function FilesPanel() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString("ko-KR", {
-      year: "2-digit",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const filteredFiles = files.filter((file) =>
     file.filename.toLowerCase().includes(searchQuery.toLowerCase())
   );

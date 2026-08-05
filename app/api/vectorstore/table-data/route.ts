@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'apikey': supabaseKey,
           'Authorization': `Bearer ${supabaseKey}`,
+          'Accept-Profile': schema,
           'Prefer': 'count=exact',
         },
       }
@@ -52,6 +53,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'apikey': supabaseKey,
           'Authorization': `Bearer ${supabaseKey}`,
+          'Accept-Profile': schema,
         },
       }
     );

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import AuthGuard from "@/components/AuthGuard";
+import AuthGuard from "@/components/layout/AuthGuard";
 import "./globals.css";
 
 export const metadata: Metadata = {

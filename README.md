@@ -312,95 +312,27 @@ npm start
 
 ```text
 text_spliter/
-├── app/                       # Next.js App Router
-│   ├── api/
-│   │   ├── keys/              # API 키 관리
-│   │   │   └── route.ts
-│   │   ├── parse/             # 문서 파싱
-│   │   │   └── route.ts
-│   │   ├── parse-results/     # Parse Results CRUD
-│   │   │   ├── route.ts
-│   │   │   ├── sync-storage/  # Storage 동기화
-│   │   │   │   └── route.ts
-│   │   │   └── migrate/       # DB 마이그레이션
-│   │   │       └── route.ts
-│   │   ├── split/             # 텍스트 분할
-│   │   │   └── route.ts
-│   │   ├── split-results/     # Split Results CRUD
-│   │   │   └── route.ts
-│   │   ├── storage/           # Storage API 프록시
-│   │   │   ├── files/
-│   │   │   │   └── route.ts   # 파일 목록/삭제
-│   │   │   ├── upload/
-│   │   │   │   └── route.ts   # 파일 업로드
-│   │   │   ├── download/
-│   │   │   │   └── [filename]/
-│   │   │   │       └── route.ts  # 파일 다운로드
-│   │   │   ├── preview/
-│   │   │   │   └── route.ts   # 파일 미리보기
-│   │   │   ├── buckets/
-│   │   │   │   └── route.ts   # 버킷 관리
-│   │   │   └── auth/
-│   │   │       └── login/
-│   │   │           └── route.ts  # Storage 로그인
-│   │   └── vectorstore/       # Vector Database
-│   │       ├── schemas/
-│   │       │   └── route.ts   # 스키마/테이블 목록
-│   │       ├── table-data/
-│   │       │   └── route.ts   # 테이블 데이터 조회
-│   │       ├── tables/
-│   │       │   └── route.ts   # 테이블 생성/삭제
-│   │       └── upload/
-│   │           └── route.ts   # Split Results 업로드
-│   ├── login/                 # 로그인 페이지
-│   │   └── page.tsx
-│   ├── layout.tsx
-│   ├── page.tsx
-│   └── globals.css
+├── app/                    # Next.js pages and authenticated API routes
+│   ├── api/                # keys, parsing, storage, splitting, and VDB APIs
+│   └── login/              # Supabase Auth page
 ├── components/
-│   ├── LeftPanel.tsx          # Text Splitter 입력 패널
-│   ├── RightPanel.tsx         # Text Splitter 결과 패널
-│   ├── ParserLeftPanel.tsx    # Document Parser 입력 패널
-│   ├── ParserRightPanel.tsx   # Document Parser 결과 패널
-│   ├── StoragePanel.tsx       # Storage 관리 패널
-│   ├── FilesPanel.tsx         # Files 관리 패널
-│   ├── ParseResultDetailPanel.tsx  # Parse 결과 상세보기
-│   ├── VectorStoreLeftPanel.tsx   # VDB 조회 패널
-│   ├── VectorStoreRightPanel.tsx  # VDB 데이터 패널
-│   ├── LicensesPanel.tsx      # API 키 관리 패널
-│   ├── Sidebar.tsx            # 네비게이션
-│   ├── Header.tsx             # 페이지 헤더
-│   ├── ErrorBoundary.tsx      # 에러 바운더리
-│   ├── Modal.tsx              # 모달 컴포넌트
-│   ├── Pagination.tsx         # 페이지네이션
-│   └── ...
-├── lib/
-│   ├── types.ts               # TypeScript 타입
-│   ├── document-engines.ts    # 엔진 capability registry
-│   ├── document-ir.ts         # 공통 문서 표현 타입
-│   ├── normalize-document.ts  # 공급사 응답 정규화
-│   ├── splitters.ts           # 스플리터 로직
-│   ├── supabase-server.ts     # 애플리케이션 DB 서버 클라이언트
-│   ├── api-key-store.ts       # 암호화 자격 증명 조회
-│   ├── encryption.ts          # 암호화 유틸리티
-│   ├── auth.ts                # 클라이언트 인증 유틸리티
-│   ├── auth-server.ts         # 서버 인증 유틸리티
-│   ├── storage-config.ts      # Storage API 설정
-│   ├── constants.ts           # 애플리케이션 상수
-│   ├── validation.ts          # 입력 검증
-│   └── hooks/                 # Custom React hooks
-├── scripts/
-│   └── dev-with-supabase.mjs  # 로컬 서버용 안전한 Supabase 환경 주입
-├── supabase/
-│   ├── config.toml
-│   └── migrations/            # 애플리케이션 DB 스키마
-├── docs/                      # 문서
-│   ├── PRD.md
-│   ├── IMPLEMENTATION_PLAN.md
-│   └── design-system.json
-└── public/
-    └── logos/                 # 파서 로고 이미지
+│   ├── connect/            # provider and VDB credentials
+│   ├── layout/             # shell, navigation, and auth boundary
+│   ├── parser/             # parser controls, results, and comparison
+│   ├── shared/             # cross-feature UI primitives
+│   ├── splitter/           # chunking controls and results
+│   ├── storage/            # source files and saved experiments
+│   └── vectorstore/        # VDB browser and uploader
+├── lib/                    # domain logic, shared contracts, and Supabase clients
+├── public/logos/           # provider logos
+├── scripts/                # local development helpers
+├── supabase/migrations/    # versioned database and Storage changes
+└── docs/
+    ├── ARCHITECTURE.md
+    └── ROADMAP.md
 ```
+
+구체적인 책임 경계와 데이터 흐름은 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), 다음 구현 순서는 [`docs/ROADMAP.md`](docs/ROADMAP.md)를 참고하세요.
 
 ## API 엔드포인트
 
