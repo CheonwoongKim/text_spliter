@@ -6,6 +6,7 @@ import JsonView from '@uiw/react-json-view';
 import { darkTheme } from '@uiw/react-json-view/dark';
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 import { DEFAULT_ROWS_PER_PAGE } from "@/lib/constants";
+import { formatStorageSyncMessage } from "@/lib/storage-sync";
 import Pagination from "@/components/shared/Pagination";
 
 interface ParseResult {
@@ -437,7 +438,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
       }
 
       const data = await response.json();
-      alert(`Successfully synced ${data.updated} out of ${data.total} parse results!\n\nMatched files:\n${data.matches.slice(0, 5).map((m: any) => `- ID ${m.id}: ${m.key}`).join('\n')}${data.matches.length > 5 ? '\n...' : ''}`);
+      alert(formatStorageSyncMessage(data));
 
       // Refresh the list
       fetchResults();

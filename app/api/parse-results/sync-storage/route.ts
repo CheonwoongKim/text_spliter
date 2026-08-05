@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const parseResults = (data || []) as ParseResult[];
 
     if (parseResults.length === 0) {
-      return NextResponse.json({ message: 'No parse results to sync', updated: 0, total: 0 });
+      return NextResponse.json({ message: 'No parse results to sync', updated: 0, total: 0, matches: [] });
     }
 
     const documents = await listUserDocuments(supabase, user.id);
