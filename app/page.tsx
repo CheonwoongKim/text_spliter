@@ -415,7 +415,7 @@ export default function Home() {
               : activeMenu === "vectorstore"
               ? "Vector Database"
               : activeMenu === "storage"
-              ? "Storage"
+              ? "Results"
               : activeMenu === "files"
               ? "Files"
               : activeMenu === "parse-detail"

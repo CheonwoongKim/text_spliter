@@ -15,7 +15,7 @@ function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
         <h1 className="text-white font-bold text-lg tracking-tight">BGK</h1>
       </div>
 
-      {/* Storage Menu */}
+      {/* Results Menu */}
       <button
         onClick={() => onMenuChange("storage")}
         className={`w-14 h-14 flex flex-col items-center justify-center rounded-lg transition-smooth ${
@@ -23,8 +23,8 @@ function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
             ? "text-white"
             : "text-gray-500 hover:text-gray-400"
         }`}
-        aria-label="Storage"
-        title="Storage"
+        aria-label="Results"
+        title="Results"
       >
         <svg
           className="w-6 h-6 mb-1"
@@ -39,7 +39,7 @@ function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
             d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
           />
         </svg>
-        <span className="text-[10px] font-medium">Storage</span>
+        <span className="text-[10px] font-medium">Results</span>
       </button>
 
       {/* Parser Menu */}
