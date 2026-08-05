@@ -56,7 +56,7 @@ private documents bucket ──→ parser adapters ──→ normalized Document
                                   ↓                       │          ↓
                                   ↓                       └────→ deterministic parser evaluation runs
                                   ↓
-                              parse_results ──→ split_results ──→ target VDB
+                              parse_results ──→ split_results ──→ owned vector collection
                                                                       ↓
                                           rag_runs ← retrieval + grounded answer
                                               ↑
@@ -77,6 +77,7 @@ private documents bucket ──→ parser adapters ──→ normalized Document
 - `document_evaluation_benchmarks`: owned source-document identity and benchmark attributes.
 - `document_evaluation_ground_truths`: editable draft and immutable frozen Document IR reference versions.
 - `document_evaluation_runs`: reference/candidate snapshots, versioned deterministic metrics, and bounded page/block issues for one parser candidate.
+- `vector_collections` / `vector_documents`: owner-scoped logical collections and 1536-dimensional pgvector chunks stored in the application Supabase.
 - `documents` bucket: private source objects under `{auth_user_id}/`.
 
 Application persistence uses the server-only Supabase secret client. Every API route verifies the caller with Supabase Auth and explicitly scopes database rows and object paths to that caller.
@@ -91,11 +92,11 @@ Application persistence uses the server-only Supabase secret client. Every API r
 
 ## RAG execution contracts
 
-- New VDB uploads use `text-embedding-3-small` with an explicit 1536 dimensions; legacy ada-002 tables remain selectable for comparison.
+- VDB uploads use `text-embedding-3-small` with 1536 dimensions in owner-scoped managed collections.
 - Chunk metadata records stable provenance, a content hash, embedding provider/model/dimensions, and the originating parse/split run.
-- Each target vector table has a table-specific cosine-search function. It executes with the target database caller's permissions.
+- One migration-managed cosine-search RPC requires both owner and collection IDs, so retrieval cannot cross users or collections.
 - The answer step uses the OpenAI Responses API and a versioned grounded-answer prompt. Retrieved chunks are treated as untrusted data.
-- `rag_runs` never stores provider credentials. It stores the target host, requested and resolved models, prompt version, evidence, usage, and latency.
+- `rag_runs` never stores provider credentials. It stores the managed collection identity, requested and resolved models, prompt version, evidence, usage, and latency.
 
 ## Evaluation contracts
 

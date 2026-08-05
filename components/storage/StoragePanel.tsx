@@ -239,7 +239,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
     setVdbMessage(null);
     setShowVdbModal(true);
 
-    // Fetch available tables
+    // Fetch available managed vector collections
     setVdbTablesLoading(true);
     try {
       const token = getAuthToken();
@@ -256,7 +256,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch tables');
+        throw new Error('Failed to fetch vector collections');
       }
 
       const schemas = await response.json();
@@ -272,10 +272,10 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
 
       setVdbTables(allTables);
     } catch (err) {
-      console.error('Error fetching tables:', err);
+      console.error('Error fetching vector collections:', err);
       setVdbMessage({
         type: 'error',
-        text: 'Failed to load tables. Please check your Supabase connection.'
+        text: 'Failed to load managed vector collections.'
       });
     } finally {
       setVdbTablesLoading(false);
@@ -284,7 +284,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
 
   const handleVdbUploadSubmit = useCallback(async () => {
     if (!vdbTableName.trim()) {
-      setVdbMessage({ type: 'error', text: 'Please enter a table name' });
+      setVdbMessage({ type: 'error', text: 'Please select a vector collection' });
       return;
     }
 
@@ -875,7 +875,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
 
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Table Name <span className="text-red-500">*</span>
+                  Vector Collection <span className="text-red-500">*</span>
                 </label>
                 {vdbTablesLoading ? (
                   <div className="flex items-center justify-center h-10 border border-border rounded-lg bg-surface">
@@ -884,7 +884,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                 ) : vdbTables.length === 0 ? (
                   <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                     <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                      No tables found. Please create a table in VDB page first.
+                      No collections found. Create a collection in the VDB page first.
                     </p>
                   </div>
                 ) : (
@@ -898,7 +898,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                                bg-surface text-card-foreground text-sm
                                disabled:opacity-50"
                     >
-                      <option value="">Select a table...</option>
+                      <option value="">Select a collection...</option>
                       {vdbTables.map((tableName) => (
                         <option key={tableName} value={tableName}>
                           {tableName}
@@ -906,7 +906,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                       ))}
                     </select>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Select the Supabase table where chunks will be uploaded
+                      Select the owner-scoped collection where chunks will be uploaded
                     </p>
                   </>
                 )}
@@ -935,12 +935,11 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
 
               <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-xs text-muted-foreground">
-                  <strong className="text-card-foreground">Note:</strong> This will generate OpenAI embeddings for all chunks and upload them to your Supabase vector database. Make sure:
+                  <strong className="text-card-foreground">Note:</strong> This generates OpenAI embeddings and stores them in the managed Supabase Vector Store. Make sure:
                 </p>
                 <ul className="text-xs text-muted-foreground mt-2 space-y-1 list-disc list-inside">
                   <li>OpenAI API key is configured in Connect page</li>
-                  <li>Supabase credentials are configured in Connect page</li>
-                  <li>Target table has been created in VDB page</li>
+                  <li>The target collection has been created in the VDB page</li>
                 </ul>
               </div>
             </div>

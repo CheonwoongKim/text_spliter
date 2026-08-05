@@ -17,8 +17,6 @@ interface ApiKeys {
   googleParserProcessorId?: string;
   doclingEndpoint?: string;
   doclingApiKey?: string;
-  supabaseUrl?: string;
-  supabaseKey?: string;
 }
 
 const connectKeyNameSet = new Set<string>(CONNECT_KEY_NAMES);
@@ -96,9 +94,6 @@ export async function POST(request: NextRequest) {
 
       case 'docling':
         return await testDocling(keys.doclingEndpoint, keys.doclingApiKey);
-
-      case 'supabase':
-        return await testSupabase(keys.supabaseUrl, keys.supabaseKey);
 
       default:
         return NextResponse.json(
@@ -397,52 +392,6 @@ async function testDocling(endpoint?: string, apiKey?: string): Promise<NextResp
       success: true,
       message: 'Docling server connection successful'
     });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Connection failed' },
-      { status: 200 }
-    );
-  }
-}
-
-async function testSupabase(url?: string, apiKey?: string): Promise<NextResponse> {
-  if (!url || !apiKey) {
-    return NextResponse.json(
-      { success: false, error: 'Supabase URL and API key not configured' },
-      { status: 400 }
-    );
-  }
-
-  try {
-    const normalizedUrl = new URL(url);
-    if (!['http:', 'https:'].includes(normalizedUrl.protocol)) {
-      throw new Error('Supabase URL must use http or https');
-    }
-    // Auth settings is intentionally available to publishable/anon keys and
-    // validates the URL/key pair without requiring a particular public table.
-    const settingsUrl = new URL('/auth/v1/settings', normalizedUrl);
-    const response = await fetch(settingsUrl, {
-      headers: {
-        apikey: apiKey,
-        Accept: 'application/json',
-      },
-    });
-
-    if (response.status === 401 || response.status === 403) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid Supabase API key' },
-        { status: 200 }
-      );
-    }
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { success: false, error: `Supabase connection failed (HTTP ${response.status})` },
-        { status: 200 }
-      );
-    }
-
-    return NextResponse.json({ success: true, message: 'Supabase connection successful' });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Connection failed' },

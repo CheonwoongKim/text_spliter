@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
 import { getDecryptedApiKeyMap } from "@/lib/api-key-store";
 import { getUserFromToken } from "@/lib/auth-server";
@@ -20,13 +19,17 @@ import {
 } from "@/lib/openai-server";
 import { assertSupabaseResult, getAppSupabase } from "@/lib/supabase-server";
 import {
-  assertSafeDatabaseIdentifier,
-  ragMatchFunctionName,
+  assertManagedVectorSchema,
+  MANAGED_VECTOR_SCHEMA,
+} from "@/lib/vectorstore";
+import {
+  getOwnedVectorCollection,
+  VectorStoreRequestError,
 } from "@/lib/vectorstore-server";
 
 const GENERATION_MODELS = ["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"] as const;
 const REASONING_EFFORTS = ["none", "low", "medium", "high"] as const;
-const EMBEDDING_MODELS = [DEFAULT_EMBEDDING_MODEL, "text-embedding-ada-002"] as const;
+const EMBEDDING_MODELS = [DEFAULT_EMBEDDING_MODEL] as const;
 
 type GenerationModel = (typeof GENERATION_MODELS)[number];
 type ReasoningEffort = (typeof REASONING_EFFORTS)[number];
@@ -113,11 +116,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   let runId: string | null = null;
+  let runOwnerId: string | null = null;
   const totalStarted = performance.now();
 
   try {
     const user = await getUserFromToken(request);
     if (!user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    runOwnerId = user.id;
 
     const body = (await request.json()) as {
       question?: string;
@@ -129,7 +134,7 @@ export async function POST(request: NextRequest) {
       reasoningEffort?: string;
     };
     const question = body.question?.trim() || "";
-    const schemaName = body.schema || "public";
+    const schemaName = body.schema || MANAGED_VECTOR_SCHEMA;
     const tableName = body.tableName?.trim() || "";
     const topK = body.topK ?? 5;
     const embeddingModel = body.embeddingModel || DEFAULT_EMBEDDING_MODEL;
@@ -142,11 +147,11 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    assertSafeDatabaseIdentifier(schemaName, "Schema name");
-    assertSafeDatabaseIdentifier(tableName, "Table name");
-    if (schemaName !== "public") {
+    try {
+      assertManagedVectorSchema(schemaName);
+    } catch (error) {
       return NextResponse.json(
-        { error: "RAG search currently supports the public schema only." },
+        { error: error instanceof Error ? error.message : "Invalid vector schema." },
         { status: 400 }
       );
     }
@@ -166,34 +171,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unsupported reasoning effort." }, { status: 400 });
     }
 
-    const keys = await getDecryptedApiKeyMap(user.email, [
-      "supabaseUrl",
-      "supabaseKey",
-      "openaiEmbedding",
-    ]);
-    if (!keys.supabaseUrl || !keys.supabaseKey || !keys.openaiEmbedding) {
+    const collection = await getOwnedVectorCollection(user.id, tableName);
+    const keys = await getDecryptedApiKeyMap(user.email, ["openaiEmbedding"]);
+    const openaiKey = keys.openaiEmbedding || process.env.OPENAI_API_KEY;
+    if (!openaiKey) {
       return NextResponse.json(
-        { error: "Supabase and OpenAI credentials are not configured in Connect." },
+        { error: "OpenAI credentials are not configured in Connect." },
         { status: 400 }
       );
-    }
-
-    let targetHost: string;
-    try {
-      targetHost = new URL(keys.supabaseUrl).hostname;
-    } catch {
-      return NextResponse.json({ error: "The configured Supabase URL is invalid." }, { status: 400 });
     }
 
     const pipelineConfig = {
       retrieval: {
         provider: "supabase-pgvector",
-        targetHost,
+        target: "application-supabase",
         schema: schemaName,
-        table: tableName,
+        table: collection.name,
+        collectionId: collection.id,
         topK,
         distanceMetric: "cosine",
-        searchFunction: ragMatchFunctionName(tableName),
+        searchFunction: "match_vector_documents",
         embedding: {
           provider: "openai",
           model: embeddingModel,
@@ -224,21 +221,19 @@ export async function POST(request: NextRequest) {
     if (!createdRun) throw new Error("Supabase did not return the created RAG run.");
     runId = createdRun.id as string;
 
-    const target = createClient(keys.supabaseUrl, keys.supabaseKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
+    const target = getAppSupabase();
     const { data: sampleRows, error: sampleError } = await target
-      .schema(schemaName)
-      .from(tableName)
+      .from("vector_documents")
       .select("metadata")
+      .eq("owner_id", user.id)
+      .eq("collection_id", collection.id)
       .limit(1);
     if (sampleError) throw new Error(`Failed to inspect vector table: ${sampleError.message}`);
     const sampleMetadata = (sampleRows?.[0]?.metadata || {}) as Record<string, unknown>;
     const indexedModel = typeof sampleMetadata.embedding_model === "string"
       ? sampleMetadata.embedding_model
       : sampleRows?.length
-        ? "text-embedding-ada-002"
+        ? collection.embedding_model
         : null;
     if (indexedModel && indexedModel !== embeddingModel) {
       const mismatch = new Error(
@@ -250,7 +245,7 @@ export async function POST(request: NextRequest) {
 
     const embeddingStarted = performance.now();
     const embeddingResult = await createEmbeddings({
-      apiKey: keys.openaiEmbedding,
+      apiKey: openaiKey,
       inputs: [question],
       model: embeddingModel,
       dimensions: DEFAULT_EMBEDDING_DIMENSIONS,
@@ -258,19 +253,19 @@ export async function POST(request: NextRequest) {
     const embeddingMs = elapsedMs(embeddingStarted);
 
     const retrievalStarted = performance.now();
-    const functionName = ragMatchFunctionName(tableName);
     const { data: matchData, error: matchError } = await target
-      .schema(schemaName)
-      .rpc(functionName, {
-        query_embedding: embeddingResult.embeddings[0],
-        match_count: topK,
+      .rpc("match_vector_documents", {
+        p_owner_id: user.id,
+        p_collection_id: collection.id,
+        p_query_embedding: embeddingResult.embeddings[0],
+        p_match_count: topK,
       });
     if (matchError) {
       const setupRequired = ["PGRST202", "42883"].includes(matchError.code || "") ||
         /function|schema cache/i.test(matchError.message);
       const searchError = new Error(
         setupRequired
-          ? "Vector search is not configured for this table. Run Search Setup and try again."
+          ? "Managed vector search is not installed. Apply the latest Supabase migration."
           : `Vector search failed: ${matchError.message}`
       );
       searchError.name = setupRequired ? "RagSearchNotConfigured" : "RagSearchFailed";
@@ -288,7 +283,7 @@ export async function POST(request: NextRequest) {
 
     const generationStarted = performance.now();
     const groundedResponse = await createGroundedResponse({
-      apiKey: keys.openaiEmbedding,
+      apiKey: openaiKey,
       model: generationModel,
       reasoningEffort,
       instructions: instructionsForGroundedAnswer(),
@@ -353,7 +348,7 @@ export async function POST(request: NextRequest) {
       retrieval: {
         provider: "supabase-pgvector",
         schema: schemaName,
-        table: tableName,
+        table: collection.name,
         topK,
         embeddingModel,
         resolvedEmbeddingModel: embeddingResult.model,
@@ -375,7 +370,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const payload = errorPayload(error);
-    if (runId) {
+    if (runId && runOwnerId) {
       await getAppSupabase()
         .from("rag_runs")
         .update({
@@ -384,7 +379,8 @@ export async function POST(request: NextRequest) {
           timings: { totalMs: elapsedMs(totalStarted) },
           completed_at: new Date().toISOString(),
         })
-        .eq("id", runId);
+        .eq("id", runId)
+        .eq("owner_id", runOwnerId);
     }
 
     const code = error instanceof Error && error.name === "RagSearchNotConfigured"
@@ -394,6 +390,7 @@ export async function POST(request: NextRequest) {
         : payload.code;
     const status = code === "RAG_SEARCH_NOT_CONFIGURED" ? 422
       : code === "EMBEDDING_MODEL_MISMATCH" ? 409
+        : error instanceof VectorStoreRequestError ? error.status
         : error instanceof OpenAIRequestError ? 502
           : 500;
     return NextResponse.json(

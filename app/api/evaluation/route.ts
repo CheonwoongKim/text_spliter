@@ -22,6 +22,15 @@ import {
   type RagasMetric,
 } from "@/lib/ragas-worker";
 import { assertSupabaseResult, getAppSupabase } from "@/lib/supabase-server";
+import {
+  assertManagedVectorSchema,
+  MANAGED_VECTOR_EMBEDDING_MODEL,
+  MANAGED_VECTOR_SCHEMA,
+} from "@/lib/vectorstore";
+import {
+  getOwnedVectorCollection,
+  VectorStoreRequestError,
+} from "@/lib/vectorstore-server";
 import type {
   DeterministicMetricKey,
   ExpectedEvidence,
@@ -880,16 +889,24 @@ export async function POST(request: NextRequest) {
       const caseIds = [...new Set(textArray(body.caseIds, "Case IDs", 20))];
       if (!caseIds.length) throw new EvaluationRequestError("Select at least one evaluation case.");
       const pipelineConfig = jsonObject(body.pipelineConfig, "Pipeline config");
-      const schemaName = requiredText(pipelineConfig.schema || "public", "Vector schema", 63);
+      const schemaName = requiredText(pipelineConfig.schema || MANAGED_VECTOR_SCHEMA, "Vector schema", 63);
       const tableName = requiredText(pipelineConfig.tableName, "Vector table", 63);
-      if (schemaName !== "public" || !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(tableName)) {
-        throw new EvaluationRequestError("The evaluation target must be a valid table in the public schema.");
+      try {
+        assertManagedVectorSchema(schemaName);
+        await getOwnedVectorCollection(user.id, tableName);
+      } catch (error) {
+        if (error instanceof VectorStoreRequestError) {
+          throw new EvaluationRequestError(error.message, error.status);
+        }
+        throw new EvaluationRequestError(
+          error instanceof Error ? error.message : "Invalid managed vector collection."
+        );
       }
       const topK = Number(pipelineConfig.topK);
       if (!Number.isInteger(topK) || topK < 1 || topK > 20) {
         throw new EvaluationRequestError("Top K must be an integer between 1 and 20.");
       }
-      if (!["text-embedding-3-small", "text-embedding-ada-002"].includes(String(pipelineConfig.embeddingModel))) {
+      if (pipelineConfig.embeddingModel !== MANAGED_VECTOR_EMBEDDING_MODEL) {
         throw new EvaluationRequestError("Unsupported evaluation embedding model.");
       }
       if (!["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"].includes(String(pipelineConfig.generationModel))) {

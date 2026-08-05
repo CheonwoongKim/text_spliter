@@ -55,8 +55,6 @@ export const API_KEY_NAMES = {
   GOOGLE_PARSER_PROCESSOR_ID: 'googleParserProcessorId',
   DOCLING_ENDPOINT: 'doclingEndpoint',
   DOCLING_API_KEY: 'doclingApiKey',
-  SUPABASE_URL: 'supabaseUrl',
-  SUPABASE_KEY: 'supabaseKey',
   CHROMA_URL: 'chroamaUrl',
   CHROMA_API_KEY: 'chroamaApiKey',
   PINECONE_URL: 'pineconeUrl',
@@ -78,8 +76,6 @@ export const CONNECT_KEY_NAMES = [
   API_KEY_NAMES.GOOGLE_PARSER_PROCESSOR_ID,
   API_KEY_NAMES.DOCLING_ENDPOINT,
   API_KEY_NAMES.DOCLING_API_KEY,
-  API_KEY_NAMES.SUPABASE_URL,
-  API_KEY_NAMES.SUPABASE_KEY,
 ] as const;
 
 /**

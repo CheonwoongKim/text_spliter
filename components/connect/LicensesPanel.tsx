@@ -20,10 +20,6 @@ interface LicenseKeys {
   googleParserProcessorId: string;
   doclingEndpoint: string;
   doclingApiKey: string;
-
-  // Vector Database
-  supabaseUrl: string;
-  supabaseKey: string;
 }
 
 type TestStatus = 'idle' | 'testing' | 'success' | 'error';
@@ -35,7 +31,6 @@ interface TestResults {
   azure: { status: TestStatus; message?: string };
   google: { status: TestStatus; message?: string };
   docling: { status: TestStatus; message?: string };
-  supabase: { status: TestStatus; message?: string };
 }
 
 function credentialsForService(
@@ -67,11 +62,6 @@ function credentialsForService(
         doclingEndpoint: keys.doclingEndpoint,
         doclingApiKey: keys.doclingApiKey,
       };
-    case 'supabase':
-      return {
-        supabaseUrl: keys.supabaseUrl,
-        supabaseKey: keys.supabaseKey,
-      };
   }
 }
 
@@ -89,8 +79,6 @@ export default function LicensesPanel() {
     googleParserProcessorId: "",
     doclingEndpoint: "",
     doclingApiKey: "",
-    supabaseUrl: "",
-    supabaseKey: "",
   });
 
   const [saved, setSaved] = useState(false);
@@ -104,7 +92,6 @@ export default function LicensesPanel() {
     azure: { status: 'idle' },
     google: { status: 'idle' },
     docling: { status: 'idle' },
-    supabase: { status: 'idle' },
   });
 
   // Load keys from backend on mount
@@ -217,8 +204,6 @@ export default function LicensesPanel() {
         googleParserProcessorId: "",
         doclingEndpoint: "",
         doclingApiKey: "",
-        supabaseUrl: "",
-        supabaseKey: "",
       };
 
       const response = await fetch('/api/keys?all=true', {
@@ -236,7 +221,6 @@ export default function LicensesPanel() {
           azure: { status: 'idle' },
           google: { status: 'idle' },
           docling: { status: 'idle' },
-          supabase: { status: 'idle' },
         });
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
@@ -971,7 +955,6 @@ export default function LicensesPanel() {
             {/* Vector Database Section */}
             {activeTab === "database" && (
             <div>
-              {/* Supabase Card */}
               <div className="py-6">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
@@ -985,84 +968,24 @@ export default function LicensesPanel() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-base font-medium text-card-foreground">Supabase</h4>
-                      <button
-                        onClick={() => handleTestConnection('supabase')}
-                        disabled={testResults.supabase.status === 'testing' || !keys.supabaseUrl || !keys.supabaseKey}
-                        className="text-xs text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      >
-                        {testResults.supabase.status === 'testing' ? (
-                          <>
-                            <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Testing...
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                            Test
-                          </>
-                        )}
-                      </button>
+                      <h4 className="text-base font-medium text-card-foreground">Managed Supabase Vector Store</h4>
+                      <span className="px-2.5 py-1 rounded-full bg-green-500/10 text-[10px] font-medium text-green-500">
+                        Connected
+                      </span>
                     </div>
                     <p className="text-xs text-muted-foreground mb-4">
-                      Vector database for storing and querying embeddings with pgvector
+                      앱 Supabase의 pgvector를 사용하며 로그인 사용자별 컬렉션으로 격리됩니다.
                     </p>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-2">
-                          Project URL
-                        </label>
-                        <input
-                          type="text"
-                          value={keys.supabaseUrl}
-                          onChange={(e) => handleChange("supabaseUrl", e.target.value)}
-                          placeholder="https://xxxxx.supabase.co"
-                          className="w-full h-10 px-3 border border-border rounded-lg
-                                   focus:outline-none focus:ring-2 focus:ring-accent
-                                   bg-surface text-card-foreground text-sm
-                                   placeholder-light"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-2">
-                          API Key (anon/public)
-                        </label>
-                        <input
-                          type="password"
-                          value={keys.supabaseKey}
-                          onChange={(e) => handleChange("supabaseKey", e.target.value)}
-                          placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                          className="w-full h-10 px-3 border border-border rounded-lg
-                                   focus:outline-none focus:ring-2 focus:ring-accent
-                                   bg-surface text-card-foreground text-sm
-                                   placeholder-light"
-                        />
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Find your project URL and anon key in your Supabase project settings
-                        </p>
+                    <div className="rounded-lg border border-border bg-muted/20 p-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                        <div><span className="block text-muted-foreground">Storage</span><strong className="block mt-1 text-card-foreground">Application Supabase</strong></div>
+                        <div><span className="block text-muted-foreground">Search</span><strong className="block mt-1 text-card-foreground">pgvector · cosine</strong></div>
+                        <div><span className="block text-muted-foreground">Isolation</span><strong className="block mt-1 text-card-foreground">Owner scoped</strong></div>
                       </div>
                     </div>
-                    {testResults.supabase.status !== 'idle' && testResults.supabase.status !== 'testing' && (
-                      <div className={`mt-2 text-xs flex items-center gap-1 ${
-                        testResults.supabase.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {testResults.supabase.status === 'success' ? (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        )}
-                        {testResults.supabase.message}
-                      </div>
-                    )}
+                    <p className="text-xs text-muted-foreground mt-3">
+                      Supabase URL이나 service-role 키를 별도로 입력할 필요가 없습니다. 임베딩 생성에는 AI Models의 OpenAI 키를 사용합니다.
+                    </p>
                   </div>
                 </div>
               </div>

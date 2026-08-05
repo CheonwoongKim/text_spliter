@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { getAuthToken } from "@/lib/auth";
+import { DEFAULT_EMBEDDING_MODEL } from "@/lib/constants";
+import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 import type {
   RagGenerationModel,
   RagReasoningEffort,
@@ -43,71 +45,22 @@ export default function RagTestPanel({
 }: RagTestPanelProps) {
   const [question, setQuestion] = useState("");
   const [topK, setTopK] = useState(5);
-  const [embeddingModel, setEmbeddingModel] = useState("text-embedding-3-small");
+  const [embeddingModel, setEmbeddingModel] = useState(DEFAULT_EMBEDDING_MODEL);
   const [generationModel, setGenerationModel] = useState<RagGenerationModel>("gpt-5.6-terra");
   const [reasoningEffort, setReasoningEffort] = useState<RagReasoningEffort>("low");
   const [loading, setLoading] = useState(false);
-  const [setupLoading, setSetupLoading] = useState(false);
   const [result, setResult] = useState<RagRunResult | null>(null);
   const [error, setError] = useState<ApiErrorBody | null>(null);
-  const [setupMessage, setSetupMessage] = useState<string | null>(null);
-  const [manualSql, setManualSql] = useState<string | null>(null);
 
   useEffect(() => {
     setResult(null);
     setError(null);
-    setSetupMessage(null);
-    setManualSql(null);
   }, [selectedSchema, selectedTable]);
 
   const citedRanks = useMemo(
     () => new Set(result?.citations.map((citation) => citation.rank) || []),
     [result]
   );
-
-  const handleSetup = async () => {
-    if (!selectedTable) return;
-
-    const token = getAuthToken();
-    if (!token) {
-      setError({ error: "로그인이 필요합니다." });
-      return;
-    }
-
-    setSetupLoading(true);
-    setSetupMessage(null);
-    setManualSql(null);
-    setError(null);
-    try {
-      const response = await fetch("/api/vectorstore/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          schema: selectedSchema || "public",
-          tableName: selectedTable,
-          vectorDimension: 1536,
-        }),
-      });
-      const data = (await response.json()) as ApiErrorBody & { success?: boolean };
-      if (!response.ok) {
-        setManualSql(data.instructions || null);
-        throw data;
-      }
-
-      setSetupMessage("검색 함수가 준비되었습니다. 이제 질문을 실행할 수 있습니다.");
-    } catch (caught) {
-      const body = caught as ApiErrorBody;
-      setError({
-        error: body.error || "검색 함수 설정에 실패했습니다.",
-        details: body.details,
-      });
-    } finally {
-      setSetupLoading(false);
-    }
-  };
 
   const handleRun = async () => {
     if (!selectedTable || !question.trim()) return;
@@ -130,7 +83,7 @@ export default function RagTestPanel({
         },
         body: JSON.stringify({
           question: question.trim(),
-          schema: selectedSchema || "public",
+          schema: selectedSchema || MANAGED_VECTOR_SCHEMA,
           tableName: selectedTable,
           topK,
           embeddingModel,
@@ -157,7 +110,7 @@ export default function RagTestPanel({
   if (!selectedTable) {
     return (
       <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-        왼쪽에서 테스트할 벡터 테이블을 선택하세요.
+        왼쪽에서 테스트할 벡터 컬렉션을 선택하세요.
       </div>
     );
   }
@@ -176,14 +129,9 @@ export default function RagTestPanel({
                 검색 문맥과 답변 설정을 실행 기록으로 저장해 같은 조건을 다시 비교합니다.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleSetup}
-              disabled={setupLoading || loading}
-              className="px-3 py-2 rounded-lg border border-border text-xs font-medium text-card-foreground hover:bg-muted disabled:opacity-50"
-            >
-              {setupLoading ? "설정 중..." : "Search Setup"}
-            </button>
+            <span className="px-2.5 py-1 rounded-full bg-green-500/10 text-[10px] font-medium text-green-500">
+              Managed search ready
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
@@ -195,8 +143,7 @@ export default function RagTestPanel({
                 disabled={loading}
                 className="w-full h-10 px-3 rounded-lg border border-border bg-surface text-sm text-card-foreground"
               >
-                <option value="text-embedding-3-small">3-small · recommended</option>
-                <option value="text-embedding-ada-002">ada-002 · legacy tables</option>
+                <option value={DEFAULT_EMBEDDING_MODEL}>3-small · managed 1536d</option>
               </select>
             </label>
             <label className="block">
@@ -254,12 +201,12 @@ export default function RagTestPanel({
 
           <div className="flex items-center justify-between gap-4 mt-4">
             <p className="text-xs text-muted-foreground">
-              대상: {selectedSchema || "public"}.{selectedTable}
+              대상: {selectedSchema || MANAGED_VECTOR_SCHEMA}.{selectedTable}
             </p>
             <button
               type="button"
               onClick={handleRun}
-              disabled={loading || setupLoading || !question.trim() || topK < 1 || topK > 20}
+              disabled={loading || !question.trim() || topK < 1 || topK > 20}
               className="px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "검색·생성 중..." : "Run RAG"}
@@ -267,39 +214,11 @@ export default function RagTestPanel({
           </div>
         </section>
 
-        {setupMessage && (
-          <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-600 dark:text-green-400">
-            {setupMessage}
-          </div>
-        )}
-
         {error && (
           <section className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3">
             <p className="text-sm font-medium text-red-600 dark:text-red-400">{error.error}</p>
             {error.details && <p className="text-xs text-red-500 mt-1 break-words">{error.details}</p>}
             {error.runId && <p className="text-xs text-muted-foreground mt-2">실패 기록 ID: {error.runId}</p>}
-            {error.code === "RAG_SEARCH_NOT_CONFIGURED" && (
-              <button
-                type="button"
-                onClick={handleSetup}
-                disabled={setupLoading}
-                className="mt-3 px-3 py-1.5 rounded-md bg-red-500 text-white text-xs font-medium disabled:opacity-50"
-              >
-                Search Setup 실행
-              </button>
-            )}
-          </section>
-        )}
-
-        {manualSql && (
-          <section className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-            <h5 className="text-sm font-medium text-card-foreground">Supabase SQL Editor에서 1회 실행</h5>
-            <p className="text-xs text-muted-foreground mt-1 mb-3">
-              연결한 키로 DDL을 실행할 수 없을 때 아래 SQL로 검색 함수만 설치할 수 있습니다.
-            </p>
-            <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-surface border border-border p-3 text-xs text-card-foreground">
-              {manualSql}
-            </pre>
           </section>
         )}
 

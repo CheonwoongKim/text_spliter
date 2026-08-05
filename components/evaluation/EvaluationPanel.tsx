@@ -8,6 +8,7 @@ import GoldenCaseEditor, { type GoldenCasePayload } from "@/components/evaluatio
 import RagasEvaluationModal from "@/components/evaluation/RagasEvaluationModal";
 import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import { getAuthToken } from "@/lib/auth";
+import { DEFAULT_EMBEDDING_MODEL } from "@/lib/constants";
 import type {
   DatabaseSchema,
   EvaluationCase,
@@ -21,6 +22,7 @@ import type {
   RagasMetricKey,
   ReviewerDecision,
 } from "@/lib/types";
+import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 
 const NEW_CASE_ID = "__new_case__";
 
@@ -98,10 +100,10 @@ export default function EvaluationPanel() {
   const [runModalOpen, setRunModalOpen] = useState(false);
   const [schemas, setSchemas] = useState<DatabaseSchema[]>([]);
   const [runName, setRunName] = useState("");
-  const [runSchema, setRunSchema] = useState("public");
+  const [runSchema, setRunSchema] = useState(MANAGED_VECTOR_SCHEMA);
   const [runTable, setRunTable] = useState("");
   const [topK, setTopK] = useState(5);
-  const [embeddingModel, setEmbeddingModel] = useState("text-embedding-3-small");
+  const [embeddingModel, setEmbeddingModel] = useState(DEFAULT_EMBEDDING_MODEL);
   const [generationModel, setGenerationModel] = useState<RagGenerationModel>("gpt-5.6-terra");
   const [reasoningEffort, setReasoningEffort] = useState<RagReasoningEffort>("low");
   const [baselineRunId, setBaselineRunId] = useState("");
@@ -306,9 +308,9 @@ export default function EvaluationPanel() {
     if (!response.ok) throw new Error(data.error || "VDB 테이블을 불러오지 못했습니다.");
     const loadedSchemas = data as DatabaseSchema[];
     setSchemas(loadedSchemas);
-    const publicSchema = loadedSchemas.find((schema) => schema.name === "public") || loadedSchemas[0];
-    setRunSchema(publicSchema?.name || "public");
-    setRunTable(publicSchema?.tables[0]?.name || "");
+    const managedSchema = loadedSchemas.find((schema) => schema.name === MANAGED_VECTOR_SCHEMA);
+    setRunSchema(managedSchema?.name || MANAGED_VECTOR_SCHEMA);
+    setRunTable(managedSchema?.tables[0]?.name || "");
   };
 
   const openRunModal = async () => {
@@ -674,8 +676,8 @@ export default function EvaluationPanel() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Run name</span><input value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing} className={styles.field} /></label>
               <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Schema</span><select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground">{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</select></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Vector table</span><select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value="">Select table</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</select></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Embedding</span><select value={embeddingModel} onChange={(event) => setEmbeddingModel(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value="text-embedding-3-small">3-small · recommended</option><option value="text-embedding-ada-002">ada-002 · legacy</option></select></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Vector collection</span><select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value="">Select collection</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</select></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Embedding</span><select value={embeddingModel} onChange={(event) => setEmbeddingModel(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value={DEFAULT_EMBEDDING_MODEL}>3-small · managed 1536d</option></select></label>
               <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Answer model</span><select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></select></label>
               <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Reasoning</span><select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"><option value="none">None</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
               <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Top K</span><input type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing} className={styles.field} /></label>
@@ -696,7 +698,7 @@ export default function EvaluationPanel() {
               </label>
               <p className="md:col-span-2 text-[11px] leading-5 text-muted-foreground">기준 실행을 선택하면 자동 검색·인용 지표가 허용 범위보다 낮아질 때 회귀로 기록합니다.</p>
             </div>
-            <div className="mt-5 px-4 py-3 bg-muted/50 border-l-2 border-accent text-xs leading-5 text-muted-foreground">각 케이스는 OpenAI embedding 1회와 Responses API 1회를 호출합니다. 대상 VDB 테이블에는 먼저 Search Setup이 완료되어 있어야 합니다.</div>
+            <div className="mt-5 px-4 py-3 bg-muted/50 border-l-2 border-accent text-xs leading-5 text-muted-foreground">각 케이스는 OpenAI embedding 1회와 Responses API 1회를 호출합니다. 검색 함수와 사용자 격리는 Managed Supabase Vector Store에서 자동으로 적용됩니다.</div>
             {executing && (
               <div className="mt-5"><div className="flex items-center justify-between text-xs text-muted-foreground mb-2"><span>Executing cases</span><span>{executionProgress.completed}/{executionProgress.total}</span></div><div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-accent transition-all duration-300" style={{ width: `${executionProgress.total ? (executionProgress.completed / executionProgress.total) * 100 : 0}%` }} /></div></div>
             )}

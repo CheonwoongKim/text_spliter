@@ -1,68 +1,59 @@
 import "server-only";
 
-import { createHash } from "node:crypto";
+import { assertSupabaseResult, getAppSupabase } from "@/lib/supabase-server";
+import { normalizeVectorCollectionName } from "@/lib/vectorstore";
 
-const IDENTIFIER_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]*$/;
-
-export function isSafeDatabaseIdentifier(value: string): boolean {
-  return IDENTIFIER_PATTERN.test(value) && value.length <= 63;
+export interface ManagedVectorCollection {
+  id: string;
+  owner_id: string;
+  name: string;
+  embedding_model: string;
+  vector_dimension: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export function assertSafeDatabaseIdentifier(value: string, label: string): void {
-  if (!isSafeDatabaseIdentifier(value)) {
-    throw new Error(
-      `${label} must start with a letter, contain only letters, numbers, and underscores, and be at most 63 characters.`
-    );
+export class VectorStoreRequestError extends Error {
+  constructor(message: string, public readonly status = 400) {
+    super(message);
+    this.name = "VectorStoreRequestError";
   }
 }
 
-export function ragMatchFunctionName(tableName: string): string {
-  const digest = createHash("sha256").update(tableName).digest("hex").slice(0, 10);
-  return `rag_match_${tableName.slice(0, 36)}_${digest}`;
-}
-
-export function vectorSearchSetupSql({
-  schemaName,
-  tableName,
-  vectorDimension,
-}: {
-  schemaName: string;
-  tableName: string;
-  vectorDimension: number;
-}): string {
-  assertSafeDatabaseIdentifier(schemaName, "Schema name");
-  assertSafeDatabaseIdentifier(tableName, "Table name");
-
-  if (!Number.isInteger(vectorDimension) || vectorDimension < 1 || vectorDimension > 4096) {
-    throw new Error("Vector dimension must be an integer between 1 and 4096.");
+export async function getOwnedVectorCollection(
+  ownerId: string,
+  collectionName: unknown
+): Promise<ManagedVectorCollection> {
+  let name: string;
+  try {
+    name = normalizeVectorCollectionName(collectionName);
+  } catch (error) {
+    throw new VectorStoreRequestError(error instanceof Error ? error.message : "Invalid collection name.");
   }
 
-  const functionName = ragMatchFunctionName(tableName);
+  const { data, error } = await getAppSupabase()
+    .from("vector_collections")
+    .select("id,owner_id,name,embedding_model,vector_dimension,created_at,updated_at")
+    .eq("owner_id", ownerId)
+    .eq("name", name)
+    .maybeSingle();
+  assertSupabaseResult(error, "Failed to load vector collection");
+  if (!data) throw new VectorStoreRequestError("Vector collection not found.", 404);
+  return data as ManagedVectorCollection;
+}
 
-  return `
-    CREATE OR REPLACE FUNCTION ${schemaName}.${functionName}(
-      query_embedding vector(${vectorDimension}),
-      match_count integer DEFAULT 5
-    )
-    RETURNS TABLE (
-      id bigint,
-      content text,
-      metadata jsonb,
-      similarity double precision
-    )
-    LANGUAGE sql
-    STABLE
-    SET search_path = ${schemaName}
-    AS $function$
-      SELECT
-        documents.id,
-        documents.content,
-        COALESCE(documents.metadata, '{}'::jsonb),
-        1 - (documents.embedding <=> query_embedding) AS similarity
-      FROM ${schemaName}.${tableName} AS documents
-      WHERE documents.embedding IS NOT NULL
-      ORDER BY documents.embedding <=> query_embedding
-      LIMIT LEAST(GREATEST(match_count, 1), 20);
-    $function$;
-  `;
+export function vectorStoreErrorResponse(error: unknown): {
+  status: number;
+  body: { error: string; details?: string };
+} {
+  if (error instanceof VectorStoreRequestError) {
+    return { status: error.status, body: { error: error.message } };
+  }
+  return {
+    status: 500,
+    body: {
+      error: "Vector Store request failed.",
+      details: error instanceof Error ? error.message : "Unknown error",
+    },
+  };
 }

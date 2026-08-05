@@ -63,15 +63,15 @@ OCR과 문서 파싱은 별도 단계로 취급합니다. 이미지 기반 문�
 ### 🗄️ Vector Database
 
 - Supabase (PostgreSQL with pgvector) 벡터 데이터베이스 연결 및 관리
-- **테이블 생성/삭제**: VDB 페이지에서 벡터 테이블 생성 및 삭제
+- **컬렉션 생성/삭제**: VDB 페이지에서 사용자별 벡터 컬렉션 생성 및 삭제
 - **Split Results 업로드**: Storage 페이지에서 청킹 결과를 벡터 스토어에 업로드
   - OpenAI 임베딩 자동 생성 (`text-embedding-3-small`, 1536차원)
   - 메타데이터 JSONB 형식 저장
   - 배치 처리로 rate limit 관리 (1-100 chunks/batch)
-  - 드롭다운으로 테이블 선택
-- 스키마 및 테이블 탐색
+  - 드롭다운으로 컬렉션 선택
+- 관리형 스키마 및 컬렉션 탐색
 - 벡터 데이터 시각화
-- 테이블별 cosine 검색 함수 설정 및 RAG 테스트
+- 공용 owner-scoped cosine 검색 RPC와 RAG 테스트
 - 검색 근거, 인용, 요청/응답 모델, 프롬프트 버전, 토큰, 지연시간을 실행 기록으로 저장
 
 ### ✅ Evaluation
@@ -154,8 +154,7 @@ APP_SUPABASE_SECRET_KEY=sb_secret_your_server_secret
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_public_key
 
-# Vector Database target (optional)
-# 별도 VDB의 Supabase URL/Key와 OpenAI Key는 Connect 화면에서 저장합니다.
+# OpenAI 키는 환경 변수 또는 Connect > AI Models에서 설정합니다.
 
 # Encryption Key (32 bytes)
 ENCRYPTION_KEY=your_32_byte_encryption_key
@@ -163,7 +162,7 @@ ENCRYPTION_KEY=your_32_byte_encryption_key
 
 ### 데이터베이스 설정
 
-애플리케이션 DB와 사용자가 실험 대상으로 연결하는 Vector DB는 서로 분리됩니다. 애플리케이션 DB에는 API 키, 파싱 실행, 청킹 결과를 저장하고, Vector DB는 검증된 청크를 적재하는 대상입니다.
+애플리케이션 DB와 Vector Store는 같은 Supabase 프로젝트를 사용합니다. Vector Store는 사용자별 `vector_collections`와 `vector_documents`로 격리되며, 브라우저에 Secret Key를 노출하거나 Connect에 Supabase 키를 중복 저장하지 않습니다.
 
 ```bash
 # 최초 1회 인증 및 프로젝트 연결
@@ -309,25 +308,22 @@ npm start
 
 ### 10. Vector Database (VDB)
 
-1. **Supabase 설정**: Connect 탭에서 Supabase URL과 Key 저장
-2. **테이블 생성 (VDB 탭)**:
-   - Create Table (+) 버튼 클릭
-   - 테이블명 입력 (영문자로 시작, 영문/숫자/언더스코어만 사용)
-   - Vector Dimension 설정 (기본값: 1536)
-   - Create Table 버튼으로 생성
-3. **테이블 삭제**:
-   - 테이블 hover 시 나타나는 삭제 아이콘 클릭
-   - 확인 후 테이블 삭제
-4. **Split Results 업로드 (Storage 탭)**:
+1. **컬렉션 생성 (VDB 탭)**:
+   - Create Collection (+) 버튼 클릭
+   - 컬렉션명 입력 (영문자로 시작, 소문자/숫자/언더스코어만 사용)
+   - 임베딩은 `text-embedding-3-small`, 1536차원으로 고정
+2. **컬렉션 삭제**:
+   - 컬렉션 hover 시 나타나는 삭제 아이콘 클릭
+   - 확인 후 컬렉션과 소속 벡터 문서를 함께 삭제
+3. **Split Results 업로드 (Storage 탭)**:
    - Split Results에서 업로드할 결과의 "Upload to VDB" 아이콘 클릭
-   - 드롭다운에서 대상 테이블 선택
+   - 드롭다운에서 대상 컬렉션 선택
    - Batch Size 설정 (1-100, 기본값: 10)
    - Upload to VDB 버튼으로 업로드 실행
    - OpenAI API를 통해 자동으로 임베딩 생성 후 Supabase에 저장
-5. **Schema 및 Table 탐색**: 좌측 패널에서 스키마와 테이블 선택
-6. **벡터 데이터 조회**: 우측 패널에서 테이블 데이터 및 임베딩 확인
-7. **RAG 테스트**:
-   - 우측 `RAG Test` 탭에서 기존 테이블은 `Search Setup`을 1회 실행
+4. **컬렉션 탐색**: 좌측 패널의 `vector_store` 스키마에서 컬렉션 선택
+5. **벡터 데이터 조회**: 우측 패널에서 콘텐츠와 메타데이터 확인
+6. **RAG 테스트**:
    - 질문, Embedding, Answer model, Reasoning, Top K를 설정하고 `Run RAG` 실행
    - 답변과 인용된 검색 근거, cosine 유사도, 토큰, 지연시간 확인
    - 실행 조건과 결과는 애플리케이션 Supabase의 `rag_runs`에 저장
@@ -336,14 +332,14 @@ npm start
 
 - 각 chunk의 content에 대해 `text-embedding-3-small` embedding 생성
 - 메타데이터 자동 생성 (문서/파싱/청킹 provenance, content hash, embedding model/dimensions)
-- Supabase 테이블에 content, embedding, metadata 저장
+- `vector_documents`에 owner, collection, content, embedding, metadata 저장
 - 배치 처리로 rate limit 회피
 
 ### 11. Evaluation
 
 1. 사이드바의 `Eval` 메뉴에서 `New dataset`으로 골든셋을 만듭니다.
 2. Draft 버전에 질문, 기준 답변/사실, 기대 근거와 리뷰 루브릭을 작성합니다.
-3. 실행할 케이스를 선택하고 `Run selected`에서 VDB 테이블과 모델 설정을 지정합니다.
+3. 실행할 케이스를 선택하고 `Run selected`에서 벡터 컬렉션과 모델 설정을 지정합니다.
 4. 실행을 시작하면 버전이 자동으로 Frozen 상태가 되며 각 케이스가 순차 실행됩니다.
 5. `Runs` 탭에서 기준/실제 답변과 기대/검색 근거를 비교합니다.
 6. Correctness, Faithfulness, Citation quality와 Pass/Fail을 저장합니다.
@@ -358,7 +354,7 @@ npm start
 5. 텍스트·구조·순서·영역·표·그림·provenance 지표와 페이지별 이슈를 확인합니다.
 6. 기준을 수정하려면 `Create next version`으로 새 Draft를 만듭니다. 과거 실행의 기준/후보 스냅샷은 바뀌지 않습니다.
 
-평가 실행 전 대상 VDB 테이블에서 `Search Setup`이 완료되어 있어야 하며, 케이스마다 OpenAI embedding과 Responses API 호출 비용이 발생합니다.
+평가 케이스마다 OpenAI embedding과 Responses API 호출 비용이 발생합니다. 벡터 검색 RPC는 Supabase 마이그레이션으로 함께 설치됩니다.
 문서 파서 평가는 저장된 Document IR에 대해 로컬 결정적 계산만 수행하므로 외부 모델 호출 비용이 없습니다.
 
 ## 프로젝트 구조
@@ -369,7 +365,7 @@ text_spliter/
 │   ├── api/                # keys, parsing, storage, splitting, and VDB APIs
 │   └── login/              # Supabase Auth page
 ├── components/
-│   ├── connect/            # provider and VDB credentials
+│   ├── connect/            # AI/parser provider credentials
 │   ├── layout/             # shell, navigation, and auth boundary
 │   ├── parser/             # parser controls, results, and comparison
 │   ├── shared/             # cross-feature UI primitives
@@ -617,11 +613,11 @@ Supabase 스키마 및 테이블 목록을 조회합니다.
 ```json
 [
   {
-    "name": "public",
+    "name": "vector_store",
     "tables": [
       {
         "name": "my_vectors",
-        "schema": "public",
+        "schema": "vector_store",
         "rowCount": 150,
         "columns": [...]
       }
@@ -630,18 +626,18 @@ Supabase 스키마 및 테이블 목록을 조회합니다.
 ]
 ```
 
-**Note:** Supabase URL과 Key는 Connect 페이지에서 설정한 값을 사용합니다.
+**Note:** 로그인 사용자의 앱 Supabase 컬렉션만 반환합니다. 별도 Supabase 자격 증명은 필요하지 않습니다.
 
 #### GET /api/vectorstore/table-data
 
-테이블 데이터를 조회합니다.
+선택한 컬렉션의 벡터 문서 데이터를 조회합니다. 임베딩 원문은 응답에서 제외합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?table=<table_name>&schema=<schema_name>`
 
 #### POST /api/vectorstore/tables
 
-벡터 테이블을 생성합니다.
+사용자 소유 벡터 컬렉션을 생성합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -659,34 +655,22 @@ Supabase 스키마 및 테이블 목록을 조회합니다.
 ```json
 {
   "success": true,
-  "message": "Table 'my_documents' created successfully",
+  "message": "Collection 'my_documents' created successfully",
+  "schema": "vector_store",
   "tableName": "my_documents",
   "vectorDimension": 1536
 }
 ```
 
-**Table Schema:**
-
-```sql
-CREATE TABLE my_documents (
-  id BIGSERIAL PRIMARY KEY,
-  content TEXT NOT NULL,
-  embedding vector(1536),
-  metadata JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
 **Note:**
 
-- pgvector extension 자동 활성화
-- ivfflat 인덱스 자동 생성 (vector_cosine_ops)
-- 테이블별 cosine 검색 함수 자동 생성
-- 직접 생성 실패 시 테이블 및 검색 함수 SQL 명령어 제공
+- 모든 컬렉션은 공용 `vector_documents` 테이블에 `owner_id`와 `collection_id`로 격리
+- pgvector extension과 HNSW cosine 인덱스는 마이그레이션에서 설치
+- 검색은 owner/collection ID를 필수로 받는 공용 RPC 사용
 
 #### DELETE /api/vectorstore/tables
 
-벡터 테이블을 삭제합니다.
+벡터 컬렉션과 그 컬렉션에 속한 문서를 삭제합니다.
 
 **Headers:** `Authorization: Bearer <token>`
 **Query:** `?tableName=<table_name>`
@@ -696,7 +680,7 @@ CREATE TABLE my_documents (
 ```json
 {
   "success": true,
-  "message": "Table 'my_documents' deleted successfully"
+  "message": "Collection 'my_documents' deleted successfully"
 }
 ```
 
@@ -721,7 +705,7 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 ```json
 {
   "success": true,
-  "message": "Successfully uploaded 50 chunks to table 'my_documents'",
+  "message": "Successfully uploaded 50 chunks to collection 'my_documents'",
   "chunksUploaded": 50,
   "tableName": "my_documents"
 }
@@ -743,12 +727,12 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
    }
    ```
 
-4. Supabase 테이블에 삽입 (content, embedding, metadata)
+4. 관리형 `vector_documents`에 upsert (content, embedding, metadata)
 5. 배치 처리로 rate limit 관리
 
 #### POST /api/vectorstore/search
 
-기존 벡터 테이블에 table-specific cosine 검색 함수를 설정합니다. 연결 키가 DDL을 실행할 수 없으면 Supabase SQL Editor에서 실행할 SQL을 반환합니다.
+선택한 관리형 컬렉션과 검색 RPC 준비 상태를 확인합니다. 별도 SQL 실행은 필요하지 않습니다.
 
 #### GET /api/rag/runs
 
@@ -761,7 +745,6 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 **Required API Keys:**
 
 - OpenAI API Key (임베딩 및 RAG 답변 생성용)
-- Supabase URL & Key (저장용)
 
 ### Evaluation
 
@@ -808,9 +791,7 @@ API 키를 저장하거나 업데이트합니다.
   "googleParserPrivateKey": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
   "googleParserProjectId": "...",
   "googleParserLocation": "us",
-  "googleParserProcessorId": "...",
-  "supabaseUrl": "https://....supabase.co",
-  "supabaseKey": "eyJ..."
+  "googleParserProcessorId": "..."
 }
 ```
 
@@ -840,7 +821,7 @@ Private Key는 PEM 형식의 전체 키를 포함해야 합니다.
   - OpenAI API rate limits 적용 (배치 처리로 완화)
   - 대용량 청킹 결과 업로드 시 시간 소요
   - 임베딩 비용 발생 (OpenAI API 사용)
-  - Supabase 직접 DDL 실행 제한 (RPC 필요)
+  - 최신 Supabase 마이그레이션 적용 필요
 
 ## 개발
 

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'node:crypto';
-import { getUserEmailFromToken } from '@/lib/auth-server';
-import { createClient } from '@supabase/supabase-js';
+import { getUserFromToken } from '@/lib/auth-server';
 import { getDecryptedApiKeyMap } from '@/lib/api-key-store';
 import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
 import {
@@ -9,7 +8,11 @@ import {
   DEFAULT_EMBEDDING_MODEL,
 } from '@/lib/constants';
 import { createEmbeddings } from '@/lib/openai-server';
-import { assertSafeDatabaseIdentifier } from '@/lib/vectorstore-server';
+import { normalizeVectorChunk } from '@/lib/vectorstore';
+import {
+  getOwnedVectorCollection,
+  vectorStoreErrorResponse,
+} from '@/lib/vectorstore-server';
 
 interface SplitResult {
   id: number;
@@ -29,8 +32,8 @@ interface SplitResult {
 // POST - Upload split results to Supabase vector database
 export async function POST(request: NextRequest) {
   try {
-    const userEmail = await getUserEmailFromToken(request);
-    if (!userEmail) {
+    const user = await getUserFromToken(request);
+    if (!user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -48,14 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    try {
-      assertSafeDatabaseIdentifier(tableName, 'Table name');
-    } catch (error) {
-      return NextResponse.json(
-        { error: error instanceof Error ? error.message : 'Invalid table name' },
-        { status: 400 }
-      );
-    }
+    const collection = await getOwnedVectorCollection(user.id, tableName);
     if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 100) {
       return NextResponse.json(
         { error: 'Batch size must be an integer between 1 and 100' },
@@ -68,7 +64,7 @@ export async function POST(request: NextRequest) {
       .from('split_results')
       .select('*')
       .eq('id', splitResultId)
-      .eq('user_email', userEmail)
+      .eq('user_email', user.email)
       .maybeSingle();
     assertSupabaseResult(splitResultError, 'Failed to load split result');
 
@@ -91,60 +87,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get API keys from database
-    const keys = await getDecryptedApiKeyMap(
-      userEmail,
-      ['supabaseUrl', 'supabaseKey', 'openaiEmbedding']
-    );
-
-    if (!keys.supabaseUrl || !keys.supabaseKey || !keys.openaiEmbedding) {
+    let normalizedChunks: ReturnType<typeof normalizeVectorChunk>[];
+    try {
+      normalizedChunks = chunks.map(normalizeVectorChunk);
+    } catch (error) {
       return NextResponse.json(
-        { error: 'Supabase and OpenAI credentials not configured. Please set up in Connect page.' },
+        { error: error instanceof Error ? error.message : 'Invalid chunk data.' },
         { status: 400 }
       );
     }
 
-    const supabaseUrl = keys.supabaseUrl;
-    const supabaseKey = keys.supabaseKey;
-    const openaiKey = keys.openaiEmbedding;
+    const keys = await getDecryptedApiKeyMap(user.email, ['openaiEmbedding']);
+    const openaiKey = keys.openaiEmbedding || process.env.OPENAI_API_KEY;
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    if (!openaiKey) {
+      return NextResponse.json(
+        { error: 'OpenAI credentials are not configured. Please set up the AI Models tab in Connect.' },
+        { status: 400 }
+      );
+    }
 
-    // Generate embeddings for all chunks
-    const embeddedChunks: Array<{
-      content: string;
-      embedding: number[];
-      metadata: any;
-    }> = [];
     const embeddingUsage = { prompt_tokens: 0, total_tokens: 0 };
+    let chunksUploaded = 0;
+    let resolvedEmbeddingModel = DEFAULT_EMBEDDING_MODEL;
 
-    console.log(`Generating embeddings for ${chunks.length} chunks...`);
+    console.log(`Generating embeddings for ${normalizedChunks.length} chunks...`);
 
     // Process chunks in batches to avoid rate limits
-    for (let i = 0; i < chunks.length; i += batchSize) {
-      const batch = chunks.slice(i, i + batchSize);
-
-      const contents = batch.map((chunk) =>
-        typeof chunk === 'string'
-          ? chunk
-          : chunk.pageContent || chunk.text || JSON.stringify(chunk)
-      );
+    for (let i = 0; i < normalizedChunks.length; i += batchSize) {
+      const batch = normalizedChunks.slice(i, i + batchSize);
+      const contents = batch.map((chunk) => chunk.content);
       const result = await createEmbeddings({
         apiKey: openaiKey,
         inputs: contents,
         model: DEFAULT_EMBEDDING_MODEL,
         dimensions: DEFAULT_EMBEDDING_DIMENSIONS,
       });
+      if (result.embeddings.length !== batch.length) {
+        throw new Error('The embedding provider returned an incomplete batch.');
+      }
       embeddingUsage.prompt_tokens += result.usage.prompt_tokens || 0;
       embeddingUsage.total_tokens += result.usage.total_tokens || 0;
+      resolvedEmbeddingModel = result.model;
 
-      const batchEmbeddings = batch.map((chunk, batchIndex) => {
-        const content = contents[batchIndex];
+      const embeddedBatch = batch.map((chunk, batchIndex) => {
+        const { content, metadata: chunkMetadata } = chunk;
         const chunkIndex = i + batchIndex;
-        const chunkMetadata = typeof chunk === 'object' && chunk.metadata
-          ? chunk.metadata
-          : {};
-        const embeddedSource = chunkMetadata.source && typeof chunkMetadata.source === 'object'
+        const embeddedSource = chunkMetadata.source !== null &&
+          typeof chunkMetadata.source === 'object' &&
+          !Array.isArray(chunkMetadata.source)
           ? chunkMetadata.source as Record<string, unknown>
           : {};
         const sourceMetadata = splitResult.source_metadata || embeddedSource;
@@ -156,7 +147,13 @@ export async function POST(request: NextRequest) {
           : null;
 
         return {
+          owner_id: user.id,
+          collection_id: collection.id,
+          source_split_result_id: splitResultId,
+          chunk_index: chunkIndex,
+          chunk_key: `${splitResultId}:${chunkIndex}`,
           content,
+          content_hash: createHash('sha256').update(content).digest('hex'),
           embedding: result.embeddings[batchIndex],
           metadata: {
             ...chunkMetadata,
@@ -182,42 +179,34 @@ export async function POST(request: NextRequest) {
         };
       });
 
-      embeddedChunks.push(...batchEmbeddings);
+      const { error: upsertError } = await getAppSupabase()
+        .from('vector_documents')
+        .upsert(embeddedBatch, { onConflict: 'collection_id,chunk_key' });
+      assertSupabaseResult(upsertError, 'Failed to store vector documents');
+      chunksUploaded += embeddedBatch.length;
 
-      console.log(`Processed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}`);
-    }
-
-    // Insert into Supabase
-    const { error } = await supabase
-      .from(tableName)
-      .insert(embeddedChunks);
-
-    if (error) {
-      console.error('Supabase insert error:', error);
-      return NextResponse.json(
-        {
-          error: 'Failed to insert into Supabase',
-          details: error.message,
-        },
-        { status: 500 }
-      );
+      console.log(`Processed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(normalizedChunks.length / batchSize)}`);
     }
 
     return NextResponse.json({
       success: true,
-      message: `Successfully uploaded ${embeddedChunks.length} chunks to table '${tableName}'`,
-      chunksUploaded: embeddedChunks.length,
-      tableName,
+      message: `Successfully uploaded ${chunksUploaded} chunks to collection '${collection.name}'`,
+      chunksUploaded,
+      tableName: collection.name,
       embedding: {
         provider: 'openai',
         model: DEFAULT_EMBEDDING_MODEL,
-        resolvedModel: embeddedChunks[0]?.metadata.embedding_model || DEFAULT_EMBEDDING_MODEL,
+        resolvedModel: resolvedEmbeddingModel,
         dimensions: DEFAULT_EMBEDDING_DIMENSIONS,
         usage: embeddingUsage,
       },
     });
   } catch (error) {
     console.error('Error uploading to vector database:', error);
+    const response = vectorStoreErrorResponse(error);
+    if (response.status !== 500) {
+      return NextResponse.json(response.body, { status: response.status });
+    }
     return NextResponse.json(
       {
         error: 'Failed to upload to vector database',

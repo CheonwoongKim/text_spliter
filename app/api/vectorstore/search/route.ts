@@ -1,79 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
-import { getDecryptedApiKeyMap } from "@/lib/api-key-store";
-import { getUserEmailFromToken } from "@/lib/auth-server";
-import { DEFAULT_EMBEDDING_DIMENSIONS } from "@/lib/constants";
+import { getUserFromToken } from "@/lib/auth-server";
 import {
-  assertSafeDatabaseIdentifier,
-  ragMatchFunctionName,
-  vectorSearchSetupSql,
+  assertManagedVectorSchema,
+  MANAGED_VECTOR_DIMENSIONS,
+  MANAGED_VECTOR_SCHEMA,
+} from "@/lib/vectorstore";
+import {
+  getOwnedVectorCollection,
+  vectorStoreErrorResponse,
+  VectorStoreRequestError,
 } from "@/lib/vectorstore-server";
 
 export async function POST(request: NextRequest) {
   try {
-    const userEmail = await getUserEmailFromToken(request);
-    if (!userEmail) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = (await request.json()) as {
-      schema?: string;
-      tableName?: string;
-      vectorDimension?: number;
+    const user = await getUserFromToken(request);
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const body = await request.json() as {
+      schema?: unknown;
+      tableName?: unknown;
+      vectorDimension?: unknown;
     };
-    const schemaName = body.schema || "public";
-    const tableName = body.tableName?.trim() || "";
-    const vectorDimension = body.vectorDimension ?? DEFAULT_EMBEDDING_DIMENSIONS;
-
-    assertSafeDatabaseIdentifier(schemaName, "Schema name");
-    assertSafeDatabaseIdentifier(tableName, "Table name");
-    if (schemaName !== "public") {
-      return NextResponse.json(
-        { error: "RAG search setup currently supports the public schema only." },
-        { status: 400 }
-      );
+    try {
+      assertManagedVectorSchema(body.schema ?? MANAGED_VECTOR_SCHEMA);
+    } catch (error) {
+      throw new VectorStoreRequestError(error instanceof Error ? error.message : "Invalid vector schema.");
     }
-
-    const keys = await getDecryptedApiKeyMap(userEmail, ["supabaseUrl", "supabaseKey"]);
-    if (!keys.supabaseUrl || !keys.supabaseKey) {
-      return NextResponse.json(
-        { error: "Supabase credentials are not configured in Connect." },
-        { status: 400 }
-      );
-    }
-
-    const sql = vectorSearchSetupSql({ schemaName, tableName, vectorDimension });
-    const target = createClient(keys.supabaseUrl, keys.supabaseKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-    const { error } = await target.rpc("exec_sql", { sql });
-
-    if (error) {
-      return NextResponse.json(
-        {
-          error: "Search setup requires the exec_sql RPC or a manual SQL run.",
-          details: error.message,
-          instructions: sql.trim(),
-        },
-        { status: 400 }
-      );
+    const collection = await getOwnedVectorCollection(user.id, body.tableName);
+    if ((body.vectorDimension ?? MANAGED_VECTOR_DIMENSIONS) !== collection.vector_dimension) {
+      throw new VectorStoreRequestError("Embedding dimensions do not match this collection.", 409);
     }
 
     return NextResponse.json({
       success: true,
-      schema: schemaName,
-      tableName,
-      vectorDimension,
-      functionName: ragMatchFunctionName(tableName),
+      schema: MANAGED_VECTOR_SCHEMA,
+      tableName: collection.name,
+      vectorDimension: collection.vector_dimension,
+      functionName: "match_vector_documents",
+      message: "Managed vector search is ready.",
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Failed to configure vector search.",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    const response = vectorStoreErrorResponse(error);
+    return NextResponse.json(response.body, { status: response.status });
   }
 }

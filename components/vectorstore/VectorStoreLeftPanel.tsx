@@ -1,8 +1,9 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import type { VectorStoreConfig, DatabaseSchema } from "@/lib/types";
 import { getAuthToken } from "@/lib/auth";
+import { MANAGED_VECTOR_DIMENSIONS, MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 
 interface VectorStoreLeftPanelProps {
   config: VectorStoreConfig;
@@ -19,12 +20,11 @@ function VectorStoreLeftPanel({
   onConfigChange,
   onRefresh,
 }: VectorStoreLeftPanelProps) {
-  const [selectedSchemaName, setSelectedSchemaName] = useState<string>("public");
+  const [selectedSchemaName, setSelectedSchemaName] = useState<string>(MANAGED_VECTOR_SCHEMA);
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [newTableName, setNewTableName] = useState("");
-  const [vectorDimension, setVectorDimension] = useState(1536);
   const [tableToDelete, setTableToDelete] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -34,9 +34,15 @@ function VectorStoreLeftPanel({
     setSelectedSchemaName(schemaName);
   }, []);
 
+  useEffect(() => {
+    if (schemas.length > 0 && !schemas.some((schema) => schema.name === selectedSchemaName)) {
+      setSelectedSchemaName(schemas[0].name);
+    }
+  }, [schemas, selectedSchemaName]);
+
   const handleCreateTable = useCallback(async () => {
     if (!newTableName.trim()) {
-      setMessage({ type: 'error', text: 'Please enter a table name' });
+      setMessage({ type: 'error', text: 'Please enter a collection name' });
       return;
     }
 
@@ -58,28 +64,18 @@ function VectorStoreLeftPanel({
         },
         body: JSON.stringify({
           tableName: newTableName.trim(),
-          vectorDimension,
+          vectorDimension: MANAGED_VECTOR_DIMENSIONS,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // Show SQL instructions if direct creation not supported
-        if (data.instructions) {
-          setMessage({
-            type: 'error',
-            text: data.error + '\n\nPlease create the table manually in Supabase SQL Editor.'
-          });
-        } else {
-          throw new Error(data.details || data.error || 'Failed to create table');
-        }
-        return;
+        throw new Error(data.details || data.error || 'Failed to create collection');
       }
 
-      setMessage({ type: 'success', text: data.message || 'Table created successfully' });
+      setMessage({ type: 'success', text: data.message || 'Collection created successfully' });
       setNewTableName("");
-      setVectorDimension(1536);
 
       // Refresh schema list
       setTimeout(() => {
@@ -96,7 +92,7 @@ function VectorStoreLeftPanel({
     } finally {
       setCreating(false);
     }
-  }, [newTableName, vectorDimension, onRefresh]);
+  }, [newTableName, onRefresh]);
 
   const handleDeleteTableClick = useCallback((tableName: string) => {
     setTableToDelete(tableName);
@@ -127,18 +123,10 @@ function VectorStoreLeftPanel({
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.instructions) {
-          setMessage({
-            type: 'error',
-            text: data.error + '\n\nPlease delete the table manually in Supabase SQL Editor.'
-          });
-        } else {
-          throw new Error(data.details || data.error || 'Failed to delete table');
-        }
-        return;
+        throw new Error(data.details || data.error || 'Failed to delete collection');
       }
 
-      setMessage({ type: 'success', text: data.message || 'Table deleted successfully' });
+      setMessage({ type: 'success', text: data.message || 'Collection deleted successfully' });
 
       // Refresh schema list
       setTimeout(() => {
@@ -177,7 +165,7 @@ function VectorStoreLeftPanel({
       <div className="border-b border-border bg-card px-6 py-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-card-foreground">
-            Tables
+            Collections
           </h3>
           <div className="flex items-center gap-2">
             <button
@@ -186,7 +174,7 @@ function VectorStoreLeftPanel({
               className="p-2 text-muted-foreground hover:text-accent
                        disabled:opacity-disabled disabled:cursor-not-allowed
                        transition-smooth"
-              title="Create Table"
+              title="Create Collection"
             >
               <svg
                 className="w-4 h-4"
@@ -258,7 +246,7 @@ function VectorStoreLeftPanel({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search tables..."
+            placeholder="Search collections..."
             className="w-full h-9 pl-9 pr-3 text-sm border border-border rounded-lg
                      focus:outline-none focus:ring-2 focus:ring-accent
                      bg-surface text-card-foreground placeholder-light"
@@ -359,7 +347,7 @@ function VectorStoreLeftPanel({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-medium text-card-foreground mb-4">
-              Create Vector Table
+              Create Vector Collection
             </h3>
 
             {message && (
@@ -377,7 +365,7 @@ function VectorStoreLeftPanel({
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Table Name *
+                  Collection Name *
                 </label>
                 <input
                   type="text"
@@ -394,30 +382,10 @@ function VectorStoreLeftPanel({
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Vector Dimension
-                </label>
-                <input
-                  type="number"
-                  value={vectorDimension}
-                  onChange={(e) => setVectorDimension(Number(e.target.value))}
-                  min={1}
-                  max={4096}
-                  className="w-full px-3 py-2 border border-border rounded-lg
-                           focus:outline-none focus:ring-2 focus:ring-accent
-                           bg-surface text-card-foreground"
-                  disabled={creating}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Default: 1536 (OpenAI text-embedding-3-small)
-                </p>
-              </div>
-
               <div className="bg-muted/30 p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground">
-                  <strong>Note:</strong> If direct table creation fails, you may need to create
-                  the table manually in Supabase SQL Editor.
+                  앱 Supabase에 사용자 전용 컬렉션으로 생성됩니다. 임베딩은 text-embedding-3-small
+                  ({MANAGED_VECTOR_DIMENSIONS} dimensions)을 사용합니다.
                 </p>
               </div>
             </div>
@@ -427,7 +395,6 @@ function VectorStoreLeftPanel({
                 onClick={() => {
                   setShowCreateModal(false);
                   setNewTableName("");
-                  setVectorDimension(1536);
                   setMessage(null);
                 }}
                 disabled={creating}
@@ -446,7 +413,7 @@ function VectorStoreLeftPanel({
                 {creating && (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 )}
-                {creating ? 'Creating...' : 'Create Table'}
+                {creating ? 'Creating...' : 'Create Collection'}
               </button>
             </div>
           </div>
@@ -458,7 +425,7 @@ function VectorStoreLeftPanel({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-medium text-card-foreground mb-4">
-              Delete Table
+              Delete Collection
             </h3>
 
             {message && (
@@ -476,10 +443,10 @@ function VectorStoreLeftPanel({
             <div className="space-y-4">
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                 <p className="text-sm text-card-foreground">
-                  Are you sure you want to delete the table <strong>{tableToDelete}</strong>?
+                  Are you sure you want to delete the collection <strong>{tableToDelete}</strong>?
                 </p>
                 <p className="text-sm text-red-500 mt-2">
-                  This action cannot be undone. All data in this table will be permanently deleted.
+                  This action cannot be undone. All vector data in this collection will be permanently deleted.
                 </p>
               </div>
             </div>
@@ -507,7 +474,7 @@ function VectorStoreLeftPanel({
                 {deleting && (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 )}
-                {deleting ? 'Deleting...' : 'Delete Table'}
+                {deleting ? 'Deleting...' : 'Delete Collection'}
               </button>
             </div>
           </div>

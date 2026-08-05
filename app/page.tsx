@@ -17,6 +17,7 @@ import ParseResultDetailPanel from "@/components/parser/ParseResultDetailPanel";
 import EvaluationPanel from "@/components/evaluation/EvaluationPanel";
 import type { AppMenu } from "@/components/layout/Sidebar";
 import { getAuthToken } from "@/lib/auth";
+import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 import type {
   SplitterConfig,
   SplitterType,
@@ -342,7 +343,7 @@ export default function Home() {
       }
 
       const response = await fetch(
-        `/api/vectorstore/table-data?table=${vectorStoreConfig.selectedTable}&schema=${vectorStoreConfig.selectedSchema || 'public'}`,
+        `/api/vectorstore/table-data?table=${vectorStoreConfig.selectedTable}&schema=${vectorStoreConfig.selectedSchema || MANAGED_VECTOR_SCHEMA}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
