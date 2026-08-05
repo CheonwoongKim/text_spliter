@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import EvaluationRunsView from "@/components/evaluation/EvaluationRunsView";
 import GoldenCaseEditor, { type GoldenCasePayload } from "@/components/evaluation/GoldenCaseEditor";
+import RagasEvaluationModal from "@/components/evaluation/RagasEvaluationModal";
 import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import { getAuthToken } from "@/lib/auth";
 import type {
@@ -11,10 +12,12 @@ import type {
   EvaluationCase,
   EvaluationDataset,
   EvaluationDatasetVersion,
+  EvaluationJudgeCaseRun,
   EvaluationRun,
   EvaluationWorkspace,
   RagGenerationModel,
   RagReasoningEffort,
+  RagasMetricKey,
   ReviewerDecision,
 } from "@/lib/types";
 
@@ -36,6 +39,17 @@ interface EvaluationTask {
 interface CreateRunResponse {
   run: EvaluationRun;
   tasks: EvaluationTask[];
+}
+
+interface CreateJudgeBatchResponse {
+  tasks: Array<Pick<EvaluationJudgeCaseRun, "id" | "evaluation_case_run_id">>;
+}
+
+interface RagasWorkerHealth {
+  frameworkVersion: string;
+  workerVersion: string;
+  allowedModels: string[];
+  supportedMetrics: string[];
 }
 
 async function evaluationRequest<T>(body?: Record<string, unknown>): Promise<T> {
@@ -62,7 +76,7 @@ function statusClass(status: string): string {
 
 export default function EvaluationPanel() {
   const [workspace, setWorkspace] = useState<EvaluationWorkspace>({
-    datasets: [], versions: [], cases: [], runs: [], caseRuns: [],
+    datasets: [], versions: [], cases: [], runs: [], caseRuns: [], judgeBatches: [], judgeCaseRuns: [],
   });
   const [activeTab, setActiveTab] = useState<"golden" | "runs">("golden");
   const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(null);
@@ -93,6 +107,16 @@ export default function EvaluationPanel() {
   const [regressionTolerance, setRegressionTolerance] = useState(5);
   const [executing, setExecuting] = useState(false);
   const [executionProgress, setExecutionProgress] = useState({ completed: 0, total: 0 });
+  const [ragasModalOpen, setRagasModalOpen] = useState(false);
+  const [ragasModel, setRagasModel] = useState<RagGenerationModel>("gpt-5.6-terra");
+  const [ragasMetrics, setRagasMetrics] = useState<RagasMetricKey[]>([
+    "faithfulness", "answerRelevancy", "contextPrecision", "contextRecall",
+  ]);
+  const [ragasHealth, setRagasHealth] = useState<RagasWorkerHealth | null>(null);
+  const [ragasHealthError, setRagasHealthError] = useState<string | null>(null);
+  const [ragasChecking, setRagasChecking] = useState(false);
+  const [ragasExecuting, setRagasExecuting] = useState(false);
+  const [ragasProgress, setRagasProgress] = useState({ completed: 0, total: 0 });
 
   const fetchWorkspace = useCallback(async () => {
     setLoading(true);
@@ -395,6 +419,72 @@ export default function EvaluationPanel() {
     }
   };
 
+  const openRagasModal = async (run: EvaluationRun) => {
+    const activeBatch = workspace.judgeBatches.find((batch) =>
+      batch.evaluation_run_id === run.id && batch.status === "running"
+    );
+    if (activeBatch?.evaluator_config.model) setRagasModel(activeBatch.evaluator_config.model);
+    if (activeBatch?.metric_config.metrics?.length) setRagasMetrics(activeBatch.metric_config.metrics);
+    setSelectedRunId(run.id);
+    setRagasModalOpen(true);
+    setRagasChecking(true);
+    setRagasHealth(null);
+    setRagasHealthError(null);
+    setRagasProgress({ completed: 0, total: run.succeeded_count });
+    try {
+      const response = await evaluationRequest<{ health: RagasWorkerHealth }>({ action: "check_evaluator" });
+      setRagasHealth(response.health);
+      const requestedModel = activeBatch?.evaluator_config.model || ragasModel;
+      if (!response.health.allowedModels.includes(requestedModel)) {
+        const fallback = response.health.allowedModels.find((model) => ["gpt-5.6-terra", "gpt-5.6-sol", "gpt-5.6-luna"].includes(model));
+        if (fallback) setRagasModel(fallback as RagGenerationModel);
+      }
+    } catch (caught) {
+      setRagasHealthError(caught instanceof Error ? caught.message : "Ragas 워커에 연결하지 못했습니다.");
+    } finally {
+      setRagasChecking(false);
+    }
+  };
+
+  const toggleRagasMetric = (metric: RagasMetricKey) => {
+    setRagasMetrics((current) => current.includes(metric)
+      ? current.filter((item) => item !== metric)
+      : [...current, metric]);
+  };
+
+  const executeRagasEvaluation = async () => {
+    const run = workspace.runs.find((item) => item.id === selectedRunId);
+    if (!run || !ragasMetrics.length) return;
+    setRagasExecuting(true);
+    setError(null);
+    let failed = 0;
+    try {
+      const created = await evaluationRequest<CreateJudgeBatchResponse>({
+        action: "create_judge_batch",
+        runId: run.id,
+        model: ragasModel,
+        metrics: ragasMetrics,
+      });
+      setRagasProgress({ completed: 0, total: created.tasks.length });
+      for (let index = 0; index < created.tasks.length; index += 1) {
+        const result = await evaluationRequest<{ success: boolean }>({
+          action: "execute_judge_case_run",
+          judgeCaseRunId: created.tasks[index].id,
+        });
+        if (!result.success) failed += 1;
+        setRagasProgress({ completed: index + 1, total: created.tasks.length });
+      }
+      setRagasModalOpen(false);
+      await fetchWorkspace();
+      if (failed) setError(`${failed}개 케이스의 Ragas 평가가 실패했습니다. 실행 상세에서 원인을 확인하세요.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Ragas 평가 실행에 실패했습니다.");
+      await fetchWorkspace();
+    } finally {
+      setRagasExecuting(false);
+    }
+  };
+
   if (loading && !workspace.datasets.length) {
     return <div className="h-full flex items-center justify-center"><div className="animate-spin w-8 h-8 rounded-full border-2 border-muted border-t-accent" /></div>;
   }
@@ -472,9 +562,13 @@ export default function EvaluationPanel() {
           <EvaluationRunsView
             runs={datasetRuns}
             caseRuns={workspace.caseRuns}
+            judgeBatches={workspace.judgeBatches}
+            judgeCaseRuns={workspace.judgeCaseRuns}
             selectedRunId={selectedRunId}
             onSelectRun={setSelectedRunId}
             onReview={handleReview}
+            onRunRagas={openRagasModal}
+            ragasExecuting={ragasExecuting}
             reviewSaving={reviewSaving}
           />
         ) : (
@@ -597,6 +691,21 @@ export default function EvaluationPanel() {
           </div>
         </div>
       )}
+      <RagasEvaluationModal
+        open={ragasModalOpen}
+        run={workspace.runs.find((run) => run.id === selectedRunId) || null}
+        model={ragasModel}
+        metrics={ragasMetrics}
+        health={ragasHealth}
+        healthError={ragasHealthError}
+        checking={ragasChecking}
+        executing={ragasExecuting}
+        progress={ragasProgress}
+        onModelChange={setRagasModel}
+        onToggleMetric={toggleRagasMetric}
+        onClose={() => setRagasModalOpen(false)}
+        onRun={executeRagasEvaluation}
+      />
     </div>
   );
 }

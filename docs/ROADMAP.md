@@ -26,11 +26,11 @@
 - [x] report scores by document type, language, difficulty, parser, chunker, embedding model, and generator
 - [x] support baseline-vs-candidate comparisons and regression thresholds
 
-### Stage 3 — Ragas evaluator worker (next)
+### Stage 3 — Ragas evaluator worker (completed)
 
-- [ ] add an isolated Python worker for Ragas metrics and evaluator-model configuration
-- [ ] persist faithfulness, answer relevancy, context precision/recall, metric versions, prompts, and evaluator usage
-- [ ] keep deterministic, model-judged, and human scores separate rather than collapsing them into one number
+- [x] add an isolated Python worker for Ragas metrics and evaluator-model configuration
+- [x] persist faithfulness, answer relevancy, context precision/recall, metric versions, prompts, and evaluator usage
+- [x] keep deterministic, model-judged, and human scores separate rather than collapsing them into one number
 
 ### Stage 4 — Document and multimodal evaluation
 

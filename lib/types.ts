@@ -305,6 +305,9 @@ export interface RagRunResult {
 export type EvaluationVersionStatus = "draft" | "frozen" | "archived";
 export type EvaluationRunStatus = "running" | "completed" | "failed";
 export type EvaluationCaseRunStatus = "pending" | "running" | "succeeded" | "failed";
+export type EvaluationJudgeBatchStatus = "running" | "completed" | "failed";
+export type EvaluationJudgeCaseRunStatus = "pending" | "running" | "succeeded" | "failed";
+export type RagasMetricKey = "faithfulness" | "answerRelevancy" | "contextPrecision" | "contextRecall";
 export type ReviewerDecision = "pending" | "pass" | "fail";
 
 export interface ExpectedEvidence {
@@ -445,12 +448,75 @@ export interface EvaluationCaseRun {
   updated_at: string;
 }
 
+export interface EvaluationJudgeBatch {
+  id: string;
+  owner_id: string;
+  evaluation_run_id: string;
+  name: string;
+  status: EvaluationJudgeBatchStatus;
+  framework: "ragas";
+  framework_version: string | null;
+  evaluator_config: {
+    provider?: "openai";
+    model?: RagGenerationModel;
+    embeddingModel?: string;
+  };
+  metric_config: {
+    metrics?: RagasMetricKey[];
+    contractVersion?: string;
+  };
+  case_count: number;
+  completed_count: number;
+  succeeded_count: number;
+  failed_count: number;
+  aggregate_metrics: {
+    metrics?: Partial<Record<RagasMetricKey, {
+      average: number | null;
+      sampleCount: number;
+      unavailableCount: number;
+    }>>;
+    usage?: {
+      requests?: number;
+      inputTokens?: number;
+      outputTokens?: number;
+      totalTokens?: number;
+    };
+  };
+  started_at: string;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface EvaluationJudgeCaseRun {
+  id: string;
+  owner_id: string;
+  judge_batch_id: string;
+  evaluation_case_run_id: string;
+  status: EvaluationJudgeCaseRunStatus;
+  scores: Partial<Record<RagasMetricKey, number>>;
+  metric_details: Partial<Record<RagasMetricKey, {
+    score?: number | null;
+    reason?: string | null;
+    status: "succeeded" | "failed" | "unavailable";
+    error?: string | null;
+  }>>;
+  prompt_manifest: Record<string, JsonValue>;
+  usage: Record<string, JsonValue>;
+  error: Record<string, JsonValue> | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface EvaluationWorkspace {
   datasets: EvaluationDataset[];
   versions: EvaluationDatasetVersion[];
   cases: EvaluationCase[];
   runs: EvaluationRun[];
   caseRuns: EvaluationCaseRun[];
+  judgeBatches: EvaluationJudgeBatch[];
+  judgeCaseRuns: EvaluationJudgeCaseRun[];
 }
 
 // Splitter information map

@@ -38,6 +38,9 @@ lib/
 ├── splitters            # chunking implementations
 └── types                # shared application contracts
 
+services/
+└── ragas-worker/        # private Python evaluator service; no browser access
+
 supabase/migrations/     # versioned database, Storage bucket, and RLS changes
 ```
 
@@ -55,6 +58,7 @@ private documents bucket ──→ parser adapters ──→ normalized Document
                                           rag_runs ← retrieval + grounded answer
                                               ↑
                  golden set versions ──→ evaluation runs ──→ human review
+                                                     └─────→ Ragas worker ──→ model-judge batches
 ```
 
 ## Persistence
@@ -66,6 +70,7 @@ private documents bucket ──→ parser adapters ──→ normalized Document
 - `evaluation_datasets` / `evaluation_dataset_versions`: owned golden sets with immutable frozen versions.
 - `evaluation_cases`: questions, reference answers/facts, answerability, expected evidence, tags, and rubrics.
 - `evaluation_runs` / `evaluation_case_runs`: frozen pipeline runs, RAG links/snapshots, per-case outcomes, and reviewer scores.
+- `evaluation_judge_batches` / `evaluation_judge_case_runs`: versioned Ragas configuration, per-metric scores and reasons, prompt manifests, usage, and failures.
 - `documents` bucket: private source objects under `{auth_user_id}/`.
 
 Application persistence uses the server-only Supabase secret client. Every API route verifies the caller with Supabase Auth and explicitly scopes database rows and object paths to that caller.
@@ -95,6 +100,9 @@ Application persistence uses the server-only Supabase secret client. Every API r
 - Successful case runs calculate versioned deterministic retrieval metrics from expected evidence identifiers and retrieved chunk provenance. Evidence notes without document, page, block, or chunk identifiers remain unscored rather than becoming false failures.
 - Run summaries keep macro averages, metric sample counts, and breakdowns for document type, language, difficulty, answerability, tags, parser, chunker, embedding model, and generator.
 - An optional completed run from the same dataset can be selected as a baseline. Per-metric allowed drops are stored with the candidate run, and regressions are recorded without overwriting human-review results.
+- Completed successful cases can be evaluated by the private Ragas 0.4 worker. The Next.js server supplies the decrypted OpenAI key through an internal bearer-authenticated request; neither that key nor the worker token is exposed to the browser.
+- Ragas batches snapshot evaluator and embedding models, metric contract/framework versions, prompt hashes/content, per-metric reasons, and token usage. Missing reference answers make reference-dependent metrics unavailable rather than zero.
+- Deterministic retrieval metrics, Ragas model-judge metrics, and human scores are stored and displayed as separate measurement layers.
 - Frozen versions are never edited in place. The next version clones the golden cases into a new draft.
 
 ## Change rules

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "text-splitter-ragas-worker"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "fastapi==0.141.1",
+  "httpx==0.28.1",
+  # Ragas 0.4.3 still imports integrations removed from LangChain 1.x.
+  # Keep this compatible set pinned until Ragas removes that import path.
+  "langchain==0.3.27",
+  "langchain-community==0.3.31",
+  "langchain-core==0.3.80",
+  "langchain-openai==0.3.35",
+  "openai==2.53.0",
+  "ragas==0.4.3",
+  "uvicorn[standard]==0.52.1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest==8.4.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

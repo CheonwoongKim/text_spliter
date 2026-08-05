@@ -182,14 +182,20 @@ supabase db push --linked
 - `evaluation_datasets` / `evaluation_dataset_versions` - 골든셋과 불변 버전
 - `evaluation_cases` - 질문, 기준 정답·사실·기대 근거·루브릭
 - `evaluation_runs` / `evaluation_case_runs` - 평가 실행, RAG 결과 연결, 사람 점수와 판정
+- `evaluation_judge_batches` / `evaluation_judge_case_runs` - Ragas 모델 평가 설정·점수·판정 근거·프롬프트·사용량 이력
 - `storage.objects` / `documents` bucket - 사용자별 문서 원본 저장
 
 ### 개발 서버 실행
 
 ```bash
+# 최초 1회 Ragas Python 워커 설치
+npm run ragas:setup
+
 # 연결된 Supabase 프로젝트의 서버·브라우저 키를 메모리로만 주입
 npm run dev:supabase
 ```
+
+`dev:supabase`는 워커 환경이 설치되어 있으면 `127.0.0.1:8001`에서 Ragas를 함께 실행하고 임의의 내부 토큰을 Next.js 서버와만 공유합니다. 별도 배포 워커는 `RAGAS_WORKER_URL`과 `RAGAS_WORKER_TOKEN`으로 연결합니다.
 
 브라우저에서 [http://localhost:3000](http://localhost:3000)을 엽니다.
 
@@ -746,11 +752,11 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 
 #### GET /api/evaluation
 
-현재 사용자의 데이터셋, 버전, 케이스, 평가 실행과 케이스 실행을 하나의 평가 워크스페이스로 조회합니다.
+현재 사용자의 데이터셋, 버전, 케이스, 평가 실행, Ragas 판정 배치와 케이스 실행을 하나의 평가 워크스페이스로 조회합니다.
 
 #### POST /api/evaluation
 
-데이터셋·케이스 CRUD, 버전 복제, 평가 실행 생성, RAG 실행 연결, 수동 리뷰 저장을 `action` 단위로 처리합니다. RAG 결과를 연결하면 Recall@K, Precision@K, Hit Rate, MRR, nDCG@K와 인용 정밀도·재현율을 계산하고, 선택한 기준 실행 대비 회귀도 판정합니다. 모든 행은 Supabase Auth 사용자 UUID로 범위를 제한합니다.
+데이터셋·케이스 CRUD, 버전 복제, 평가 실행 생성, RAG 실행 연결, 수동 리뷰와 Ragas 배치 실행을 `action` 단위로 처리합니다. RAG 결과를 연결하면 Recall@K, Precision@K, Hit Rate, MRR, nDCG@K와 인용 정밀도·재현율을 계산하고, 선택한 기준 실행 대비 회귀도 판정합니다. 완료된 결과에는 Faithfulness, Answer relevancy, Context precision/recall을 별도 모델 판정 이력으로 기록할 수 있습니다. 모든 행은 Supabase Auth 사용자 UUID로 범위를 제한합니다.
 
 ### API 키 관리
 

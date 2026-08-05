@@ -5,7 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import type {
   EvaluationCaseRun,
+  EvaluationJudgeBatch,
+  EvaluationJudgeCaseRun,
   EvaluationRun,
+  RagasMetricKey,
   ReviewerDecision,
 } from "@/lib/types";
 
@@ -22,9 +25,13 @@ interface ReviewPayload {
 interface EvaluationRunsViewProps {
   runs: EvaluationRun[];
   caseRuns: EvaluationCaseRun[];
+  judgeBatches: EvaluationJudgeBatch[];
+  judgeCaseRuns: EvaluationJudgeCaseRun[];
   selectedRunId: string | null;
   onSelectRun: (runId: string) => void;
   onReview: (caseRunId: string, payload: ReviewPayload) => Promise<void>;
+  onRunRagas: (run: EvaluationRun) => void;
+  ragasExecuting: boolean;
   reviewSaving: boolean;
 }
 
@@ -56,6 +63,13 @@ const METRIC_COLUMNS = [
   ["citationPrecision", "Citation precision"],
   ["citationRecall", "Citation recall"],
 ] as const;
+
+const RAGAS_METRIC_COLUMNS: Array<[RagasMetricKey, string]> = [
+  ["faithfulness", "Faithfulness"],
+  ["answerRelevancy", "Answer relevancy"],
+  ["contextPrecision", "Context precision"],
+  ["contextRecall", "Context recall"],
+];
 
 const BREAKDOWN_LABELS = {
   documentType: "Document type",
@@ -110,9 +124,13 @@ function ScoreSelect({
 export default function EvaluationRunsView({
   runs,
   caseRuns,
+  judgeBatches,
+  judgeCaseRuns,
   selectedRunId,
   onSelectRun,
   onReview,
+  onRunRagas,
+  ragasExecuting,
   reviewSaving,
 }: EvaluationRunsViewProps) {
   const selectedRun = runs.find((run) => run.id === selectedRunId) || runs[0] || null;
@@ -130,6 +148,18 @@ export default function EvaluationRunsView({
   const [decision, setDecision] = useState<ReviewerDecision>("pending");
   const [notes, setNotes] = useState("");
   const [breakdownDimension, setBreakdownDimension] = useState<BreakdownDimension>("documentType");
+  const selectedRunJudgeBatches = useMemo(
+    () => judgeBatches.filter((batch) => batch.evaluation_run_id === selectedRun?.id),
+    [judgeBatches, selectedRun?.id]
+  );
+  const [selectedJudgeBatchId, setSelectedJudgeBatchId] = useState<string | null>(null);
+  const selectedJudgeBatch = selectedRunJudgeBatches.find((batch) => batch.id === selectedJudgeBatchId)
+    || selectedRunJudgeBatches[0]
+    || null;
+  const selectedJudgeCaseRun = judgeCaseRuns.find((caseRun) =>
+    caseRun.judge_batch_id === selectedJudgeBatch?.id
+    && caseRun.evaluation_case_run_id === selectedCaseRun?.id
+  ) || null;
 
   useEffect(() => {
     setSelectedCaseRunId((current) =>
@@ -146,6 +176,14 @@ export default function EvaluationRunsView({
     setDecision(selectedCaseRun?.reviewer_decision || "pending");
     setNotes(selectedCaseRun?.reviewer_notes || "");
   }, [selectedCaseRun]);
+
+  useEffect(() => {
+    setSelectedJudgeBatchId((current) =>
+      current && selectedRunJudgeBatches.some((batch) => batch.id === current)
+        ? current
+        : selectedRunJudgeBatches[0]?.id || null
+    );
+  }, [selectedRunJudgeBatches]);
 
   if (!runs.length) {
     return (
@@ -171,6 +209,11 @@ export default function EvaluationRunsView({
   const relevanceByRank = Array.isArray(selectedCaseMetrics.relevanceByRank)
     ? selectedCaseMetrics.relevanceByRank.map(asRecord)
     : [];
+  const judgeAggregate = asRecord(selectedJudgeBatch?.aggregate_metrics);
+  const judgeMetricAverages = asRecord(judgeAggregate.metrics);
+  const judgeUsage = asRecord(judgeAggregate.usage);
+  const judgeModel = selectedJudgeBatch?.evaluator_config.model || "—";
+  const activeJudgeBatch = selectedRunJudgeBatches.some((batch) => batch.status === "running");
 
   return (
     <div className="h-full grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -256,6 +299,54 @@ export default function EvaluationRunsView({
                 </div>
               </div>
             )}
+            <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-border">
+              <div className="flex flex-wrap items-center gap-3 min-w-0">
+                <div>
+                  <p className="text-xs font-medium text-card-foreground">Model evaluation</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {selectedJudgeBatch
+                      ? `Ragas ${selectedJudgeBatch.framework_version || "—"} · ${judgeModel} · ${selectedJudgeBatch.completed_count}/${selectedJudgeBatch.case_count}`
+                      : "Ragas 평가 배치가 없습니다."}
+                  </p>
+                </div>
+                {selectedRunJudgeBatches.length > 0 && (
+                  <select
+                    value={selectedJudgeBatch?.id || ""}
+                    onChange={(event) => setSelectedJudgeBatchId(event.target.value)}
+                    className="h-9 max-w-64 px-3 border border-border rounded-md bg-surface text-xs text-card-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    {selectedRunJudgeBatches.map((batch) => (
+                      <option key={batch.id} value={batch.id}>{new Date(batch.created_at).toLocaleString()} · {batch.status}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => selectedRun && onRunRagas(selectedRun)}
+                disabled={!selectedRun || selectedRun.status !== "completed" || !selectedRun.succeeded_count || ragasExecuting}
+                className={styles.compactPrimaryButton}
+              >
+                {ragasExecuting ? "Ragas running..." : activeJudgeBatch ? "Resume Ragas" : "Run Ragas"}
+              </button>
+              {selectedJudgeBatch && (
+                <div className="basis-full flex flex-wrap border-y border-border">
+                  {RAGAS_METRIC_COLUMNS.map(([key, label]) => {
+                    const metric = asRecord(judgeMetricAverages[key]);
+                    return (
+                      <div key={key} className="flex-[1_1_130px] min-w-[130px] py-2.5 pr-4">
+                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</p>
+                        <p className="text-xs font-semibold text-card-foreground mt-1">{numberMetric(metric.average)} <span className="font-normal text-muted-foreground">n={String(metric.sampleCount ?? 0)}</span></p>
+                      </div>
+                    );
+                  })}
+                  <div className="flex-[1_1_130px] min-w-[130px] py-2.5 pr-4">
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Judge usage</p>
+                    <p className="text-xs font-semibold text-card-foreground mt-1">{Number(judgeUsage.totalTokens || 0).toLocaleString()} <span className="font-normal text-muted-foreground">tokens</span></p>
+                  </div>
+                </div>
+              )}
+            </div>
             <details className="mt-4 pt-4 border-t border-border group">
               <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-xs font-medium text-card-foreground">
                 <span>Metric breakdown</span>
@@ -314,6 +405,12 @@ export default function EvaluationRunsView({
                       {caseRun.reviewer_decision !== "pending" && (
                         <span className={`px-1.5 py-0.5 rounded text-[10px] ${statusClass(caseRun.reviewer_decision)}`}>{caseRun.reviewer_decision}</span>
                       )}
+                      {selectedJudgeBatch && (() => {
+                        const judgeCase = judgeCaseRuns.find((item) => item.judge_batch_id === selectedJudgeBatch.id && item.evaluation_case_run_id === caseRun.id);
+                        return judgeCase
+                          ? <span className={`px-1.5 py-0.5 rounded text-[10px] ${statusClass(judgeCase.status)}`}>Ragas {judgeCase.status}</span>
+                          : null;
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -401,6 +498,37 @@ export default function EvaluationRunsView({
                     })}
                   </div>
                 </section>
+
+                {selectedJudgeBatch && (
+                  <section className="border-t border-border pt-7">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-card-foreground">Ragas model evaluation</h4>
+                        <p className="text-xs text-muted-foreground mt-1">{judgeModel} 판정 점수와 지표별 근거입니다.</p>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusClass(selectedJudgeCaseRun?.status || "pending")}`}>{selectedJudgeCaseRun?.status || "not evaluated"}</span>
+                    </div>
+                    {selectedJudgeCaseRun?.status === "failed" && (
+                      <pre className="mb-4 p-3 border border-red-500/20 bg-red-500/10 rounded-lg text-xs text-red-500 whitespace-pre-wrap">{JSON.stringify(selectedJudgeCaseRun.error, null, 2)}</pre>
+                    )}
+                    <div className="border-t border-border">
+                      {RAGAS_METRIC_COLUMNS.map(([key, label]) => {
+                        const detail = selectedJudgeCaseRun?.metric_details[key];
+                        const score = selectedJudgeCaseRun?.scores[key];
+                        return (
+                          <div key={key} className="grid grid-cols-1 sm:grid-cols-[140px_70px_minmax(0,1fr)] gap-2 sm:gap-4 py-3 border-b border-border text-xs">
+                            <div>
+                              <p className="font-medium text-card-foreground">{label}</p>
+                              <p className={`text-[10px] mt-1 ${detail?.status === "failed" ? "text-red-500" : "text-muted-foreground"}`}>{detail?.status || "not selected"}</p>
+                            </div>
+                            <p className="font-semibold text-card-foreground tabular-nums">{numberMetric(score)}</p>
+                            <p className="leading-5 text-muted-foreground whitespace-pre-wrap">{detail?.reason || detail?.error || "판정 근거가 없습니다."}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
 
                 <section className="border-t border-border pt-7 pb-8">
                   <div className="flex items-center justify-between gap-4 mb-5">

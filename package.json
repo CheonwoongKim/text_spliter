@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "dev:supabase": "node scripts/dev-with-supabase.mjs",
+    "ragas:setup": "node scripts/setup-ragas-worker.mjs",
+    "ragas:test": "services/ragas-worker/.venv/bin/python -m pytest services/ragas-worker/tests",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
