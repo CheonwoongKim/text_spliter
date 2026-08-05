@@ -4,6 +4,10 @@ import { memo, useCallback, useState, useEffect } from "react";
 import type { ParserType, ParserConfig } from "@/lib/types";
 import { getAuthToken } from "@/lib/auth";
 import { getDocumentEngine, listDocumentEngines } from "@/lib/document-engines";
+import {
+  getParserFileTypeProfile,
+  isParserFileSupported,
+} from "@/lib/parser-file-types";
 
 const documentEngines = listDocumentEngines();
 
@@ -42,6 +46,10 @@ function ParserLeftPanel({
   const [experimentEngines, setExperimentEngines] = useState<ParserType[]>([
     config.parserType,
   ]);
+  const acceptedFileProfile = getParserFileTypeProfile(experimentEngines);
+  const selectedFileSupported = selectedFile
+    ? isParserFileSupported(selectedFile.name, experimentEngines)
+    : true;
 
   const toggleExperimentEngine = useCallback((parserType: ParserType) => {
     setExperimentEngines((current) => {
@@ -59,11 +67,16 @@ function ParserLeftPanel({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
+        if (!isParserFileSupported(file.name, experimentEngines)) {
+          e.target.value = "";
+          alert(`Choose a supported file type: ${acceptedFileProfile.label}`);
+          return;
+        }
         onFileSelect(file, null);  // null indicates this is a direct upload
         setSelectedFileKey(null);
       }
     },
-    [onFileSelect]
+    [acceptedFileProfile.label, experimentEngines, onFileSelect]
   );
 
   const handleParserTypeChange = useCallback(
@@ -231,13 +244,6 @@ function ParserLeftPanel({
     }
   }, [uploadMode, fetchStorageFiles]);
 
-  const acceptedFileTypes = config.parserType === "Docling"
-    ? ".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.html,.htm,.md,.txt"
-    : ".pdf,.png,.jpg,.jpeg,.docx,.pptx";
-  const acceptedFileLabel = config.parserType === "Docling"
-    ? "PDF, images, Office, HTML, Markdown, CSV, TXT"
-    : "PDF, PNG, JPG, JPEG, DOCX, PPTX";
-
   return (
     <div className="h-full flex flex-col relative">
       <div className="flex-1 overflow-y-auto py-6 pb-24">
@@ -273,6 +279,11 @@ function ParserLeftPanel({
               </span>
             )}
           </div>
+          {selectedFile && !selectedFileSupported && (
+            <p role="alert" className="mb-2 text-xs text-red-600 dark:text-red-300">
+              This file is not supported by every selected parser. Choose: {acceptedFileProfile.label}.
+            </p>
+          )}
 
           {/* File Upload Content */}
           <div className="h-[300px]">
@@ -315,7 +326,7 @@ function ParserLeftPanel({
                   <input
                     id="file-upload"
                     type="file"
-                    accept={acceptedFileTypes}
+                    accept={acceptedFileProfile.accept}
                     onChange={handleFileChange}
                     disabled={loading}
                     className="hidden"
@@ -337,13 +348,13 @@ function ParserLeftPanel({
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {acceptedFileLabel} (max 100MB)
+                      {acceptedFileProfile.label} (max 100MB)
                     </p>
                   </div>
                   <input
                     id="file-upload"
                     type="file"
-                    accept={acceptedFileTypes}
+                    accept={acceptedFileProfile.accept}
                     onChange={handleFileChange}
                     disabled={loading}
                     className="hidden"
@@ -390,32 +401,41 @@ function ParserLeftPanel({
                   </div>
                 ) : (
                   <div className="flex-1 overflow-y-auto p-2">
-                    {storageFiles.map((file) => (
-                      <button
-                        key={file.id}
-                        onClick={() => handleSelectFile(file.storage_key, file.filename)}
-                        disabled={loading}
-                        className={`w-full text-left p-3 mb-2 rounded-lg border transition-smooth ${
-                          selectedFileKey === file.storage_key
-                            ? "border-accent bg-accent/10"
-                            : "border-border hover:border-accent/50 hover:bg-muted"
-                        } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-muted-foreground flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-surface-foreground truncate">
-                              {file.filename}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {(file.file_size / 1024).toFixed(2)} KB
-                            </p>
+                    {storageFiles.map((file) => {
+                      const supported = isParserFileSupported(
+                        file.filename,
+                        experimentEngines
+                      );
+                      return (
+                        <button
+                          key={file.id}
+                          onClick={() => handleSelectFile(file.storage_key, file.filename)}
+                          disabled={loading || !supported}
+                          title={supported ? undefined : `Supported types: ${acceptedFileProfile.label}`}
+                          className={`w-full text-left p-3 mb-2 rounded-lg border transition-smooth ${
+                            selectedFileKey === file.storage_key
+                              ? "border-accent bg-accent/10"
+                              : "border-border hover:border-accent/50 hover:bg-muted"
+                          } ${loading || !supported ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-muted-foreground flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-surface-foreground truncate">
+                                {file.filename}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {supported
+                                  ? `${(file.file_size / 1024).toFixed(2)} KB`
+                                  : "Not supported by all selected parsers"}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -864,7 +884,7 @@ function ParserLeftPanel({
           {/* Parse Button */}
           <button
             onClick={() => onParse(experimentEngines)}
-            disabled={loading || !selectedFile || experimentEngines.length === 0}
+            disabled={loading || !selectedFile || !selectedFileSupported || experimentEngines.length === 0}
             className="text-white hover:text-white/90 disabled:text-muted-foreground
                      disabled:cursor-not-allowed font-medium text-sm
                      transition-smooth flex items-center gap-2"
