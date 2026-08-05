@@ -2,9 +2,11 @@
 
 import { memo } from "react";
 
+export type AppMenu = "parser" | "splitter" | "licenses" | "vectorstore" | "evaluation" | "storage" | "files";
+
 interface SidebarProps {
-  activeMenu: "parser" | "splitter" | "licenses" | "vectorstore" | "storage" | "files";
-  onMenuChange: (menu: "parser" | "splitter" | "licenses" | "vectorstore" | "storage" | "files") => void;
+  activeMenu: AppMenu;
+  onMenuChange: (menu: AppMenu) => void;
 }
 
 function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
@@ -121,6 +123,23 @@ function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
           />
         </svg>
         <span className="text-[10px] font-medium">VDB</span>
+      </button>
+
+      {/* Evaluation Menu */}
+      <button
+        onClick={() => onMenuChange("evaluation")}
+        className={`w-14 h-14 flex flex-col items-center justify-center rounded-lg transition-smooth ${
+          activeMenu === "evaluation"
+            ? "text-white"
+            : "text-gray-500 hover:text-gray-400"
+        }`}
+        aria-label="Evaluation"
+        title="Evaluation"
+      >
+        <svg className="w-6 h-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 11l2 2 4-4m5-2.25A11.95 11.95 0 0112 3a11.95 11.95 0 01-8 3.75C4 12.15 7.4 17.1 12 19c4.6-1.9 8-6.85 8-12.25z" />
+        </svg>
+        <span className="text-[10px] font-medium">Eval</span>
       </button>
 
       {/* Files Menu */}

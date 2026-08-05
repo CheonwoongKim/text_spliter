@@ -13,14 +13,14 @@
 
 ## Evaluation delivery plan
 
-### Stage 1 — Golden sets and manual runs (next)
+### Stage 1 — Golden sets and manual runs (completed)
 
-- [ ] add an Evaluation menu with dataset, version, and case management
-- [ ] let reviewers author questions, reference answers/facts, answerability, expected evidence, tags, and rubrics
-- [ ] execute selected cases against a frozen parser/chunker/retriever/generator configuration
-- [ ] record reviewer scores, notes, pass/fail decisions, and source/evidence links
+- [x] add an Evaluation menu with dataset, version, and case management
+- [x] let reviewers author questions, reference answers/facts, answerability, expected evidence, tags, and rubrics
+- [x] execute selected cases against a frozen dataset version and RAG configuration
+- [x] record reviewer scores, notes, pass/fail decisions, and source/evidence links
 
-### Stage 2 — Deterministic retrieval metrics
+### Stage 2 — Deterministic retrieval metrics (next)
 
 - [ ] calculate Recall@K, Precision@K, MRR, nDCG, hit rate, citation precision, and citation recall
 - [ ] report scores by document type, language, difficulty, parser, chunker, embedding model, and generator

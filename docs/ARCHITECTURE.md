@@ -21,6 +21,7 @@ app/
 
 components/
 ├── connect/             # provider credential settings
+├── evaluation/          # golden sets, batch runs, evidence review, and manual scores
 ├── layout/              # application shell and auth boundary
 ├── parser/              # document parsing and comparison UI
 ├── shared/              # cross-feature UI primitives
@@ -52,6 +53,8 @@ private documents bucket ──→ parser adapters ──→ normalized Document
                               parse_results ──→ split_results ──→ target VDB
                                                                       ↓
                                           rag_runs ← retrieval + grounded answer
+                                              ↑
+                 golden set versions ──→ evaluation runs ──→ human review
 ```
 
 ## Persistence
@@ -60,6 +63,9 @@ private documents bucket ──→ parser adapters ──→ normalized Document
 - `parse_results`: immutable parser run metadata plus editable result formats.
 - `split_results`: chunking configuration, source metadata, and generated chunks.
 - `rag_runs`: immutable RAG configurations, retrieved evidence, answers, citations, usage, timings, and failures.
+- `evaluation_datasets` / `evaluation_dataset_versions`: owned golden sets with immutable frozen versions.
+- `evaluation_cases`: questions, reference answers/facts, answerability, expected evidence, tags, and rubrics.
+- `evaluation_runs` / `evaluation_case_runs`: frozen pipeline runs, RAG links/snapshots, per-case outcomes, and reviewer scores.
 - `documents` bucket: private source objects under `{auth_user_id}/`.
 
 Application persistence uses the server-only Supabase secret client. Every API route verifies the caller with Supabase Auth and explicitly scopes database rows and object paths to that caller.
@@ -79,6 +85,14 @@ Application persistence uses the server-only Supabase secret client. Every API r
 - Each target vector table has a table-specific cosine-search function. It executes with the target database caller's permissions.
 - The answer step uses the OpenAI Responses API and a versioned grounded-answer prompt. Retrieved chunks are treated as untrusted data.
 - `rag_runs` never stores provider credentials. It stores the target host, requested and resolved models, prompt version, evidence, usage, and latency.
+
+## Evaluation contracts
+
+- A new dataset starts with draft version 1. Cases can only be edited while their version is draft.
+- Starting an evaluation run freezes the selected dataset version and snapshots every selected case before execution.
+- Browser-side orchestration executes each case through the authenticated RAG API; each result is linked by `rag_run_id` and copied into the case-run snapshot for review.
+- Manual correctness, faithfulness, and citation-quality scores remain separate from pass/fail decisions and future automatic metrics.
+- Frozen versions are never edited in place. The next version clones the golden cases into a new draft.
 
 ## Change rules
 

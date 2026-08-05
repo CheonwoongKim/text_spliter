@@ -302,6 +302,115 @@ export interface RagRunResult {
   completedAt: string;
 }
 
+export type EvaluationVersionStatus = "draft" | "frozen" | "archived";
+export type EvaluationRunStatus = "running" | "completed" | "failed";
+export type EvaluationCaseRunStatus = "pending" | "running" | "succeeded" | "failed";
+export type ReviewerDecision = "pending" | "pass" | "fail";
+
+export interface ExpectedEvidence {
+  documentHash?: string;
+  pageNumber?: number;
+  blockId?: string;
+  chunkKey?: string;
+  note?: string;
+}
+
+export interface EvaluationDataset {
+  id: string;
+  owner_id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EvaluationDatasetVersion {
+  id: string;
+  dataset_id: string;
+  owner_id: string;
+  version_number: number;
+  status: EvaluationVersionStatus;
+  change_note: string | null;
+  frozen_at: string | null;
+  created_at: string;
+}
+
+export interface EvaluationCase {
+  id: string;
+  dataset_version_id: string;
+  owner_id: string;
+  case_key: string;
+  question: string;
+  reference_answer: string | null;
+  reference_facts: string[];
+  expected_evidence: ExpectedEvidence[];
+  answerable: boolean;
+  tags: string[];
+  language: string | null;
+  difficulty: "easy" | "medium" | "hard";
+  rubric: Record<string, JsonValue>;
+  notes: string | null;
+  position: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EvaluationRun {
+  id: string;
+  owner_id: string;
+  dataset_version_id: string;
+  name: string;
+  status: EvaluationRunStatus;
+  pipeline_config: Record<string, JsonValue>;
+  case_count: number;
+  completed_count: number;
+  succeeded_count: number;
+  failed_count: number;
+  aggregate_metrics: Record<string, JsonValue>;
+  started_at: string;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface EvaluationCaseRun {
+  id: string;
+  owner_id: string;
+  evaluation_run_id: string;
+  evaluation_case_id: string;
+  rag_run_id: string | null;
+  status: EvaluationCaseRunStatus;
+  question_snapshot: string;
+  reference_answer_snapshot: string | null;
+  reference_facts_snapshot: string[];
+  expected_evidence_snapshot: ExpectedEvidence[];
+  rubric_snapshot: Record<string, JsonValue>;
+  actual_answer: string | null;
+  retrieved_contexts: RagRetrievedContext[] | null;
+  citations: RagCitation[] | null;
+  rag_usage: Record<string, JsonValue> | null;
+  rag_timings: Record<string, JsonValue> | null;
+  rag_pipeline_config: Record<string, JsonValue> | null;
+  error: Record<string, JsonValue> | null;
+  manual_score: {
+    correctness?: number;
+    faithfulness?: number;
+    citationQuality?: number;
+  };
+  reviewer_decision: ReviewerDecision;
+  reviewer_notes: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EvaluationWorkspace {
+  datasets: EvaluationDataset[];
+  versions: EvaluationDatasetVersion[];
+  cases: EvaluationCase[];
+  runs: EvaluationRun[];
+  caseRuns: EvaluationCaseRun[];
+}
+
 // Splitter information map
 export const SPLITTER_INFO: Record<SplitterType, SplitterDescription> = {
   CharacterTextSplitter: {

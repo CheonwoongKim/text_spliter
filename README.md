@@ -74,6 +74,15 @@ OCR과 문서 파싱은 별도 단계로 취급합니다. 이미지 기반 문�
 - 테이블별 cosine 검색 함수 설정 및 RAG 테스트
 - 검색 근거, 인용, 요청/응답 모델, 프롬프트 버전, 토큰, 지연시간을 실행 기록으로 저장
 
+### ✅ Evaluation
+
+- 골든셋 데이터셋과 불변 버전 관리
+- 질문, 기준 답변/사실, 답변 가능 여부, 문서·페이지·블록·청크 기대 근거, 태그, 난이도, 루브릭 작성
+- 선택한 케이스를 하나의 VDB·임베딩·생성 모델·Reasoning·Top K 설정으로 실행
+- 실행 시작 시 데이터셋 버전을 자동 동결하고 케이스와 RAG 결과를 스냅샷으로 저장
+- 기준 답변과 실제 답변, 기대 근거와 검색 근거를 나란히 검토
+- Correctness, Faithfulness, Citation quality 1–5점과 Pass/Fail, 리뷰 노트 기록
+
 ### 🔐 API 키 관리
 
 - 전용 Supabase 데이터베이스에 암호화된 API 키 및 자격 증명 저장
@@ -170,6 +179,9 @@ supabase db push --linked
 - `parse_results` - 문서 파싱 결과 저장
 - `split_results` - 텍스트 분할 결과 저장
 - `rag_runs` - 검색 설정·검색 문맥·답변·인용·토큰·지연시간을 포함한 RAG 실행 기록
+- `evaluation_datasets` / `evaluation_dataset_versions` - 골든셋과 불변 버전
+- `evaluation_cases` - 질문, 기준 정답·사실·기대 근거·루브릭
+- `evaluation_runs` / `evaluation_case_runs` - 평가 실행, RAG 결과 연결, 사람 점수와 판정
 - `storage.objects` / `documents` bucket - 사용자별 문서 원본 저장
 
 ### 개발 서버 실행
@@ -315,6 +327,18 @@ npm start
 - 메타데이터 자동 생성 (문서/파싱/청킹 provenance, content hash, embedding model/dimensions)
 - Supabase 테이블에 content, embedding, metadata 저장
 - 배치 처리로 rate limit 회피
+
+### 11. Evaluation
+
+1. 사이드바의 `Eval` 메뉴에서 `New dataset`으로 골든셋을 만듭니다.
+2. Draft 버전에 질문, 기준 답변/사실, 기대 근거와 리뷰 루브릭을 작성합니다.
+3. 실행할 케이스를 선택하고 `Run selected`에서 VDB 테이블과 모델 설정을 지정합니다.
+4. 실행을 시작하면 버전이 자동으로 Frozen 상태가 되며 각 케이스가 순차 실행됩니다.
+5. `Runs` 탭에서 기준/실제 답변과 기대/검색 근거를 비교합니다.
+6. Correctness, Faithfulness, Citation quality와 Pass/Fail을 저장합니다.
+7. 골든셋을 수정하려면 `Create next version`으로 새 Draft를 생성합니다.
+
+평가 실행 전 대상 VDB 테이블에서 `Search Setup`이 완료되어 있어야 하며, 케이스마다 OpenAI embedding과 Responses API 호출 비용이 발생합니다.
 
 ## 프로젝트 구조
 
@@ -717,6 +741,16 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 
 - OpenAI API Key (임베딩 및 RAG 답변 생성용)
 - Supabase URL & Key (저장용)
+
+### Evaluation
+
+#### GET /api/evaluation
+
+현재 사용자의 데이터셋, 버전, 케이스, 평가 실행과 케이스 실행을 하나의 평가 워크스페이스로 조회합니다.
+
+#### POST /api/evaluation
+
+데이터셋·케이스 CRUD, 버전 복제, 평가 실행 생성, RAG 실행 연결, 수동 리뷰 저장을 `action` 단위로 처리합니다. 모든 행은 Supabase Auth 사용자 UUID로 범위를 제한합니다.
 
 ### API 키 관리
 

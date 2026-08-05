@@ -14,6 +14,8 @@ import VectorStoreRightPanel from "@/components/vectorstore/VectorStoreRightPane
 import StoragePanel from "@/components/storage/StoragePanel";
 import FilesPanel from "@/components/storage/FilesPanel";
 import ParseResultDetailPanel from "@/components/parser/ParseResultDetailPanel";
+import EvaluationPanel from "@/components/evaluation/EvaluationPanel";
+import type { AppMenu } from "@/components/layout/Sidebar";
 import { getAuthToken } from "@/lib/auth";
 import type {
   SplitterConfig,
@@ -32,7 +34,7 @@ import type {
 
 export default function Home() {
   // State
-  const [activeMenu, setActiveMenu] = useState<"parser" | "splitter" | "licenses" | "vectorstore" | "storage" | "files" | "parse-detail">("storage");
+  const [activeMenu, setActiveMenu] = useState<AppMenu | "parse-detail">("storage");
   const [selectedParseResultId, setSelectedParseResultId] = useState<number | null>(null);
 
   // Splitter state
@@ -416,6 +418,8 @@ export default function Home() {
               ? "Vector Database"
               : activeMenu === "storage"
               ? "Results"
+              : activeMenu === "evaluation"
+              ? "Evaluation"
               : activeMenu === "files"
               ? "Files"
               : activeMenu === "parse-detail"
@@ -479,6 +483,8 @@ export default function Home() {
               <StoragePanel onNavigateToDetail={handleNavigateToParseDetail} />
             ) : activeMenu === "files" ? (
               <FilesPanel />
+            ) : activeMenu === "evaluation" ? (
+              <EvaluationPanel />
             ) : activeMenu === "parse-detail" && selectedParseResultId ? (
               <div className="h-full px-10 py-6">
                 <ParseResultDetailPanel
