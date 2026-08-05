@@ -10,6 +10,15 @@ export const VDB_ROWS_PER_PAGE = 50;
 export const DEFAULT_FETCH_TIMEOUT = 30000; // 30 seconds
 export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
+// Reproducible RAG defaults
+export const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
+export const DEFAULT_EMBEDDING_DIMENSIONS = 1536;
+export const DEFAULT_GENERATION_MODEL = 'gpt-5.6-terra';
+export const RAG_PROMPT_VERSION = 'grounded-answer-v1';
+export const RAG_TOP_K_MIN = 1;
+export const RAG_TOP_K_MAX = 20;
+export const RAG_QUESTION_MAX_LENGTH = 8000;
+
 // Text limits
 export const MAX_TEXT_LENGTH = 100000;
 export const MAX_CHUNK_SIZE = 10000;

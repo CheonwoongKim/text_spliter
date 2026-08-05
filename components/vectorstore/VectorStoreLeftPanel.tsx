@@ -410,7 +410,7 @@ function VectorStoreLeftPanel({
                   disabled={creating}
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Default: 1536 (OpenAI text-embedding-ada-002)
+                  Default: 1536 (OpenAI text-embedding-3-small)
                 </p>
               </div>
 

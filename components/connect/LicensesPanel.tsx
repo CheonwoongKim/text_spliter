@@ -5,7 +5,7 @@ import Image from "next/image";
 import { getAuthToken } from "@/lib/auth";
 
 interface LicenseKeys {
-  // Embedding Models
+  // OpenAI (kept as openaiEmbedding for stored-key backward compatibility)
   openaiEmbedding: string;
 
   // Parsers
@@ -318,7 +318,7 @@ export default function LicensesPanel() {
                 Connect
               </h2>
               <p className="text-sm text-muted-foreground">
-                Configure API keys and credentials for embedding models, document parsers, and databases
+                Configure API keys and credentials for AI models, document parsers, and databases
               </p>
             </div>
 
@@ -333,7 +333,7 @@ export default function LicensesPanel() {
                     : "text-muted-foreground hover:text-surface-foreground"
                 }`}
               >
-                Embedding Model
+                AI Models
               </button>
               <button
                 onClick={() => setActiveTab("parser")}
@@ -406,7 +406,7 @@ export default function LicensesPanel() {
         {/* Content Area */}
         <div className="px-6 pb-6">
           <div className="max-w-5xl mx-auto">
-            {/* Embedding Model Section */}
+            {/* AI Model Section */}
             {activeTab === "embedding" && (
             <div>
 
@@ -449,7 +449,7 @@ export default function LicensesPanel() {
                       </button>
                     </div>
                     <p className="text-xs text-muted-foreground mb-4">
-                      Used for text embeddings with text-embedding-ada-002 model
+                      Used for text-embedding-3-small embeddings and grounded RAG answers
                     </p>
                     <div>
                       <label className="block text-xs font-medium text-muted-foreground mb-2">

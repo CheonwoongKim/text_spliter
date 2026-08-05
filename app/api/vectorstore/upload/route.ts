@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
 import { getUserEmailFromToken } from '@/lib/auth-server';
 import { createClient } from '@supabase/supabase-js';
 import { getDecryptedApiKeyMap } from '@/lib/api-key-store';
 import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
+import {
+  DEFAULT_EMBEDDING_DIMENSIONS,
+  DEFAULT_EMBEDDING_MODEL,
+} from '@/lib/constants';
+import { createEmbeddings } from '@/lib/openai-server';
+import { assertSafeDatabaseIdentifier } from '@/lib/vectorstore-server';
 
 interface SplitResult {
   id: number;
   user_email: string;
+  parse_run_id: string | null;
+  document_hash: string | null;
   splitter_type: string;
   original_text: string;
   chunk_size: number | null;
@@ -34,6 +43,21 @@ export async function POST(request: NextRequest) {
     if (!splitResultId || !tableName) {
       return NextResponse.json(
         { error: 'Split result ID and table name are required' },
+        { status: 400 }
+      );
+    }
+
+    try {
+      assertSafeDatabaseIdentifier(tableName, 'Table name');
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Invalid table name' },
+        { status: 400 }
+      );
+    }
+    if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 100) {
+      return NextResponse.json(
+        { error: 'Batch size must be an integer between 1 and 100' },
         { status: 400 }
       );
     }
@@ -91,6 +115,7 @@ export async function POST(request: NextRequest) {
       embedding: number[];
       metadata: any;
     }> = [];
+    const embeddingUsage = { prompt_tokens: 0, total_tokens: 0 };
 
     console.log(`Generating embeddings for ${chunks.length} chunks...`);
 
@@ -98,48 +123,49 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < chunks.length; i += batchSize) {
       const batch = chunks.slice(i, i + batchSize);
 
-      const batchEmbeddings = await Promise.all(
-        batch.map(async (chunk) => {
-          const content = typeof chunk === 'string' ? chunk : chunk.pageContent || chunk.text || JSON.stringify(chunk);
+      const contents = batch.map((chunk) =>
+        typeof chunk === 'string'
+          ? chunk
+          : chunk.pageContent || chunk.text || JSON.stringify(chunk)
+      );
+      const result = await createEmbeddings({
+        apiKey: openaiKey,
+        inputs: contents,
+        model: DEFAULT_EMBEDDING_MODEL,
+        dimensions: DEFAULT_EMBEDDING_DIMENSIONS,
+      });
+      embeddingUsage.prompt_tokens += result.usage.prompt_tokens || 0;
+      embeddingUsage.total_tokens += result.usage.total_tokens || 0;
 
-          // Generate embedding using OpenAI
-          const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${openaiKey}`,
-            },
-            body: JSON.stringify({
-              input: content,
-              model: 'text-embedding-ada-002',
-            }),
-          });
+      const batchEmbeddings = batch.map((chunk, batchIndex) => {
+        const content = contents[batchIndex];
+        const chunkIndex = i + batchIndex;
+        const chunkMetadata = typeof chunk === 'object' && chunk.metadata
+          ? chunk.metadata
+          : {};
 
-          if (!embeddingResponse.ok) {
-            const error = await embeddingResponse.json();
-            throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
-          }
-
-          const embeddingData = await embeddingResponse.json();
-          const embedding = embeddingData.data[0].embedding;
-
-          // Extract metadata
-          const metadata = {
+        return {
+          content,
+          embedding: result.embeddings[batchIndex],
+          metadata: {
+            ...chunkMetadata,
             source: `split_result_${splitResultId}`,
+            split_result_id: splitResultId,
+            parse_run_id: splitResult.parse_run_id,
+            document_hash: splitResult.document_hash,
             splitter_type: splitResult.splitter_type,
             chunk_size: splitResult.chunk_size,
             chunk_overlap: splitResult.chunk_overlap,
-            chunk_index: chunks.indexOf(chunk),
-            ...(typeof chunk === 'object' && chunk.metadata ? chunk.metadata : {}),
-          };
-
-          return {
-            content,
-            embedding,
-            metadata,
-          };
-        })
-      );
+            chunk_index: chunkIndex,
+            chunk_key: `${splitResultId}:${chunkIndex}`,
+            content_hash: createHash('sha256').update(content).digest('hex'),
+            embedding_provider: 'openai',
+            embedding_model: result.model,
+            embedding_dimensions: DEFAULT_EMBEDDING_DIMENSIONS,
+            embedded_at: new Date().toISOString(),
+          },
+        };
+      });
 
       embeddedChunks.push(...batchEmbeddings);
 
@@ -167,6 +193,13 @@ export async function POST(request: NextRequest) {
       message: `Successfully uploaded ${embeddedChunks.length} chunks to table '${tableName}'`,
       chunksUploaded: embeddedChunks.length,
       tableName,
+      embedding: {
+        provider: 'openai',
+        model: DEFAULT_EMBEDDING_MODEL,
+        resolvedModel: embeddedChunks[0]?.metadata.embedding_model || DEFAULT_EMBEDDING_MODEL,
+        dimensions: DEFAULT_EMBEDDING_DIMENSIONS,
+        usage: embeddingUsage,
+      },
     });
   } catch (error) {
     console.error('Error uploading to vector database:', error);

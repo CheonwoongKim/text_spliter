@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserEmailFromToken } from '@/lib/auth-server';
 import { createClient } from '@supabase/supabase-js';
 import { getDecryptedApiKeyMap } from '@/lib/api-key-store';
+import { DEFAULT_EMBEDDING_DIMENSIONS } from '@/lib/constants';
+import {
+  assertSafeDatabaseIdentifier,
+  vectorSearchSetupSql,
+} from '@/lib/vectorstore-server';
 
 // POST - Create a new table in Supabase
 export async function POST(request: NextRequest) {
@@ -12,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tableName, vectorDimension = 1536 } = body as {
+    const { tableName, vectorDimension = DEFAULT_EMBEDDING_DIMENSIONS } = body as {
       tableName: string;
       vectorDimension?: number;
     };
@@ -24,10 +29,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate table name (alphanumeric and underscores only)
-    if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(tableName)) {
+    try {
+      assertSafeDatabaseIdentifier(tableName, 'Table name');
+    } catch (error) {
       return NextResponse.json(
-        { error: 'Invalid table name. Must start with a letter and contain only letters, numbers, and underscores.' },
+        { error: error instanceof Error ? error.message : 'Invalid table name' },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isInteger(vectorDimension) || vectorDimension < 1 || vectorDimension > 4096) {
+      return NextResponse.json(
+        { error: 'Vector dimension must be an integer between 1 and 4096.' },
         { status: 400 }
       );
     }
@@ -49,8 +62,7 @@ export async function POST(request: NextRequest) {
 
     // Create table with pgvector support
     // Note: Supabase JS client doesn't support DDL directly, so we use RPC or raw SQL
-    const { error } = await supabase.rpc('exec_sql', {
-      sql: `
+    const setupSql = `
         -- Enable pgvector extension if not already enabled
         CREATE EXTENSION IF NOT EXISTS vector;
 
@@ -68,42 +80,25 @@ export async function POST(request: NextRequest) {
         ON ${tableName}
         USING ivfflat (embedding vector_cosine_ops)
         WITH (lists = 100);
-      `
+        ${vectorSearchSetupSql({
+          schemaName: 'public',
+          tableName,
+          vectorDimension,
+        })}
+      `;
+    const { error } = await supabase.rpc('exec_sql', {
+      sql: setupSql,
     });
 
     if (error) {
-      // If RPC doesn't exist, try direct query
-      const { error: sqlError } = await supabase.from(tableName).select('*').limit(0);
-
-      if (sqlError && sqlError.message.includes('does not exist')) {
-        // Table doesn't exist, we need to create it via SQL
-        // Since Supabase JS doesn't support DDL, return instructions
-        return NextResponse.json(
-          {
-            error: 'Direct table creation is not supported via API. Please use Supabase SQL Editor.',
-            instructions: `
-              1. Go to Supabase Dashboard > SQL Editor
-              2. Run this SQL:
-
-              CREATE EXTENSION IF NOT EXISTS vector;
-
-              CREATE TABLE ${tableName} (
-                id BIGSERIAL PRIMARY KEY,
-                content TEXT NOT NULL,
-                embedding vector(${vectorDimension}),
-                metadata JSONB,
-                created_at TIMESTAMPTZ DEFAULT NOW()
-              );
-
-              CREATE INDEX ${tableName}_embedding_idx
-              ON ${tableName}
-              USING ivfflat (embedding vector_cosine_ops)
-              WITH (lists = 100);
-            `
-          },
-          { status: 400 }
-        );
-      }
+      return NextResponse.json(
+        {
+          error: 'Table creation requires the exec_sql RPC or a manual SQL run.',
+          details: error.message,
+          instructions: setupSql.trim(),
+        },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({
@@ -138,6 +133,15 @@ export async function DELETE(request: NextRequest) {
     if (!tableName) {
       return NextResponse.json(
         { error: 'Table name is required' },
+        { status: 400 }
+      );
+    }
+
+    try {
+      assertSafeDatabaseIdentifier(tableName, 'Table name');
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Invalid table name' },
         { status: 400 }
       );
     }

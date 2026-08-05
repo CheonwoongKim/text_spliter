@@ -65,12 +65,14 @@ OCR과 문서 파싱은 별도 단계로 취급합니다. 이미지 기반 문�
 - Supabase (PostgreSQL with pgvector) 벡터 데이터베이스 연결 및 관리
 - **테이블 생성/삭제**: VDB 페이지에서 벡터 테이블 생성 및 삭제
 - **Split Results 업로드**: Storage 페이지에서 청킹 결과를 벡터 스토어에 업로드
-  - OpenAI 임베딩 자동 생성 (text-embedding-ada-002)
+  - OpenAI 임베딩 자동 생성 (`text-embedding-3-small`, 1536차원)
   - 메타데이터 JSONB 형식 저장
   - 배치 처리로 rate limit 관리 (1-100 chunks/batch)
   - 드롭다운으로 테이블 선택
 - 스키마 및 테이블 탐색
 - 벡터 데이터 시각화
+- 테이블별 cosine 검색 함수 설정 및 RAG 테스트
+- 검색 근거, 인용, 요청/응답 모델, 프롬프트 버전, 토큰, 지연시간을 실행 기록으로 저장
 
 ### 🔐 API 키 관리
 
@@ -129,7 +131,7 @@ npm install
 `.env.local` 파일을 생성하고 다음 내용을 입력합니다:
 
 ```env
-# OpenAI API Key (for embeddings and VDB upload)
+# OpenAI API Key (for embeddings, VDB upload, and RAG answer generation)
 OPENAI_API_KEY=your_openai_api_key
 
 # Application Database (server only)
@@ -167,6 +169,7 @@ supabase db push --linked
 - `user_api_keys` - 암호화된 API 키 저장
 - `parse_results` - 문서 파싱 결과 저장
 - `split_results` - 텍스트 분할 결과 저장
+- `rag_runs` - 검색 설정·검색 문맥·답변·인용·토큰·지연시간을 포함한 RAG 실행 기록
 - `storage.objects` / `documents` bucket - 사용자별 문서 원본 저장
 
 ### 개발 서버 실행
@@ -300,11 +303,16 @@ npm start
    - OpenAI API를 통해 자동으로 임베딩 생성 후 Supabase에 저장
 5. **Schema 및 Table 탐색**: 좌측 패널에서 스키마와 테이블 선택
 6. **벡터 데이터 조회**: 우측 패널에서 테이블 데이터 및 임베딩 확인
+7. **RAG 테스트**:
+   - 우측 `RAG Test` 탭에서 기존 테이블은 `Search Setup`을 1회 실행
+   - 질문, Embedding, Answer model, Reasoning, Top K를 설정하고 `Run RAG` 실행
+   - 답변과 인용된 검색 근거, cosine 유사도, 토큰, 지연시간 확인
+   - 실행 조건과 결과는 애플리케이션 Supabase의 `rag_runs`에 저장
 
 **업로드 프로세스:**
 
-- 각 chunk의 content에 대해 OpenAI embedding 생성
-- 메타데이터 자동 생성 (source, splitter_type, chunk_size, chunk_overlap, chunk_index)
+- 각 chunk의 content에 대해 `text-embedding-3-small` embedding 생성
+- 메타데이터 자동 생성 (문서/파싱/청킹 provenance, content hash, embedding model/dimensions)
 - Supabase 테이블에 content, embedding, metadata 저장
 - 배치 처리로 rate limit 회피
 
@@ -628,7 +636,8 @@ CREATE TABLE my_documents (
 
 - pgvector extension 자동 활성화
 - ivfflat 인덱스 자동 생성 (vector_cosine_ops)
-- 직접 생성 실패 시 SQL 명령어 제공
+- 테이블별 cosine 검색 함수 자동 생성
+- 직접 생성 실패 시 테이블 및 검색 함수 SQL 명령어 제공
 
 #### DELETE /api/vectorstore/tables
 
@@ -676,7 +685,7 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 **Process:**
 
 1. Split Result를 애플리케이션 Supabase DB에서 조회
-2. 각 chunk에 대해 OpenAI embedding 생성 (text-embedding-ada-002)
+2. 각 chunk에 대해 OpenAI embedding 생성 (`text-embedding-3-small`, 1536차원)
 3. 메타데이터 생성:
 
    ```json
@@ -692,9 +701,21 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 4. Supabase 테이블에 삽입 (content, embedding, metadata)
 5. 배치 처리로 rate limit 관리
 
+#### POST /api/vectorstore/search
+
+기존 벡터 테이블에 table-specific cosine 검색 함수를 설정합니다. 연결 키가 DDL을 실행할 수 없으면 Supabase SQL Editor에서 실행할 SQL을 반환합니다.
+
+#### GET /api/rag/runs
+
+현재 사용자의 저장된 RAG 실행 이력을 조회합니다.
+
+#### POST /api/rag/runs
+
+질문 임베딩, pgvector 검색, 근거 기반 답변 생성을 실행하고 전체 trace를 `rag_runs`에 저장합니다. API 키 원문은 실행 기록에 포함하지 않습니다.
+
 **Required API Keys:**
 
-- OpenAI API Key (임베딩 생성용)
+- OpenAI API Key (임베딩 및 RAG 답변 생성용)
 - Supabase URL & Key (저장용)
 
 ### API 키 관리

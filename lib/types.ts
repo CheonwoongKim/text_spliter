@@ -249,6 +249,59 @@ export interface TableDataResponse {
   columns: ColumnInfo[];
 }
 
+export type RagGenerationModel = "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna";
+export type RagReasoningEffort = "none" | "low" | "medium" | "high";
+
+export interface RagRetrievedContext {
+  rank: number;
+  chunkId: string;
+  content: string;
+  metadata: Record<string, JsonValue>;
+  similarity: number;
+}
+
+export interface RagCitation extends RagRetrievedContext {
+  reference: number;
+}
+
+export interface RagRunResult {
+  id: string;
+  status: "succeeded";
+  question: string;
+  answer: string;
+  citations: RagCitation[];
+  retrieval: {
+    provider: "supabase-pgvector";
+    schema: string;
+    table: string;
+    topK: number;
+    embeddingModel: string;
+    resolvedEmbeddingModel: string;
+    embeddingDimensions: number;
+    results: RagRetrievedContext[];
+  };
+  generation: {
+    provider: "openai";
+    model: RagGenerationModel;
+    resolvedModel: string;
+    reasoningEffort: RagReasoningEffort;
+    promptVersion: string;
+    responseId?: string;
+  };
+  usage: {
+    embedding?: Record<string, JsonValue>;
+    generation?: Record<string, JsonValue>;
+  };
+  timings: {
+    embeddingMs: number;
+    retrievalMs: number;
+    generationMs: number;
+    totalMs: number;
+  };
+  startedAt: string;
+  completedAt: string;
+}
+
 // Splitter information map
 export const SPLITTER_INFO: Record<SplitterType, SplitterDescription> = {
   CharacterTextSplitter: {
