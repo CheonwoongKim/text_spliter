@@ -118,6 +118,7 @@ export default function EvaluationPanel() {
   ]);
   const [ragasHealth, setRagasHealth] = useState<RagasWorkerHealth | null>(null);
   const [ragasHealthError, setRagasHealthError] = useState<string | null>(null);
+  const [ragasExecutionError, setRagasExecutionError] = useState<string | null>(null);
   const [ragasChecking, setRagasChecking] = useState(false);
   const [ragasExecuting, setRagasExecuting] = useState(false);
   const [ragasProgress, setRagasProgress] = useState({ completed: 0, total: 0 });
@@ -434,6 +435,7 @@ export default function EvaluationPanel() {
     setRagasChecking(true);
     setRagasHealth(null);
     setRagasHealthError(null);
+    setRagasExecutionError(null);
     setRagasProgress({ completed: 0, total: run.succeeded_count });
     try {
       const response = await evaluationRequest<{ health: RagasWorkerHealth }>({ action: "check_evaluator" });
@@ -460,6 +462,7 @@ export default function EvaluationPanel() {
     const run = workspace.runs.find((item) => item.id === selectedRunId);
     if (!run || !ragasMetrics.length) return;
     setRagasExecuting(true);
+    setRagasExecutionError(null);
     setError(null);
     let failed = 0;
     try {
@@ -482,7 +485,7 @@ export default function EvaluationPanel() {
       await fetchWorkspace();
       if (failed) setError(`${failed}개 케이스의 Ragas 평가가 실패했습니다. 실행 상세에서 원인을 확인하세요.`);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Ragas 평가 실행에 실패했습니다.");
+      setRagasExecutionError(caught instanceof Error ? caught.message : "Ragas 평가 실행에 실패했습니다.");
       await fetchWorkspace();
     } finally {
       setRagasExecuting(false);
@@ -720,12 +723,16 @@ export default function EvaluationPanel() {
         metrics={ragasMetrics}
         health={ragasHealth}
         healthError={ragasHealthError}
+        executionError={ragasExecutionError}
         checking={ragasChecking}
         executing={ragasExecuting}
         progress={ragasProgress}
         onModelChange={setRagasModel}
         onToggleMetric={toggleRagasMetric}
-        onClose={() => setRagasModalOpen(false)}
+        onClose={() => {
+          setRagasModalOpen(false);
+          setRagasExecutionError(null);
+        }}
         onRun={executeRagasEvaluation}
       />
     </div>

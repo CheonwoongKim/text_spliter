@@ -24,6 +24,7 @@ interface RagasEvaluationModalProps {
   metrics: RagasMetricKey[];
   health: WorkerHealth | null;
   healthError: string | null;
+  executionError: string | null;
   checking: boolean;
   executing: boolean;
   progress: { completed: number; total: number };
@@ -40,6 +41,7 @@ export default function RagasEvaluationModal({
   metrics,
   health,
   healthError,
+  executionError,
   checking,
   executing,
   progress,
@@ -106,6 +108,11 @@ export default function RagasEvaluationModal({
           선택한 지표는 케이스마다 여러 OpenAI 호출을 만들 수 있으며 Answer relevancy는 text-embedding-3-small도 사용합니다. 기준 답변이 없는 케이스의 Context 지표는 0점 대신 unavailable로 기록됩니다.
         </div>
         {healthError && <p className="mt-4 text-xs text-red-500">{healthError}</p>}
+        {executionError && (
+          <div role="alert" className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {executionError}
+          </div>
+        )}
 
         {executing && (
           <div className="mt-5">
