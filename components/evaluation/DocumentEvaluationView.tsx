@@ -6,7 +6,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import { getAuthToken } from "@/lib/auth";
 import type { DocumentBlock, NormalizedDocument } from "@/lib/document-ir";
-import type { DocumentEvaluationDimension } from "@/lib/document-evaluation";
+import {
+  DOCUMENT_EVALUATION_MAX_CANDIDATES,
+  isDocumentHash,
+  type DocumentEvaluationDimension,
+} from "@/lib/document-evaluation";
 import type {
   DocumentEvaluationBenchmark,
   DocumentEvaluationCandidate,
@@ -36,6 +40,7 @@ const METRICS: Array<{
   { key: "readingOrderAccuracy", label: "Reading order", dimension: "readingOrder" },
   { key: "layoutMeanIoU", label: "Layout IoU", dimension: "layout" },
   { key: "tableStructureScore", label: "Table structure", dimension: "table" },
+  { key: "tableCellTextSimilarity", label: "Table cell text", dimension: "table" },
   { key: "figureRecall", label: "Figure recall", dimension: "figure" },
   { key: "provenanceCompleteness", label: "Provenance", dimension: "provenance" },
 ];
@@ -124,6 +129,7 @@ export default function DocumentEvaluationView() {
   const [referenceJson, setReferenceJson] = useState("");
   const [referenceNotes, setReferenceNotes] = useState("");
   const [referenceDirty, setReferenceDirty] = useState(false);
+  const [groundTruthLoading, setGroundTruthLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
@@ -202,16 +208,28 @@ export default function DocumentEvaluationView() {
 
   const selectedGroundTruthSummary = benchmarkGroundTruths.find((item) => item.id === selectedGroundTruthId) || null;
   const selectedRunSummary = benchmarkRuns.find((item) => item.id === selectedRunId) || null;
+  const referenceReady = Boolean(
+    !groundTruthLoading
+    && groundTruthDetail
+    && groundTruthDetail.id === selectedGroundTruthId
+  );
+  const referenceEditable = referenceReady && selectedGroundTruthSummary?.status === "draft";
 
   useEffect(() => {
+    setGroundTruthDetail(null);
+    setReferenceJson("");
+    setReferenceNotes("");
+    setReferenceDirty(false);
     if (!selectedGroundTruthId) {
-      setGroundTruthDetail(null);
+      setGroundTruthLoading(false);
       return;
     }
     let active = true;
+    setGroundTruthLoading(true);
     void documentEvaluationRequest<{ groundTruth: DocumentEvaluationGroundTruth }>(undefined, `?groundTruthId=${encodeURIComponent(selectedGroundTruthId)}`)
       .then((data) => { if (active) setGroundTruthDetail(data.groundTruth); })
-      .catch((caught) => { if (active) setError(caught instanceof Error ? caught.message : "기준 문서를 불러오지 못했습니다."); });
+      .catch((caught) => { if (active) setError(caught instanceof Error ? caught.message : "기준 문서를 불러오지 못했습니다."); })
+      .finally(() => { if (active) setGroundTruthLoading(false); });
     return () => { active = false; };
   }, [selectedGroundTruthId]);
 
@@ -242,17 +260,30 @@ export default function DocumentEvaluationView() {
   }, [selectedBenchmarkId]);
 
   useEffect(() => {
+    if (!referenceDirty) return;
+    const preventUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", preventUnload);
+    return () => window.removeEventListener("beforeunload", preventUnload);
+  }, [referenceDirty]);
+
+  useEffect(() => {
     const storageKey = selectedBenchmark?.source_storage_key;
+    setPreviewLoading(Boolean(storageKey));
     if (!storageKey) {
       setPreviewUrl(null);
       setPreviewType(null);
+      setPreviewLoading(false);
       return;
     }
     const token = getAuthToken();
-    if (!token) return;
+    if (!token) {
+      setPreviewLoading(false);
+      return;
+    }
     const controller = new AbortController();
     let objectUrl: string | null = null;
-    setPreviewLoading(true);
     void fetch(`/api/storage/preview?key=${encodeURIComponent(storageKey)}`, {
       headers: { Authorization: `Bearer ${token}` },
       signal: controller.signal,
@@ -274,17 +305,36 @@ export default function DocumentEvaluationView() {
   }, [selectedBenchmark?.source_storage_key]);
 
   const candidates = useMemo(() => {
-    if (!selectedBenchmark) return [];
+    const benchmarkHash = selectedBenchmark?.document_hash;
+    if (!isDocumentHash(benchmarkHash)) return [];
     return workspace.candidates.filter((candidate) => {
       if (selectedGroundTruthSummary?.source_parse_result_id === candidate.id) return false;
-      return selectedBenchmark.document_hash
-        ? candidate.document_hash === selectedBenchmark.document_hash
-        : candidate.file_name === selectedBenchmark.file_name;
+      return isDocumentHash(candidate.document_hash)
+        && candidate.document_hash.toLowerCase() === benchmarkHash.toLowerCase();
     });
   }, [workspace.candidates, selectedBenchmark, selectedGroundTruthSummary?.source_parse_result_id]);
 
+  const benchmarkSources = useMemo(
+    () => workspace.candidates.filter((candidate) => isDocumentHash(candidate.document_hash)),
+    [workspace.candidates]
+  );
+
+  const confirmDiscardReferenceChanges = (): boolean => (
+    !referenceDirty || confirm("저장하지 않은 Reference IR 변경사항을 버릴까요?")
+  );
+
+  const changeBenchmark = (benchmarkId: string) => {
+    if (!confirmDiscardReferenceChanges()) return;
+    setSelectedBenchmarkId(benchmarkId);
+  };
+
+  const changeGroundTruth = (groundTruthId: string) => {
+    if (groundTruthId === selectedGroundTruthId || !confirmDiscardReferenceChanges()) return;
+    setSelectedGroundTruthId(groundTruthId);
+  };
+
   const openCreate = () => {
-    const source = workspace.candidates[0];
+    const source = benchmarkSources[0];
     setCreateSourceId(source ? String(source.id) : "");
     setCreateName(source ? `${source.file_name} reference` : "");
     setCreateDescription("");
@@ -325,7 +375,8 @@ export default function DocumentEvaluationView() {
   };
 
   const saveReference = async () => {
-    if (!selectedGroundTruthSummary || selectedGroundTruthSummary.status !== "draft") return;
+    if (!selectedGroundTruthSummary || !groundTruthDetail || !referenceEditable
+      || groundTruthDetail.id !== selectedGroundTruthSummary.id) return;
     let normalizedDocument: unknown;
     try {
       normalizedDocument = JSON.parse(referenceJson);
@@ -337,7 +388,7 @@ export default function DocumentEvaluationView() {
     try {
       await documentEvaluationRequest({
         action: "update_ground_truth",
-        groundTruthId: selectedGroundTruthSummary.id,
+        groundTruthId: groundTruthDetail.id,
         normalizedDocument,
         notes: referenceNotes,
       });
@@ -351,11 +402,12 @@ export default function DocumentEvaluationView() {
   };
 
   const freezeReference = async () => {
-    if (!selectedGroundTruthSummary || referenceDirty) return;
+    if (!selectedGroundTruthSummary || !groundTruthDetail || !referenceEditable || referenceDirty
+      || groundTruthDetail.id !== selectedGroundTruthSummary.id) return;
     if (!confirm("Freeze this reference version? It cannot be edited afterward.")) return;
     setSaving(true);
     try {
-      await documentEvaluationRequest({ action: "freeze_ground_truth", groundTruthId: selectedGroundTruthSummary.id });
+      await documentEvaluationRequest({ action: "freeze_ground_truth", groundTruthId: groundTruthDetail.id });
       await fetchWorkspace();
       setActiveView("runs");
     } catch (caught) {
@@ -398,6 +450,10 @@ export default function DocumentEvaluationView() {
   };
 
   const toggleCandidate = (id: number) => {
+    if (!selectedCandidateIds.has(id) && selectedCandidateIds.size >= DOCUMENT_EVALUATION_MAX_CANDIDATES) {
+      setError(`한 번에 최대 ${DOCUMENT_EVALUATION_MAX_CANDIDATES}개 파서 결과를 평가할 수 있습니다.`);
+      return;
+    }
     setSelectedCandidateIds((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -409,7 +465,7 @@ export default function DocumentEvaluationView() {
     if (!selectedBenchmark || !selectedGroundTruthSummary || !selectedCandidateIds.size) return;
     setEvaluating(true);
     try {
-      const response = await documentEvaluationRequest<{ runs: DocumentEvaluationRun[] }>({
+      const response = await documentEvaluationRequest<{ runs: DocumentEvaluationRunSummary[] }>({
         action: "evaluate_candidates",
         benchmarkId: selectedBenchmark.id,
         groundTruthId: selectedGroundTruthSummary.id,
@@ -448,7 +504,7 @@ export default function DocumentEvaluationView() {
           const truth = workspace.groundTruths.find((item) => item.benchmark_id === benchmark.id);
           const runCount = workspace.runs.filter((item) => item.benchmark_id === benchmark.id).length;
           return (
-            <button key={benchmark.id} type="button" onClick={() => setSelectedBenchmarkId(benchmark.id)} className={`w-full px-5 py-4 text-left border-b border-border transition-colors ${selectedBenchmarkId === benchmark.id ? "bg-accent/10" : "hover:bg-muted/30"}`}>
+            <button key={benchmark.id} type="button" onClick={() => changeBenchmark(benchmark.id)} className={`w-full px-5 py-4 text-left border-b border-border transition-colors ${selectedBenchmarkId === benchmark.id ? "bg-accent/10" : "hover:bg-muted/30"}`}>
               <div className="flex items-start justify-between gap-2"><p className="text-sm font-medium text-card-foreground line-clamp-2">{benchmark.name}</p>{truth && <span className={`px-1.5 py-0.5 rounded text-[9px] ${statusClass(truth.status)}`}>{truth.status}</span>}</div>
               <p className="text-xs text-muted-foreground mt-2 truncate">{benchmark.file_name}</p>
               <p className="text-[10px] text-muted-foreground mt-2">{runCount} evaluations · {benchmark.attributes.language || "language unset"}</p>
@@ -468,8 +524,8 @@ export default function DocumentEvaluationView() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0"><div className="flex items-center gap-2"><h3 className="text-base font-semibold text-card-foreground truncate">{selectedBenchmark.name}</h3>{selectedGroundTruthSummary && <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusClass(selectedGroundTruthSummary.status)}`}>v{selectedGroundTruthSummary.version_number} · {selectedGroundTruthSummary.status}</span>}</div><p className="text-xs text-muted-foreground mt-1 truncate">{selectedBenchmark.file_name} · {selectedBenchmark.document_hash || "hash unavailable"}</p></div>
                 <div className="flex items-center gap-2">
-                  {benchmarkGroundTruths.length > 1 && <select value={selectedGroundTruthId || ""} onChange={(event) => setSelectedGroundTruthId(event.target.value)} className="h-9 px-3 border border-border rounded-md bg-surface text-xs text-card-foreground">{benchmarkGroundTruths.map((item) => <option key={item.id} value={item.id}>Reference v{item.version_number} · {item.status}</option>)}</select>}
-                  {selectedGroundTruthSummary?.status !== "draft" && <button type="button" onClick={cloneReference} disabled={saving} className={styles.secondaryButton}>Create next version</button>}
+                  {benchmarkGroundTruths.length > 1 && <select value={selectedGroundTruthId || ""} onChange={(event) => changeGroundTruth(event.target.value)} disabled={saving || groundTruthLoading} className="h-9 px-3 border border-border rounded-md bg-surface text-xs text-card-foreground disabled:opacity-50">{benchmarkGroundTruths.map((item) => <option key={item.id} value={item.id}>Reference v{item.version_number} · {item.status}</option>)}</select>}
+                  {selectedGroundTruthSummary?.status === "frozen" && <button type="button" onClick={cloneReference} disabled={saving} className={styles.secondaryButton}>Create next version</button>}
                   <button type="button" onClick={deleteBenchmark} disabled={saving} className={styles.dangerTextButton}>Delete</button>
                 </div>
               </div>
@@ -488,15 +544,15 @@ export default function DocumentEvaluationView() {
                   </div>
                 </section>
                 <section className="min-h-0 flex flex-col">
-                  <div className="px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-medium text-card-foreground">Reference Document IR</p><p className="text-[11px] text-muted-foreground mt-1">블록 텍스트·유형·순서·영역·표 셀을 검수합니다.</p></div><div className="flex items-center gap-2">{selectedGroundTruthSummary?.status === "draft" ? <><button type="button" onClick={saveReference} disabled={saving || !referenceDirty} className={styles.secondaryButton}>{saving ? "Saving..." : "Save draft"}</button><button type="button" onClick={freezeReference} disabled={saving || referenceDirty} className={styles.compactPrimaryButton}>Freeze reference</button></> : <span className="text-[11px] text-muted-foreground">Frozen {selectedGroundTruthSummary?.frozen_at ? new Date(selectedGroundTruthSummary.frozen_at).toLocaleString() : ""}</span>}</div></div>
-                  <textarea value={referenceJson} onChange={(event) => { setReferenceJson(event.target.value); setReferenceDirty(true); }} readOnly={selectedGroundTruthSummary?.status !== "draft"} spellCheck={false} className="flex-1 min-h-[360px] resize-none p-5 bg-surface text-xs leading-5 font-mono text-card-foreground focus:outline-none" />
-                  <div className="p-4 border-t border-border"><label className="block"><span className="block text-[11px] text-muted-foreground mb-2">Reference notes</span><textarea value={referenceNotes} onChange={(event) => { setReferenceNotes(event.target.value); setReferenceDirty(true); }} readOnly={selectedGroundTruthSummary?.status !== "draft"} rows={2} className={styles.textArea} /></label>{referenceDirty && <p className="text-[10px] text-amber-500 mt-2">저장되지 않은 변경사항이 있습니다. 고정 전에 초안을 저장하세요.</p>}</div>
+                  <div className="px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-medium text-card-foreground">Reference Document IR</p><p className="text-[11px] text-muted-foreground mt-1">블록 텍스트·유형·순서·영역·표 셀을 검수합니다.</p></div><div className="flex items-center gap-2">{groundTruthLoading ? <span className="text-[11px] text-muted-foreground">Loading reference...</span> : selectedGroundTruthSummary?.status === "draft" ? <><button type="button" onClick={saveReference} disabled={saving || !referenceDirty || !referenceEditable} className={styles.secondaryButton}>{saving ? "Saving..." : "Save draft"}</button><button type="button" onClick={freezeReference} disabled={saving || referenceDirty || !referenceEditable} className={styles.compactPrimaryButton}>Freeze reference</button></> : <span className="text-[11px] text-muted-foreground">Frozen {selectedGroundTruthSummary?.frozen_at ? new Date(selectedGroundTruthSummary.frozen_at).toLocaleString() : ""}</span>}</div></div>
+                  <textarea value={referenceJson} onChange={(event) => { setReferenceJson(event.target.value); setReferenceDirty(true); }} readOnly={!referenceEditable} placeholder={groundTruthLoading ? "Loading reference Document IR..." : undefined} spellCheck={false} className="flex-1 min-h-[360px] resize-none p-5 bg-surface text-xs leading-5 font-mono text-card-foreground focus:outline-none read-only:text-muted-foreground" />
+                  <div className="p-4 border-t border-border"><label className="block"><span className="block text-[11px] text-muted-foreground mb-2">Reference notes</span><textarea value={referenceNotes} onChange={(event) => { setReferenceNotes(event.target.value); setReferenceDirty(true); }} readOnly={!referenceEditable} rows={2} className={styles.textArea} /></label>{referenceDirty && <p className="text-[10px] text-amber-500 mt-2">저장되지 않은 변경사항이 있습니다. 고정 전에 초안을 저장하세요.</p>}</div>
                 </section>
               </div>
             ) : (
               <div className="flex-1 min-h-0 flex flex-col">
                 <section className="border-b border-border bg-card/15">
-                  <div className="px-5 py-3 flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-medium text-card-foreground">Parser candidates</p><p className="text-[11px] text-muted-foreground mt-1">같은 문서 해시를 가진 성공한 Document IR만 표시합니다.</p></div><button type="button" onClick={evaluateCandidates} disabled={evaluating || selectedGroundTruthSummary?.status !== "frozen" || !selectedCandidateIds.size} className={styles.compactPrimaryButton}>{evaluating ? "Evaluating..." : `Evaluate selected · ${selectedCandidateIds.size}`}</button></div>
+                  <div className="px-5 py-3 flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-medium text-card-foreground">Parser candidates</p><p className="text-[11px] text-muted-foreground mt-1">같은 문서 해시의 결과를 한 번에 최대 {DOCUMENT_EVALUATION_MAX_CANDIDATES}개까지 평가합니다.</p></div><button type="button" onClick={evaluateCandidates} disabled={evaluating || selectedGroundTruthSummary?.status !== "frozen" || !selectedCandidateIds.size} className={styles.compactPrimaryButton}>{evaluating ? "Evaluating..." : `Evaluate selected · ${selectedCandidateIds.size}`}</button></div>
                   <div className="max-h-48 overflow-y-auto border-t border-border">
                     {candidates.map((candidate) => {
                       const latest = benchmarkRuns.find((run) => run.parse_result_id === candidate.id && run.ground_truth_id === selectedGroundTruthId);
@@ -538,7 +594,7 @@ export default function DocumentEvaluationView() {
         )}
       </main>
 
-      {createOpen && <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-xl shadow-2xl p-6"><h3 className="text-lg font-semibold text-card-foreground">New document benchmark</h3><p className="text-xs text-muted-foreground mt-1">저장된 파서 결과를 교정 가능한 Reference Document IR 초안으로 복제합니다.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"><label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Reference parser run</span><select value={createSourceId} onChange={(event) => { setCreateSourceId(event.target.value); const source = workspace.candidates.find((item) => item.id === Number(event.target.value)); if (source) setCreateName(`${source.file_name} reference`); }} className={styles.field}><option value="">Select a stored Document IR</option>{workspace.candidates.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.file_name} · {candidateLabel(candidate)}</option>)}</select></label><label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Name</span><input value={createName} onChange={(event) => setCreateName(event.target.value)} className={styles.field} /></label><label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Description</span><textarea value={createDescription} onChange={(event) => setCreateDescription(event.target.value)} rows={3} className={styles.textArea} /></label><label><span className="block text-xs font-medium text-muted-foreground mb-2">Document type</span><input value={createDocumentType} onChange={(event) => setCreateDocumentType(event.target.value)} className={styles.field} placeholder="financial-report" /></label><label><span className="block text-xs font-medium text-muted-foreground mb-2">Language</span><input value={createLanguage} onChange={(event) => setCreateLanguage(event.target.value)} className={styles.field} placeholder="ko" /></label><label><span className="block text-xs font-medium text-muted-foreground mb-2">Layout</span><input value={createLayout} onChange={(event) => setCreateLayout(event.target.value)} className={styles.field} placeholder="multi-column" /></label><label><span className="block text-xs font-medium text-muted-foreground mb-2">Source quality</span><input value={createQuality} onChange={(event) => setCreateQuality(event.target.value)} className={styles.field} placeholder="digital / scan" /></label><label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Tags</span><input value={createTags} onChange={(event) => setCreateTags(event.target.value)} className={styles.field} placeholder="table, chart, rotated" /></label></div><div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setCreateOpen(false)} disabled={saving} className={styles.textButton}>Cancel</button><button type="button" onClick={createBenchmark} disabled={saving || !createSourceId || !createName.trim()} className={styles.primaryButton}>{saving ? "Creating..." : "Create draft reference"}</button></div></div></div>}
+      {createOpen && <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-xl shadow-2xl p-6"><h3 className="text-lg font-semibold text-card-foreground">New document benchmark</h3><p className="text-xs text-muted-foreground mt-1">저장된 파서 결과를 교정 가능한 Reference Document IR 초안으로 복제합니다.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"><label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Reference parser run</span><select value={createSourceId} onChange={(event) => { setCreateSourceId(event.target.value); const source = benchmarkSources.find((item) => item.id === Number(event.target.value)); if (source) setCreateName(`${source.file_name} reference`); }} className={styles.field}><option value="">Select a stored Document IR</option>{benchmarkSources.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.file_name} · {candidateLabel(candidate)}</option>)}</select>{!benchmarkSources.length && <span className="block text-[10px] text-amber-500 mt-2">유효한 문서 해시가 없습니다. 문서를 다시 파싱한 뒤 기준 문서를 만드세요.</span>}</label><label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Name</span><input value={createName} onChange={(event) => setCreateName(event.target.value)} className={styles.field} /></label><label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Description</span><textarea value={createDescription} onChange={(event) => setCreateDescription(event.target.value)} rows={3} className={styles.textArea} /></label><label><span className="block text-xs font-medium text-muted-foreground mb-2">Document type</span><input value={createDocumentType} onChange={(event) => setCreateDocumentType(event.target.value)} className={styles.field} placeholder="financial-report" /></label><label><span className="block text-xs font-medium text-muted-foreground mb-2">Language</span><input value={createLanguage} onChange={(event) => setCreateLanguage(event.target.value)} className={styles.field} placeholder="ko" /></label><label><span className="block text-xs font-medium text-muted-foreground mb-2">Layout</span><input value={createLayout} onChange={(event) => setCreateLayout(event.target.value)} className={styles.field} placeholder="multi-column" /></label><label><span className="block text-xs font-medium text-muted-foreground mb-2">Source quality</span><input value={createQuality} onChange={(event) => setCreateQuality(event.target.value)} className={styles.field} placeholder="digital / scan" /></label><label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Tags</span><input value={createTags} onChange={(event) => setCreateTags(event.target.value)} className={styles.field} placeholder="table, chart, rotated" /></label></div><div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setCreateOpen(false)} disabled={saving} className={styles.textButton}>Cancel</button><button type="button" onClick={createBenchmark} disabled={saving || !createSourceId || !createName.trim()} className={styles.primaryButton}>{saving ? "Creating..." : "Create draft reference"}</button></div></div></div>}
     </div>
   );
 }

@@ -3,8 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "@/lib/auth-server";
 import {
   assertNormalizedDocument,
+  DOCUMENT_EVALUATION_MAX_CANDIDATES,
+  DOCUMENT_EVALUATION_MAX_JSON_CHARACTERS,
   DOCUMENT_EVALUATION_VERSION,
+  DocumentEvaluationLimitError,
   evaluateDocumentIR,
+  isDocumentHash,
 } from "@/lib/document-evaluation";
 import { assertSupabaseResult, getAppSupabase } from "@/lib/supabase-server";
 import type { NormalizedDocument } from "@/lib/document-ir";
@@ -47,10 +51,22 @@ function parseResultId(value: unknown, label = "Parse result ID"): number {
 }
 
 function parseResultIds(value: unknown): number[] {
-  if (!Array.isArray(value) || !value.length || value.length > 20) {
-    throw new DocumentEvaluationRequestError("Select between 1 and 20 parser runs.");
+  if (!Array.isArray(value) || !value.length || value.length > DOCUMENT_EVALUATION_MAX_CANDIDATES) {
+    throw new DocumentEvaluationRequestError(
+      `Select between 1 and ${DOCUMENT_EVALUATION_MAX_CANDIDATES} parser runs.`
+    );
   }
   return [...new Set(value.map((item) => parseResultId(item, "Candidate parse result ID")))];
+}
+
+function requiredDocumentHash(value: unknown, label: string): string {
+  if (!isDocumentHash(value)) {
+    throw new DocumentEvaluationRequestError(
+      `${label} does not have a valid SHA-256 document hash. Parse the source again before evaluation.`,
+      409
+    );
+  }
+  return value.toLowerCase();
 }
 
 function objectValue(value: unknown, label: string): Record<string, unknown> {
@@ -82,8 +98,8 @@ function validatedDocument(value: unknown, label: string): NormalizedDocument {
   } catch (error) {
     throw new DocumentEvaluationRequestError(error instanceof Error ? error.message : `${label} is invalid.`);
   }
-  if (JSON.stringify(value).length > 25_000_000) {
-    throw new DocumentEvaluationRequestError(`${label} must be at most 25 MB.`);
+  if (JSON.stringify(value).length > DOCUMENT_EVALUATION_MAX_JSON_CHARACTERS) {
+    throw new DocumentEvaluationRequestError(`${label} must be at most 10 MB.`);
   }
   return value;
 }
@@ -201,6 +217,7 @@ export async function POST(request: NextRequest) {
 
     if (action === "create_benchmark") {
       const source = await ownedParseResult(user.email, parseResultId(body.parseResultId));
+      const documentHash = requiredDocumentHash(source.document_hash, "Reference parser result");
       const document = validatedDocument(source.normalized_document, "Reference Document IR");
       const name = optionalText(body.name, 160) || `${source.file_name} reference`;
       const { data: benchmark, error } = await supabase
@@ -209,7 +226,7 @@ export async function POST(request: NextRequest) {
           owner_id: user.id,
           name,
           description: optionalText(body.description, 2000),
-          document_hash: source.document_hash,
+          document_hash: documentHash,
           file_name: source.file_name,
           mime_type: source.mime_type,
           source_storage_key: source.file_storage_key,
@@ -313,27 +330,15 @@ export async function POST(request: NextRequest) {
     if (action === "clone_ground_truth") {
       const groundTruthId = requiredId(body.groundTruthId, "Reference ID");
       const source = await ownedGroundTruth(user.id, groundTruthId);
-      const { data: latest, error: latestError } = await supabase
-        .from("document_evaluation_ground_truths")
-        .select("version_number")
-        .eq("benchmark_id", source.benchmark_id)
-        .eq("owner_id", user.id)
-        .order("version_number", { ascending: false })
-        .limit(1)
-        .single();
-      assertSupabaseResult(latestError, "Failed to calculate the next document reference version");
+      if (source.status !== "frozen") {
+        throw new DocumentEvaluationRequestError("Only frozen document references can be cloned.", 409);
+      }
       const { data, error } = await supabase
-        .from("document_evaluation_ground_truths")
-        .insert({
-          benchmark_id: source.benchmark_id,
-          owner_id: user.id,
-          version_number: Number(latest?.version_number || 0) + 1,
-          status: "draft",
-          source_parse_result_id: source.source_parse_result_id,
-          normalized_document: source.normalized_document,
-          notes: optionalText(body.notes, 5000) || `Cloned from v${source.version_number}`,
+        .rpc("clone_document_evaluation_ground_truth", {
+          p_owner_id: user.id,
+          p_source_id: source.id,
+          p_notes: optionalText(body.notes, 5000) || `Cloned from v${source.version_number}`,
         })
-        .select("*")
         .single();
       assertSupabaseResult(error, "Failed to clone document reference");
       return NextResponse.json({ groundTruth: data });
@@ -344,6 +349,7 @@ export async function POST(request: NextRequest) {
       const groundTruthId = requiredId(body.groundTruthId, "Reference ID");
       const candidateIds = parseResultIds(body.parseResultIds);
       const benchmark = await ownedBenchmark(user.id, benchmarkId);
+      const benchmarkHash = requiredDocumentHash(benchmark.document_hash, "Document benchmark");
       const groundTruth = await ownedGroundTruth(user.id, groundTruthId);
       if (groundTruth.benchmark_id !== benchmarkId || groundTruth.status !== "frozen") {
         throw new DocumentEvaluationRequestError("Select a frozen reference from this benchmark.", 409);
@@ -361,7 +367,8 @@ export async function POST(request: NextRequest) {
       }
 
       const rows = candidates.map((candidate) => {
-        if (benchmark.document_hash && candidate.document_hash !== benchmark.document_hash) {
+        const candidateHash = requiredDocumentHash(candidate.document_hash, "Candidate parser result");
+        if (candidateHash !== benchmarkHash) {
           throw new DocumentEvaluationRequestError("Every candidate must come from the same source document.", 409);
         }
         const candidateDocument = validatedDocument(candidate.normalized_document, "Candidate Document IR");
@@ -393,17 +400,21 @@ export async function POST(request: NextRequest) {
       const { data: runs, error } = await supabase
         .from("document_evaluation_runs")
         .insert(rows)
-        .select("*");
+        .select("id,benchmark_id,ground_truth_id,owner_id,parse_result_id,status,framework_version,candidate_metadata,metrics,issue_count,error,started_at,completed_at,created_at");
       assertSupabaseResult(error, "Failed to save document evaluation runs");
       return NextResponse.json({ runs: runs || [] });
     }
 
     throw new DocumentEvaluationRequestError(`Unsupported document evaluation action: ${action}`);
   } catch (error) {
-    const status = error instanceof DocumentEvaluationRequestError ? error.status : 500;
+    const status = error instanceof DocumentEvaluationRequestError
+      ? error.status
+      : error instanceof DocumentEvaluationLimitError ? 422 : 500;
     return NextResponse.json({
-      error: error instanceof DocumentEvaluationRequestError ? error.message : "Document evaluation request failed",
-      details: error instanceof DocumentEvaluationRequestError
+      error: error instanceof DocumentEvaluationRequestError || error instanceof DocumentEvaluationLimitError
+        ? error.message
+        : "Document evaluation request failed",
+      details: error instanceof DocumentEvaluationRequestError || error instanceof DocumentEvaluationLimitError
         ? undefined
         : error instanceof Error ? error.message : "Unknown error",
     }, { status });

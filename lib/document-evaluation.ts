@@ -8,6 +8,23 @@ import type {
 } from "@/lib/document-ir";
 
 export const DOCUMENT_EVALUATION_VERSION = "document-ir-eval-v1" as const;
+export const DOCUMENT_EVALUATION_MAX_CANDIDATES = 5;
+export const DOCUMENT_EVALUATION_MAX_BLOCK_PAIRS = 100_000;
+export const DOCUMENT_EVALUATION_MAX_JSON_CHARACTERS = 10_000_000;
+
+const DOCUMENT_EVALUATION_MAX_BLOCK_CONTENT_CHARACTERS = 250_000;
+const DOCUMENT_EVALUATION_MAX_CONTENT_CHARACTERS = 5_000_000;
+
+export class DocumentEvaluationLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DocumentEvaluationLimitError";
+  }
+}
+
+export function isDocumentHash(value: unknown): value is string {
+  return typeof value === "string" && /^[a-f0-9]{64}$/i.test(value);
+}
 
 export type DocumentEvaluationDimension =
   | "text"
@@ -319,28 +336,33 @@ function tableScores(reference: DocumentTable | undefined, candidate: DocumentTa
   cellCount: number;
 } {
   if (!reference || reference.cells.length === 0) return { structure: null, cellText: null, cellCount: 0 };
-  if (!candidate) return { structure: 0, cellText: null, cellCount: reference.cells.length };
+  if (!candidate) return { structure: 0, cellText: 0, cellCount: reference.cells.length };
   const inferredDimensions = (table: DocumentTable) => ({
     rows: table.rowCount ?? Math.max(0, ...table.cells.map((cell) => cell.rowIndex + (cell.rowSpan || 1))),
     columns: table.columnCount ?? Math.max(0, ...table.cells.map((cell) => cell.columnIndex + (cell.columnSpan || 1))),
   });
   const referenceDimensions = inferredDimensions(reference);
   const candidateDimensions = inferredDimensions(candidate);
+  const referenceCells = new Map(reference.cells.map((cell) => [`${cell.rowIndex}:${cell.columnIndex}`, cell]));
   const candidateCells = new Map(candidate.cells.map((cell) => [`${cell.rowIndex}:${cell.columnIndex}`, cell]));
   let matchedPositions = 0;
   const spanScores: number[] = [];
   const textScores: number[] = [];
   for (const referenceCell of reference.cells) {
     const candidateCell = candidateCells.get(`${referenceCell.rowIndex}:${referenceCell.columnIndex}`);
-    if (!candidateCell) continue;
+    if (!candidateCell) {
+      textScores.push(0);
+      continue;
+    }
     matchedPositions += 1;
     const rowSpanMatch = (referenceCell.rowSpan || 1) === (candidateCell.rowSpan || 1) ? 1 : 0;
     const columnSpanMatch = (referenceCell.columnSpan || 1) === (candidateCell.columnSpan || 1) ? 1 : 0;
     const headerMatch = Boolean(referenceCell.isHeader) === Boolean(candidateCell.isHeader) ? 1 : 0;
     spanScores.push((rowSpanMatch + columnSpanMatch + headerMatch) / 3);
-    if (referenceCell.text || candidateCell.text) {
-      textScores.push(normalizedEditSimilarity(referenceCell.text || "", candidateCell.text || ""));
-    }
+    textScores.push(normalizedEditSimilarity(referenceCell.text || "", candidateCell.text || ""));
+  }
+  for (const [position] of candidateCells) {
+    if (!referenceCells.has(position)) textScores.push(0);
   }
   const positionPrecision = ratio(matchedPositions, candidate.cells.length) ?? 0;
   const positionRecall = ratio(matchedPositions, reference.cells.length) ?? 0;
@@ -395,10 +417,34 @@ function pushIssue(issues: DocumentEvaluationIssue[], issue: DocumentEvaluationI
   if (issues.length < MAX_ISSUES) issues.push(issue);
 }
 
+export function estimateDocumentEvaluationBlockPairs(
+  reference: NormalizedDocument,
+  candidate: NormalizedDocument
+): number {
+  const candidatePages = new Map(candidate.pages.map((page) => [page.pageNumber, page.blocks.length]));
+  return reference.pages.reduce(
+    (total, page) => total + page.blocks.length * (candidatePages.get(page.pageNumber) || 0),
+    0
+  );
+}
+
+export function assertDocumentEvaluationWorkload(
+  reference: NormalizedDocument,
+  candidate: NormalizedDocument
+): void {
+  const blockPairs = estimateDocumentEvaluationBlockPairs(reference, candidate);
+  if (blockPairs > DOCUMENT_EVALUATION_MAX_BLOCK_PAIRS) {
+    throw new DocumentEvaluationLimitError(
+      `Document comparison requires ${blockPairs.toLocaleString()} block pairs; the limit is ${DOCUMENT_EVALUATION_MAX_BLOCK_PAIRS.toLocaleString()}. Split the document or reduce blocks per page.`
+    );
+  }
+}
+
 export function evaluateDocumentIR(
   reference: NormalizedDocument,
   candidate: NormalizedDocument
 ): DocumentEvaluationResult {
+  assertDocumentEvaluationWorkload(reference, candidate);
   const referencePages = new Map(reference.pages.map((page) => [page.pageNumber, page]));
   const candidatePages = new Map(candidate.pages.map((page) => [page.pageNumber, page]));
   const pageNumbers = [...new Set([...referencePages.keys(), ...candidatePages.keys()])].sort((left, right) => left - right);
@@ -570,6 +616,19 @@ export function evaluateDocumentIR(
         message: "Table rows, columns, cell positions, spans, or headers differ from the reference.",
       });
     }
+    if (result.cellText !== null && result.cellText < 0.95) {
+      pushIssue(issues, {
+        code: "low-table-cell-text",
+        dimension: "table",
+        severity: result.cellText < 0.5 ? "error" : "warning",
+        pageNumber: referenceTable.pageNumber,
+        referenceBlockId: referenceTable.id,
+        candidateBlockId: match?.candidate.block.id,
+        blockType: "table",
+        score: roundMetric(result.cellText) || 0,
+        message: "Table cell text differs from the reference or contains missing or extra cells.",
+      });
+    }
   }
 
   const referenceFigures = referenceBlocks.filter((block) => FIGURE_TYPES.has(block.type));
@@ -597,9 +656,10 @@ export function evaluateDocumentIR(
     figureRecall: roundMetric(ratio(matchedFigures, referenceFigures.length)),
     captionRecall: roundMetric(ratio(matchedCaptions, referenceCaptions.length)),
     provenanceCompleteness: roundMetric(mean(candidateBlocks.map(provenanceScore))),
-    pageCountAccuracy: roundMetric(
-      Math.min(reference.pages.length, candidate.pages.length) / Math.max(1, reference.pages.length, candidate.pages.length)
-    ),
+    pageCountAccuracy: roundMetric(reference.pages.length === candidate.pages.length
+      ? 1
+      : Math.min(reference.pages.length, candidate.pages.length)
+        / Math.max(1, reference.pages.length, candidate.pages.length)),
     samples: {
       referencePages: reference.pages.length,
       candidatePages: candidate.pages.length,
@@ -634,6 +694,7 @@ export function assertNormalizedDocument(value: unknown, label = "Document IR"):
   if (document.pages.length > 2000) throw new Error(`${label} contains too many pages.`);
   let blockCount = 0;
   let tableCellCount = 0;
+  let contentCharacterCount = 0;
   const blockIds = new Set<string>();
   const pageNumbers = new Set<number>();
   for (const page of document.pages) {
@@ -662,6 +723,16 @@ export function assertNormalizedDocument(value: unknown, label = "Document IR"):
       if ([block.text, block.markdown, block.html].some((text) => text !== undefined && typeof text !== "string")) {
         throw new Error(`${label} contains invalid block content.`);
       }
+      for (const content of [block.text, block.markdown, block.html]) {
+        if (!content) continue;
+        if (content.length > DOCUMENT_EVALUATION_MAX_BLOCK_CONTENT_CHARACTERS) {
+          throw new Error(`${label} contains a block with too much content.`);
+        }
+        contentCharacterCount += content.length;
+      }
+      if (contentCharacterCount > DOCUMENT_EVALUATION_MAX_CONTENT_CHARACTERS) {
+        throw new Error(`${label} contains too much text content.`);
+      }
       const box = block.region?.boundingBox;
       if (box && (![box.x, box.y, box.width, box.height].every(Number.isFinite) || box.width < 0 || box.height < 0)) {
         throw new Error(`${label} contains an invalid bounding box.`);
@@ -679,6 +750,15 @@ export function assertNormalizedDocument(value: unknown, label = "Document IR"):
             || (cell.columnSpan !== undefined && (!Number.isInteger(cell.columnSpan) || cell.columnSpan < 1))
             || (cell.text !== undefined && typeof cell.text !== "string")) {
             throw new Error(`${label} contains an invalid table cell.`);
+          }
+          if (cell.text) {
+            if (cell.text.length > DOCUMENT_EVALUATION_MAX_BLOCK_CONTENT_CHARACTERS) {
+              throw new Error(`${label} contains a table cell with too much content.`);
+            }
+            contentCharacterCount += cell.text.length;
+            if (contentCharacterCount > DOCUMENT_EVALUATION_MAX_CONTENT_CHARACTERS) {
+              throw new Error(`${label} contains too much text content.`);
+            }
           }
         }
       }
