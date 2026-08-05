@@ -82,6 +82,9 @@ OCR과 문서 파싱은 별도 단계로 취급합니다. 이미지 기반 문�
 - 실행 시작 시 데이터셋 버전을 자동 동결하고 케이스와 RAG 결과를 스냅샷으로 저장
 - 기준 답변과 실제 답변, 기대 근거와 검색 근거를 나란히 검토
 - Correctness, Faithfulness, Citation quality 1–5점과 Pass/Fail, 리뷰 노트 기록
+- 저장된 Document IR을 교정 가능한 문서 기준 정답으로 만들고 버전별 Draft/Freeze 관리
+- 같은 원본의 파서 결과를 텍스트, 블록, 읽기 순서, 영역 IoU, 표 셀, 그림·캡션 재현율, provenance로 비교
+- 페이지별 오류와 기준/후보 블록을 함께 확인하며 평가 실행 스냅샷과 이슈를 기록
 
 ### 🔐 API 키 관리
 
@@ -183,6 +186,8 @@ supabase db push --linked
 - `evaluation_cases` - 질문, 기준 정답·사실·기대 근거·루브릭
 - `evaluation_runs` / `evaluation_case_runs` - 평가 실행, RAG 결과 연결, 사람 점수와 판정
 - `evaluation_judge_batches` / `evaluation_judge_case_runs` - Ragas 모델 평가 설정·점수·판정 근거·프롬프트·사용량 이력
+- `document_evaluation_benchmarks` / `document_evaluation_ground_truths` - 문서 기준셋과 교정·동결된 Document IR 버전
+- `document_evaluation_runs` - 파서 후보의 기준/결과 스냅샷, 결정적 지표, 페이지·블록 이슈
 - `storage.objects` / `documents` bucket - 사용자별 문서 원본 저장
 
 ### 개발 서버 실행
@@ -344,7 +349,17 @@ npm start
 6. Correctness, Faithfulness, Citation quality와 Pass/Fail을 저장합니다.
 7. 골든셋을 수정하려면 `Create next version`으로 새 Draft를 생성합니다.
 
+문서 파서 자체를 평가하려면 다음 순서로 진행합니다.
+
+1. `Documents` 탭에서 저장된 파싱 결과를 골라 문서 벤치마크를 만듭니다.
+2. 원본 미리보기와 Reference Document IR을 나란히 보며 블록, 순서, 영역과 표 셀을 교정합니다.
+3. 초안을 저장한 뒤 `Freeze reference`로 해당 기준 버전을 고정합니다.
+4. 같은 문서 해시의 다른 파서 실행을 선택하고 평가합니다.
+5. 텍스트·구조·순서·영역·표·그림·provenance 지표와 페이지별 이슈를 확인합니다.
+6. 기준을 수정하려면 `Create next version`으로 새 Draft를 만듭니다. 과거 실행의 기준/후보 스냅샷은 바뀌지 않습니다.
+
 평가 실행 전 대상 VDB 테이블에서 `Search Setup`이 완료되어 있어야 하며, 케이스마다 OpenAI embedding과 Responses API 호출 비용이 발생합니다.
+문서 파서 평가는 저장된 Document IR에 대해 로컬 결정적 계산만 수행하므로 외부 모델 호출 비용이 없습니다.
 
 ## 프로젝트 구조
 
@@ -757,6 +772,14 @@ Split Results를 벡터 데이터베이스에 업로드합니다.
 #### POST /api/evaluation
 
 데이터셋·케이스 CRUD, 버전 복제, 평가 실행 생성, RAG 실행 연결, 수동 리뷰와 Ragas 배치 실행을 `action` 단위로 처리합니다. RAG 결과를 연결하면 Recall@K, Precision@K, Hit Rate, MRR, nDCG@K와 인용 정밀도·재현율을 계산하고, 선택한 기준 실행 대비 회귀도 판정합니다. 완료된 결과에는 Faithfulness, Answer relevancy, Context precision/recall을 별도 모델 판정 이력으로 기록할 수 있습니다. 모든 행은 Supabase Auth 사용자 UUID로 범위를 제한합니다.
+
+#### GET /api/document-evaluation
+
+현재 사용자의 문서 벤치마크, 기준 버전 요약, 평가 실행 요약과 평가 가능한 파서 후보를 조회합니다. `groundTruthId` 또는 `runId`를 전달하면 큰 Document IR 및 이슈 스냅샷은 선택한 항목에 대해서만 반환합니다.
+
+#### POST /api/document-evaluation
+
+문서 벤치마크 생성·삭제, 기준 IR 수정·동결·버전 복제와 파서 후보 평가를 `action` 단위로 처리합니다. 기준과 후보는 같은 원본 문서 해시여야 하며, 평가는 `document-ir-eval-v1` 계약의 독립 지표와 이슈를 저장합니다.
 
 ### API 키 관리
 

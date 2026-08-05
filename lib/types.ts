@@ -1,4 +1,5 @@
 import type { NormalizedDocument } from "@/lib/document-ir";
+import type { DocumentEvaluationIssue, DocumentEvaluationMetrics } from "@/lib/document-evaluation";
 
 // JSON value types for better type safety
 export type JsonPrimitive = string | number | boolean | null;
@@ -517,6 +518,102 @@ export interface EvaluationWorkspace {
   caseRuns: EvaluationCaseRun[];
   judgeBatches: EvaluationJudgeBatch[];
   judgeCaseRuns: EvaluationJudgeCaseRun[];
+}
+
+export type DocumentGroundTruthStatus = "draft" | "frozen" | "archived";
+
+export interface DocumentEvaluationBenchmark {
+  id: string;
+  owner_id: string;
+  name: string;
+  description: string | null;
+  document_hash: string | null;
+  file_name: string;
+  mime_type: string;
+  source_storage_key: string | null;
+  attributes: {
+    documentType?: string;
+    language?: string;
+    layout?: string;
+    quality?: string;
+    tags?: string[];
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DocumentEvaluationGroundTruth {
+  id: string;
+  benchmark_id: string;
+  owner_id: string;
+  version_number: number;
+  status: DocumentGroundTruthStatus;
+  source_parse_result_id: number | null;
+  normalized_document: NormalizedDocument;
+  notes: string | null;
+  frozen_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DocumentEvaluationGroundTruthSummary = Omit<
+  DocumentEvaluationGroundTruth,
+  "normalized_document"
+>;
+
+export interface DocumentEvaluationRun {
+  id: string;
+  benchmark_id: string;
+  ground_truth_id: string;
+  owner_id: string;
+  parse_result_id: number | null;
+  status: "completed" | "failed";
+  framework_version: string;
+  reference_snapshot: NormalizedDocument;
+  candidate_snapshot: NormalizedDocument;
+  candidate_metadata: {
+    runId?: string | null;
+    engineId?: string | null;
+    parserType?: string;
+    model?: string | null;
+    version?: string | null;
+    config?: Record<string, JsonValue> | null;
+    processingTime?: number | null;
+  };
+  metrics: DocumentEvaluationMetrics;
+  issues: DocumentEvaluationIssue[];
+  issue_count: number;
+  error: Record<string, JsonValue> | null;
+  started_at: string;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export type DocumentEvaluationRunSummary = Omit<
+  DocumentEvaluationRun,
+  "reference_snapshot" | "candidate_snapshot" | "issues"
+>;
+
+export interface DocumentEvaluationCandidate {
+  id: number;
+  run_id: string | null;
+  document_hash: string | null;
+  parser_type: string;
+  engine_id: string | null;
+  parser_model: string | null;
+  parser_version: string | null;
+  run_status: string;
+  file_name: string;
+  mime_type: string;
+  processing_time: number | null;
+  created_at: string;
+}
+
+export interface DocumentEvaluationWorkspace {
+  benchmarks: DocumentEvaluationBenchmark[];
+  groundTruths: DocumentEvaluationGroundTruthSummary[];
+  runs: DocumentEvaluationRunSummary[];
+  candidates: DocumentEvaluationCandidate[];
 }
 
 // Splitter information map

@@ -34,9 +34,14 @@
 
 ### Stage 4 — Document and multimodal evaluation
 
-- [ ] evaluate text fidelity, reading order, table structure/cells, figures, captions, layout, and page/block provenance
+- [x] create versioned Document IR benchmarks with editable drafts, immutable frozen references, and parser-run snapshots
+- [x] evaluate text fidelity, block/type fidelity, reading order, layout IoU, table structure/cells, figure/caption recall, and provenance as separate deterministic metrics
+- [x] inspect source/reference IR together and review page-level issues with matched reference/candidate blocks
+- [ ] add visual-semantic scoring for chart values, figure content, formulas, and source-grounded context with a document VLM judge
 - [ ] connect parser/OCR/VLM outputs to downstream retrieval deltas
 - [ ] add robustness sets for scans, rotations, noise, multilingual documents, prompt injection, and unanswerable questions
+
+Metric contracts follow the separable evaluation pattern used by [OmniDocBench](https://github.com/opendatalab/OmniDocBench) and use layout overlap compatible with the IoU-based view in [DocLayNet](https://ds4sd.github.io/icdar23-doclaynet/task/). The current table score is a Document IR cell/position/span contract, not TEDS. Future visual-semantic and robustness work should use interpretable unit tests in the style of [olmOCR-Bench](https://aclanthology.org/2026.acl-demo.62/) and scenario coverage informed by [OCRBench v2](https://arxiv.org/abs/2501.00321).
 
 ## Phase 1 — Parser execution baseline
 

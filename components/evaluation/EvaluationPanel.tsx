@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import DocumentEvaluationView from "@/components/evaluation/DocumentEvaluationView";
 import EvaluationRunsView from "@/components/evaluation/EvaluationRunsView";
 import GoldenCaseEditor, { type GoldenCasePayload } from "@/components/evaluation/GoldenCaseEditor";
 import RagasEvaluationModal from "@/components/evaluation/RagasEvaluationModal";
@@ -78,7 +79,7 @@ export default function EvaluationPanel() {
   const [workspace, setWorkspace] = useState<EvaluationWorkspace>({
     datasets: [], versions: [], cases: [], runs: [], caseRuns: [], judgeBatches: [], judgeCaseRuns: [],
   });
-  const [activeTab, setActiveTab] = useState<"golden" | "runs">("golden");
+  const [activeTab, setActiveTab] = useState<"golden" | "runs" | "documents">("golden");
   const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
@@ -493,42 +494,52 @@ export default function EvaluationPanel() {
     <div className="h-full flex flex-col bg-surface">
       <header className="border-b border-border bg-card/60 px-7 py-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 min-w-0">
-            <select
-              value={selectedDatasetId || ""}
-              onChange={(event) => setSelectedDatasetId(event.target.value || null)}
-              className="h-10 min-w-56 max-w-80 px-3 border border-border rounded-lg bg-surface text-sm font-medium text-card-foreground"
-            >
-              {!workspace.datasets.length && <option value="">No datasets</option>}
-              {workspace.datasets.map((dataset) => <option key={dataset.id} value={dataset.id}>{dataset.name}</option>)}
-            </select>
-            {selectedDataset && (
+          {activeTab === "documents" ? (
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-card-foreground">Document evaluation</h2>
+              <p className="text-xs text-muted-foreground mt-1">원본과 기준 Document IR을 사용해 파서 정확도를 비교합니다.</p>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3 min-w-0">
               <select
-                value={selectedVersionId || ""}
-                onChange={(event) => setSelectedVersionId(event.target.value)}
-                className="h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"
+                value={selectedDatasetId || ""}
+                onChange={(event) => setSelectedDatasetId(event.target.value || null)}
+                className="h-10 min-w-56 max-w-80 px-3 border border-border rounded-lg bg-surface text-sm font-medium text-card-foreground"
               >
-                {datasetVersions.map((version) => (
-                  <option key={version.id} value={version.id}>v{version.version_number} · {version.status}</option>
-                ))}
+                {!workspace.datasets.length && <option value="">No datasets</option>}
+                {workspace.datasets.map((dataset) => <option key={dataset.id} value={dataset.id}>{dataset.name}</option>)}
               </select>
-            )}
-            {selectedVersion && <span className={`px-2.5 py-1 rounded-full text-[11px] font-medium ${statusClass(selectedVersion.status)}`}>{selectedVersion.status}</span>}
-          </div>
-          <div className="flex items-center gap-2">
-            {selectedDataset && (
-              <>
-                <button type="button" onClick={() => openDatasetModal(selectedDataset)} className={styles.textButton}>Edit</button>
-                <button type="button" onClick={handleDeleteDataset} disabled={saving} className={styles.dangerTextButton}>Delete</button>
-              </>
-            )}
-            <button type="button" onClick={() => openDatasetModal()} className={styles.primaryButton}>New dataset</button>
-          </div>
+              {selectedDataset && (
+                <select
+                  value={selectedVersionId || ""}
+                  onChange={(event) => setSelectedVersionId(event.target.value)}
+                  className="h-10 px-3 border border-border rounded-lg bg-surface text-sm text-card-foreground"
+                >
+                  {datasetVersions.map((version) => (
+                    <option key={version.id} value={version.id}>v{version.version_number} · {version.status}</option>
+                  ))}
+                </select>
+              )}
+              {selectedVersion && <span className={`px-2.5 py-1 rounded-full text-[11px] font-medium ${statusClass(selectedVersion.status)}`}>{selectedVersion.status}</span>}
+            </div>
+          )}
+          {activeTab !== "documents" && (
+            <div className="flex items-center gap-2">
+              {selectedDataset && (
+                <>
+                  <button type="button" onClick={() => openDatasetModal(selectedDataset)} className={styles.textButton}>Edit</button>
+                  <button type="button" onClick={handleDeleteDataset} disabled={saving} className={styles.dangerTextButton}>Delete</button>
+                </>
+              )}
+              <button type="button" onClick={() => openDatasetModal()} className={styles.primaryButton}>New dataset</button>
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-between gap-4 mt-4 -mb-4">
           <nav className="flex items-center gap-5">
             <button type="button" onClick={() => setActiveTab("golden")} className={`pb-3 text-sm font-medium border-b-2 ${activeTab === "golden" ? "border-accent text-card-foreground" : "border-transparent text-muted-foreground"}`}>Golden set</button>
             <button type="button" onClick={() => setActiveTab("runs")} className={`pb-3 text-sm font-medium border-b-2 ${activeTab === "runs" ? "border-accent text-card-foreground" : "border-transparent text-muted-foreground"}`}>Runs <span className="ml-1 text-xs">{datasetRuns.length}</span></button>
+            <button type="button" onClick={() => setActiveTab("documents")} className={`pb-3 text-sm font-medium border-b-2 ${activeTab === "documents" ? "border-accent text-card-foreground" : "border-transparent text-muted-foreground"}`}>Documents</button>
           </nav>
           {activeTab === "golden" && selectedVersion && (
             <div className="flex items-center gap-2 pb-2">
@@ -550,7 +561,9 @@ export default function EvaluationPanel() {
       )}
 
       <div className="flex-1 min-h-0">
-        {!selectedDataset ? (
+        {activeTab === "documents" ? (
+          <DocumentEvaluationView />
+        ) : !selectedDataset ? (
           <div className="h-full flex items-center justify-center text-center px-8">
             <div>
               <p className="text-base font-semibold text-card-foreground">첫 골든셋을 만드세요</p>

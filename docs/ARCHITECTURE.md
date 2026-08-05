@@ -21,7 +21,7 @@ app/
 
 components/
 ├── connect/             # provider credential settings
-├── evaluation/          # golden sets, batch runs, evidence review, and manual scores
+├── evaluation/          # RAG golden sets plus document-reference and parser evaluation
 ├── layout/              # application shell and auth boundary
 ├── parser/              # document parsing and comparison UI
 ├── shared/              # cross-feature UI primitives
@@ -52,7 +52,10 @@ Supabase Auth
 private documents bucket ──→ parser adapters ──→ normalized Document IR
                                   ↓                       ↓
                            raw provider output      comparison/evaluation
-                                  ↓                       ↓
+                                  ↓                       ├────→ versioned document references
+                                  ↓                       │          ↓
+                                  ↓                       └────→ deterministic parser evaluation runs
+                                  ↓
                               parse_results ──→ split_results ──→ target VDB
                                                                       ↓
                                           rag_runs ← retrieval + grounded answer
@@ -71,6 +74,9 @@ private documents bucket ──→ parser adapters ──→ normalized Document
 - `evaluation_cases`: questions, reference answers/facts, answerability, expected evidence, tags, and rubrics.
 - `evaluation_runs` / `evaluation_case_runs`: frozen pipeline runs, RAG links/snapshots, per-case outcomes, and reviewer scores.
 - `evaluation_judge_batches` / `evaluation_judge_case_runs`: versioned Ragas configuration, per-metric scores and reasons, prompt manifests, usage, and failures.
+- `document_evaluation_benchmarks`: owned source-document identity and benchmark attributes.
+- `document_evaluation_ground_truths`: editable draft and immutable frozen Document IR reference versions.
+- `document_evaluation_runs`: reference/candidate snapshots, versioned deterministic metrics, and bounded page/block issues for one parser candidate.
 - `documents` bucket: private source objects under `{auth_user_id}/`.
 
 Application persistence uses the server-only Supabase secret client. Every API route verifies the caller with Supabase Auth and explicitly scopes database rows and object paths to that caller.
@@ -104,6 +110,9 @@ Application persistence uses the server-only Supabase secret client. Every API r
 - Ragas batches snapshot evaluator and embedding models, metric contract/framework versions, prompt hashes/content, per-metric reasons, and token usage. Missing reference answers make reference-dependent metrics unavailable rather than zero.
 - Deterministic retrieval metrics, Ragas model-judge metrics, and human scores are stored and displayed as separate measurement layers.
 - Frozen versions are never edited in place. The next version clones the golden cases into a new draft.
+- Document evaluation follows the same immutability rule but remains independent of RAG evaluation. A frozen Document IR reference is compared only with successful parser runs that share its source-document hash.
+- `document-ir-eval-v1` reports text precision/recall/F1, block precision/recall/F1 and type accuracy, pairwise reading order, bounding-box IoU, table cell/structure fidelity, figure/caption recall, provenance completeness, and page accuracy without collapsing them into a composite score.
+- Document evaluation runs snapshot both IR documents so later parser-result edits or reference versions cannot rewrite historical measurements. Large snapshots and issue lists are fetched only for the selected run.
 
 ## Change rules
 
