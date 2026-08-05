@@ -72,9 +72,9 @@ const RightPanel = memo(function RightPanel({
   return (
     <div className="h-full flex flex-col py-6 bg-surface">
       {/* Header with Title and View Mode Toggle */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-sm font-medium text-surface-foreground">Result</h3>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* View Mode Toggle */}
           <div className="flex gap-1 bg-muted rounded-lg p-1">
             <button

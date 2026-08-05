@@ -407,7 +407,7 @@ export default function Home() {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="min-w-0 flex-1 flex flex-col">
         {/* Header */}
         <Header
           title={
@@ -431,7 +431,7 @@ export default function Home() {
 
       {/* Error Banner */}
       {(activeMenu === "parser" ? parserError : error) && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 px-10 py-3">
+        <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 px-4 sm:px-6 lg:px-10 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <svg
@@ -518,7 +518,7 @@ export default function Home() {
               </div>
             </div>
           ) : activeMenu === "parser" ? (
-            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-10 px-10">
+            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-6 lg:gap-10 px-4 sm:px-6 lg:px-10">
               {/* Parser Left Panel */}
               <div className="h-full overflow-hidden lg:col-span-3">
                 <ParserLeftPanel
@@ -546,7 +546,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-10 px-10">
+            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-6 lg:gap-10 px-4 sm:px-6 lg:px-10">
               {/* Left Panel */}
               <div className="h-full overflow-hidden lg:col-span-3">
                 <LeftPanel

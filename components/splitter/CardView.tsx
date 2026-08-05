@@ -12,8 +12,8 @@ function CardView({ result }: CardViewProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Statistics */}
-      <div className="mb-4 px-6 py-4 bg-accent/5 rounded-lg border border-accent/10">
-        <div className="grid grid-cols-4 gap-3">
+      <div className="mb-4 px-4 sm:px-6 py-4 bg-accent/5 rounded-lg border border-accent/10">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="text-left">
             <p className="text-xs text-muted-foreground">Total Chunks</p>
             <p className="text-lg font-semibold text-surface-foreground">

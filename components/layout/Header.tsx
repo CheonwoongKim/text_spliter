@@ -16,7 +16,7 @@ export default function Header({ title, isLoggedIn = true }: HeaderProps) {
 
   return (
     <header className="border-b border-border bg-card shadow-sm">
-      <div className="px-10 py-4 flex items-center justify-between">
+      <div className="px-4 sm:px-6 lg:px-10 py-4 flex items-center justify-between">
         <h1 className="text-[14px] font-semibold text-card-foreground">
           {title}
         </h1>
