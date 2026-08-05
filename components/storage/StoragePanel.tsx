@@ -7,6 +7,7 @@ import { darkTheme } from '@uiw/react-json-view/dark';
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 import { DEFAULT_ROWS_PER_PAGE } from "@/lib/constants";
 import { formatStorageSyncMessage } from "@/lib/storage-sync";
+import ModalDialog from "@/components/shared/ModalDialog";
 import Pagination from "@/components/shared/Pagination";
 
 interface ParseResult {
@@ -822,47 +823,35 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
 
       {/* Split Results View Modal */}
       {splitViewModalData && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setSplitViewModalData(null)}>
-          <div className="bg-surface shadow-xl max-w-3xl w-full h-[80vh] flex flex-col border border-border" onClick={(e) => e.stopPropagation()}>
-            <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-card">
-              <div>
-                <h2 className="text-lg font-semibold text-card-foreground">Split Result</h2>
-                <p className="text-xs text-muted-foreground mt-1">{splitViewModalData.chunk_count} chunks</p>
-              </div>
-              <button onClick={() => setSplitViewModalData(null)} className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-6 bg-card">
-              <JsonView
-                value={splitViewModalData}
-                style={{
-                  ...darkTheme,
-                  '--w-rjv-background-color': 'transparent',
-                } as CSSProperties}
-                collapsed={false}
-                displayDataTypes={false}
-                enableClipboard={true}
-              />
-            </div>
+        <ModalDialog
+          title="Split Result"
+          description={`${splitViewModalData.chunk_count} chunks`}
+          onClose={() => setSplitViewModalData(null)}
+          panelClassName="max-w-3xl h-[80vh]"
+        >
+          <div className="flex-1 overflow-auto p-6 bg-card">
+            <JsonView
+              value={splitViewModalData}
+              style={{
+                ...darkTheme,
+                '--w-rjv-background-color': 'transparent',
+              } as CSSProperties}
+              collapsed={false}
+              displayDataTypes={false}
+              enableClipboard={true}
+            />
           </div>
-        </div>
+        </ModalDialog>
       )}
 
       {/* VDB Upload Modal */}
       {showVdbModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setShowVdbModal(false)}>
-          <div className="bg-surface shadow-xl max-w-lg w-full flex flex-col border border-border rounded-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-card rounded-t-lg">
-              <h2 className="text-lg font-semibold text-card-foreground">Upload to Vector Database</h2>
-              <button onClick={() => setShowVdbModal(false)} className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth rounded">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+        <ModalDialog
+          title="Upload to Vector Database"
+          onClose={() => setShowVdbModal(false)}
+          panelClassName="max-w-lg rounded-lg"
+          headerClassName="rounded-t-lg"
+        >
             <div className="p-6 bg-card space-y-4">
               {vdbMessage && (
                 <div className={`p-3 rounded-lg text-sm ${
@@ -960,8 +949,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                 {vdbUploading ? 'Uploading...' : 'Upload to VDB'}
               </button>
             </div>
-          </div>
-        </div>
+        </ModalDialog>
       )}
     </div>
   );
