@@ -115,7 +115,7 @@
   .card-interactive:has(input:checked),
   .card-interactive:has(input:focus-visible),
   .card-interactive:has(button:focus-visible) {
-    border-color: var(--color-accent);
+    border-color: var(--ds-color-accent);
   }
 }
 

@@ -80,7 +80,7 @@ test("FormField binds label htmlFor to input/select/textarea id and displays hin
     React.createElement(
       FormField,
       { label: "Email Address", hint: "Enter work email", required: true },
-      React.createElement(Input, { placeholder: "name@company.com" })
+      React.createElement(Input, { id: "work-email", placeholder: "name@company.com" })
     )
   );
   const forMatch = fieldHtml.match(/for="([^"]+)"/);
@@ -88,9 +88,12 @@ test("FormField binds label htmlFor to input/select/textarea id and displays hin
   assert.ok(forMatch && forMatch[1], "label should have a for attribute");
   assert.ok(idMatch && idMatch[1], "input should have an id attribute");
   assert.equal(forMatch[1], idMatch[1], "label for attribute must match input id");
+  assert.equal(idMatch[1], "work-email", "an existing control id should be preserved");
   assert.match(fieldHtml, /Email Address/);
   assert.match(fieldHtml, /Enter work email/);
   assert.match(fieldHtml, /\*/);
+  assert.match(fieldHtml, /required=""/);
+  assert.match(fieldHtml, /aria-describedby="[^"]+-hint"/);
 
   const selectHtml = renderToStaticMarkup(
     React.createElement(
@@ -125,7 +128,21 @@ test("FormField binds label htmlFor to input/select/textarea id and displays hin
     )
   );
   assert.match(errorHtml, /border-danger/);
+  assert.match(errorHtml, /aria-invalid="true"/);
+  assert.match(errorHtml, /aria-describedby="[^"]+-error"/);
+  assert.match(errorHtml, /role="alert"/);
   assert.match(errorHtml, /Password is required/);
+
+  const nativeInputHtml = renderToStaticMarkup(
+    React.createElement(
+      FormField,
+      { label: "Native Email", error: "Email is required" },
+      React.createElement("input", { id: "native-email" })
+    )
+  );
+  assert.match(nativeInputHtml, /for="native-email"/);
+  assert.match(nativeInputHtml, /aria-invalid="true"/);
+  assert.doesNotMatch(nativeInputHtml, /\serror=/);
 });
 
 test("EmptyState renders title, description, and action button", () => {
@@ -143,7 +160,26 @@ test("EmptyState renders title, description, and action button", () => {
   assert.equal(clicked, false);
 });
 
-test("Modal does not render when closed", () => {
+test("Modal renders an accessible dialog when open and nothing when closed", () => {
+  const openModalHtml = renderToStaticMarkup(
+    React.createElement(
+      Modal,
+      {
+        isOpen: true,
+        onClose: () => {},
+        title: "Test Modal",
+        description: "Review the selected settings",
+      },
+      "Content"
+    )
+  );
+  assert.match(openModalHtml, /role="dialog"/);
+  assert.match(openModalHtml, /aria-modal="true"/);
+  assert.match(openModalHtml, /aria-labelledby="[^"]+"/);
+  assert.match(openModalHtml, /aria-label="Close Test Modal"/);
+  assert.match(openModalHtml, /Review the selected settings/);
+  assert.match(openModalHtml, /Content/);
+
   const modalHtml = renderToStaticMarkup(
     React.createElement(
       Modal,
