@@ -12,18 +12,18 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-accent-foreground hover:bg-accent/90 focus-visible:ring-accent",
+  primary: "bg-accent text-accent-foreground hover:opacity-hover focus-visible:ring-accent",
   secondary: "bg-subtle text-card-foreground border border-border hover:bg-muted focus-visible:ring-accent",
   outline: "border border-border text-muted-foreground hover:text-card-foreground hover:bg-muted focus-visible:ring-accent",
-  ghost: "text-muted-foreground hover:text-card-foreground hover:bg-muted/50 focus-visible:ring-accent",
-  danger: "bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 focus-visible:ring-red-500",
+  ghost: "text-muted-foreground hover:text-card-foreground hover:bg-muted focus-visible:ring-accent",
+  danger: "bg-danger-surface text-danger border border-danger-border hover:bg-danger-action hover:text-danger-action-foreground focus-visible:ring-danger",
   soft: "bg-accent/10 text-accent hover:bg-accent/20 focus-visible:ring-accent",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-xs gap-1.5 rounded-md",
-  md: "h-10 px-4 text-sm gap-2 rounded-lg",
-  lg: "h-11 px-5 text-base gap-2.5 rounded-lg",
+  sm: "h-control-sm px-3 text-xs gap-1 rounded-sm",
+  md: "h-control-md px-4 text-base gap-2 rounded-lg",
+  lg: "h-control-lg px-6 text-lg gap-3 rounded-lg",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -47,7 +47,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type={type}
         disabled={disabled || isLoading}
-        className={`inline-flex items-center justify-center font-medium transition-smooth focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        className={`inline-flex items-center justify-center font-medium transition-smooth focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:opacity-disabled disabled:cursor-not-allowed ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...props}
       >
         {isLoading ? (

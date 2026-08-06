@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 import {
   Button,
@@ -19,20 +21,149 @@ import {
   Pagination,
 } from "../components/shared";
 
-test("shared components module exports all expected components", () => {
-  assert.equal(typeof Button, "object"); // React forwardRef component is an object with $$typeof
-  assert.equal(typeof Card, "object");
-  assert.equal(typeof CardHeader, "object");
-  assert.equal(typeof CardTitle, "object");
-  assert.equal(typeof CardDescription, "object");
-  assert.equal(typeof CardContent, "object");
-  assert.equal(typeof CardFooter, "object");
-  assert.equal(typeof Badge, "function");
-  assert.equal(typeof FormField, "function");
-  assert.equal(typeof Input, "object");
-  assert.equal(typeof Select, "object");
-  assert.equal(typeof Textarea, "object");
-  assert.equal(typeof Modal, "function");
-  assert.equal(typeof EmptyState, "function");
-  assert.equal(typeof Pagination, "function");
+test("Button renders correct variant classes, icons, and loading state", () => {
+  const primaryHtml = renderToStaticMarkup(
+    React.createElement(Button, { variant: "primary", size: "md" }, "Submit")
+  );
+  assert.match(primaryHtml, /bg-accent/);
+  assert.match(primaryHtml, /text-accent-foreground/);
+  assert.match(primaryHtml, /Submit/);
+
+  const dangerHtml = renderToStaticMarkup(
+    React.createElement(Button, { variant: "danger", size: "sm" }, "Delete")
+  );
+  assert.match(dangerHtml, /bg-danger-surface/);
+  assert.match(dangerHtml, /text-danger/);
+
+  const loadingHtml = renderToStaticMarkup(
+    React.createElement(Button, { isLoading: true }, "Saving")
+  );
+  assert.match(loadingHtml, /animate-spin/);
+  assert.match(loadingHtml, /disabled=""/);
+});
+
+test("Card renders structure, padding, and interactive styles", () => {
+  const cardHtml = renderToStaticMarkup(
+    React.createElement(
+      Card,
+      { interactive: true, shadow: "lg" },
+      React.createElement(CardHeader, null, React.createElement(CardTitle, null, "Card Title")),
+      React.createElement(CardContent, null, React.createElement(CardDescription, null, "Desc")),
+      React.createElement(CardFooter, null, React.createElement(Button, null, "OK"))
+    )
+  );
+  assert.match(cardHtml, /card-interactive/);
+  assert.match(cardHtml, /shadow-lg/);
+  assert.match(cardHtml, /Card Title/);
+  assert.match(cardHtml, /Desc/);
+  assert.match(cardHtml, /OK/);
+});
+
+test("Badge renders allowed design system status variants and dot", () => {
+  const successHtml = renderToStaticMarkup(
+    React.createElement(Badge, { variant: "success", dot: true }, "Active")
+  );
+  assert.match(successHtml, /bg-success-surface/);
+  assert.match(successHtml, /text-success/);
+  assert.match(successHtml, /bg-success/); // dot color
+  assert.match(successHtml, /Active/);
+
+  const dangerHtml = renderToStaticMarkup(
+    React.createElement(Badge, { variant: "danger" }, "Failed")
+  );
+  assert.match(dangerHtml, /bg-danger-surface/);
+  assert.match(dangerHtml, /text-danger/);
+});
+
+test("FormField binds label htmlFor to input/select/textarea id and displays hint or error", () => {
+  const fieldHtml = renderToStaticMarkup(
+    React.createElement(
+      FormField,
+      { label: "Email Address", hint: "Enter work email", required: true },
+      React.createElement(Input, { placeholder: "name@company.com" })
+    )
+  );
+  const forMatch = fieldHtml.match(/for="([^"]+)"/);
+  const idMatch = fieldHtml.match(/id="([^"]+)"/);
+  assert.ok(forMatch && forMatch[1], "label should have a for attribute");
+  assert.ok(idMatch && idMatch[1], "input should have an id attribute");
+  assert.equal(forMatch[1], idMatch[1], "label for attribute must match input id");
+  assert.match(fieldHtml, /Email Address/);
+  assert.match(fieldHtml, /Enter work email/);
+  assert.match(fieldHtml, /\*/);
+
+  const selectHtml = renderToStaticMarkup(
+    React.createElement(
+      FormField,
+      { label: "Role" },
+      React.createElement(
+        Select,
+        { defaultValue: "user" },
+        React.createElement("option", { value: "user" }, "User"),
+        React.createElement("option", { value: "admin" }, "Admin")
+      )
+    )
+  );
+  assert.match(selectHtml, /<select/);
+  assert.match(selectHtml, /Role/);
+
+  const textareaHtml = renderToStaticMarkup(
+    React.createElement(
+      FormField,
+      { label: "Bio" },
+      React.createElement(Textarea, { placeholder: "Tell us about yourself" })
+    )
+  );
+  assert.match(textareaHtml, /<textarea/);
+  assert.match(textareaHtml, /Bio/);
+
+  const errorHtml = renderToStaticMarkup(
+    React.createElement(
+      FormField,
+      { label: "Password", error: "Password is required" },
+      React.createElement(Input, { type: "password" })
+    )
+  );
+  assert.match(errorHtml, /border-danger/);
+  assert.match(errorHtml, /Password is required/);
+});
+
+test("EmptyState renders title, description, and action button", () => {
+  let clicked = false;
+  const emptyHtml = renderToStaticMarkup(
+    React.createElement(EmptyState, {
+      title: "No Documents",
+      description: "Upload a document to start parsing.",
+      action: { label: "Upload", onClick: () => { clicked = true; } },
+    })
+  );
+  assert.match(emptyHtml, /No Documents/);
+  assert.match(emptyHtml, /Upload a document to start parsing\./);
+  assert.match(emptyHtml, /Upload/);
+  assert.equal(clicked, false);
+});
+
+test("Modal does not render when closed", () => {
+  const modalHtml = renderToStaticMarkup(
+    React.createElement(
+      Modal,
+      { isOpen: false, onClose: () => {}, title: "Test Modal" },
+      "Content"
+    )
+  );
+  assert.equal(modalHtml, "");
+});
+
+test("Pagination calculates bounds and renders navigation buttons", () => {
+  const paginationHtml = renderToStaticMarkup(
+    React.createElement(Pagination, {
+      page: 1,
+      total: 50,
+      rowsPerPage: 10,
+      onPageChange: () => {},
+    })
+  );
+  assert.match(paginationHtml, /Showing 11 to 20 of 50 results/);
+  assert.match(paginationHtml, /Previous/);
+  assert.match(paginationHtml, /Next/);
 });
