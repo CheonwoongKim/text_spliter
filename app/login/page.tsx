@@ -116,7 +116,7 @@ export default function LoginPage() {
                        text-base text-card-foreground font-medium rounded-lg
                        border border-border transition-smooth
                        flex items-center justify-center gap-2
-                       disabled:cursor-not-allowed disabled:opacity-60"
+                       disabled:cursor-not-allowed disabled:opacity-disabled"
             >
               {loading ? "처리 중..." : mode === "signin" ? "로그인" : "계정 생성"}
             </button>
@@ -129,7 +129,7 @@ export default function LoginPage() {
               setError(null);
               setMessage(null);
             }}
-            className="mt-8 w-full text-center text-base text-muted-foreground hover:text-card-foreground"
+            className="mt-8 w-full text-center text-base text-muted-foreground hover:text-card-foreground transition-smooth"
           >
             {mode === "signin" ? "계정이 없나요? 회원가입" : "이미 계정이 있나요? 로그인"}
           </button>

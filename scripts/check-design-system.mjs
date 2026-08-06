@@ -42,6 +42,11 @@ const RULES = [
     guidance: "Add a semantic theme token instead of a raw color.",
   },
   {
+    name: "legacy color token",
+    pattern: /var\(--color-[^)]+\)/g,
+    guidance: "Use a --ds-color-* design token or a semantic Tailwind color.",
+  },
+  {
     name: "numeric motion duration",
     pattern: /\bduration-[0-9]+\b/g,
     guidance: "Use duration-fast, duration-normal, or duration-slow.",
