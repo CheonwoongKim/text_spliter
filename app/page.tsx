@@ -431,11 +431,11 @@ export default function Home() {
 
       {/* Error Banner */}
       {(activeMenu === "parser" ? parserError : error) && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 px-4 sm:px-6 lg:px-10 py-3">
+        <div className="bg-danger-surface border-b border-danger-border px-4 sm:px-6 lg:px-10 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <svg
-                className="h-5 w-5 text-red-400 mr-2"
+                className="h-5 w-5 text-danger mr-2"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -447,13 +447,13 @@ export default function Home() {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-sm text-red-800 dark:text-red-200">
+              <span className="text-base text-danger">
                 {activeMenu === "parser" ? parserError : error}
               </span>
             </div>
             <button
               onClick={() => activeMenu === "parser" ? setParserError(null) : setError(null)}
-              className="text-red-800 dark:text-red-200 hover:text-red-900 dark:hover:text-red-100"
+              className="text-danger hover:text-danger/80"
               aria-label="Close error message"
             >
               <svg

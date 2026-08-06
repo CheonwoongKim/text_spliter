@@ -73,13 +73,13 @@ const RightPanel = memo(function RightPanel({
     <div className="h-full flex flex-col py-6 bg-surface">
       {/* Header with Title and View Mode Toggle */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-medium text-surface-foreground">Result</h3>
+        <h3 className="text-base font-medium text-surface-foreground">Result</h3>
         <div className="flex flex-wrap items-center gap-3">
           {/* View Mode Toggle */}
           <div className="flex gap-1 bg-muted rounded-lg p-1">
             <button
               onClick={() => onViewModeChange("card")}
-              className={`px-3 py-1 text-xs font-medium rounded transition-smooth ${
+              className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth ${
                 viewMode === "card"
                   ? "bg-card text-card-foreground shadow-sm"
                   : "text-muted-foreground hover:text-surface-foreground"
@@ -89,7 +89,7 @@ const RightPanel = memo(function RightPanel({
             </button>
             <button
               onClick={() => onViewModeChange("json")}
-              className={`px-3 py-1 text-xs font-medium rounded transition-smooth ${
+              className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth ${
                 viewMode === "json"
                   ? "bg-card text-card-foreground shadow-sm"
                   : "text-muted-foreground hover:text-surface-foreground"
@@ -104,8 +104,8 @@ const RightPanel = memo(function RightPanel({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-3 py-1.5 text-xs bg-accent/10 text-accent hover:bg-accent/20
-                       rounded-md transition-smooth flex items-center gap-2
+              className="px-3 py-2 text-xs bg-accent/10 text-accent hover:bg-accent/20
+                       rounded-lg transition-smooth flex items-center gap-2
                        disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (

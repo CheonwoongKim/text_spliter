@@ -57,7 +57,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
           <div className="max-w-md w-full bg-card border border-border rounded-lg p-6">
             <div className="flex items-center gap-3 mb-4">
               <svg
-                className="w-6 h-6 text-red-500"
+                className="w-6 h-6 text-danger"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -74,15 +74,15 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
               </h2>
             </div>
 
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-base text-muted-foreground mb-4">
               An error occurred while rendering this component. Please try again or contact support if the problem persists.
             </p>
 
             <details className="mb-4">
-              <summary className="text-sm font-medium text-card-foreground cursor-pointer hover:text-accent">
+              <summary className="text-base font-medium text-card-foreground cursor-pointer hover:text-accent">
                 Error details
               </summary>
-              <pre className="mt-2 text-xs bg-muted p-3 rounded overflow-auto max-h-32 text-muted-foreground font-mono">
+              <pre className="mt-2 text-xs bg-muted p-3 rounded-sm overflow-auto max-h-32 text-muted-foreground font-mono">
                 {this.state.error.message}
                 {'\n\n'}
                 {this.state.error.stack}
@@ -91,7 +91,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
             <button
               onClick={this.resetError}
-              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-smooth font-medium"
+              className="w-full px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-smooth font-medium"
             >
               Try again
             </button>

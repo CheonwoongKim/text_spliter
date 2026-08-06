@@ -332,7 +332,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
         <div className="flex gap-1 bg-muted rounded-lg p-1">
           <button
             onClick={() => setActiveTab("upload")}
-            className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+            className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
               activeTab === "upload"
                 ? "bg-card text-card-foreground shadow-sm"
                 : "text-muted-foreground hover:text-card-foreground"
@@ -342,7 +342,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
           </button>
           <button
             onClick={() => setActiveTab("plaintext")}
-            className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+            className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
               activeTab === "plaintext"
                 ? "bg-card text-card-foreground shadow-sm"
                 : "text-muted-foreground hover:text-card-foreground"
@@ -352,7 +352,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
           </button>
           <button
             onClick={() => setActiveTab("storage")}
-            className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+            className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
               activeTab === "storage"
                 ? "bg-card text-card-foreground shadow-sm"
                 : "text-muted-foreground hover:text-card-foreground"
@@ -400,7 +400,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
                   readOnly
                   className="flex-1 min-h-0 w-full p-4 border border-border rounded-lg
                              bg-card text-card-foreground
-                             resize-none font-mono text-sm
+                             resize-none font-mono text-base
                              scrollbar-thin"
                 />
               </div>
@@ -418,7 +418,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-surface-foreground mb-1">
+                  <p className="text-base font-medium text-surface-foreground mb-1">
                     {loading ? "Loading..." : "Click to upload or drag and drop"}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -437,7 +437,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
             className="w-full h-full p-4 border border-border rounded-lg
                        focus-ring
                        bg-card text-card-foreground placeholder-light
-                       resize-none font-mono text-sm
+                       resize-none font-mono text-base
                        scrollbar-thin transition-smooth"
             maxLength={100000}
           />
@@ -467,7 +467,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  <p className="text-sm text-muted-foreground">Loading parse results...</p>
+                  <p className="text-base text-muted-foreground">Loading parse results...</p>
                 </div>
               </div>
             ) : parseResults.length === 0 ? (
@@ -486,7 +486,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
                       d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                     />
                   </svg>
-                  <p className="text-sm font-medium text-surface-foreground mb-1">
+                  <p className="text-base font-medium text-surface-foreground mb-1">
                     No parse results found
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -520,7 +520,7 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
                               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                             />
                           </svg>
-                          <span className="text-sm font-medium text-surface-foreground truncate">
+                          <span className="text-base font-medium text-surface-foreground truncate">
                             {result.file_name}
                           </span>
                         </div>
@@ -539,10 +539,10 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
                         </svg>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="px-2 py-0.5 bg-muted rounded">
+                        <span className="px-2 py-1 bg-muted rounded-sm">
                           {result.parser_type}
                         </span>
-                        <span className="px-2 py-0.5 bg-muted rounded">
+                        <span className="px-2 py-1 bg-muted rounded-sm">
                           {(result.file_size / 1024).toFixed(1)} KB
                         </span>
                         <span>

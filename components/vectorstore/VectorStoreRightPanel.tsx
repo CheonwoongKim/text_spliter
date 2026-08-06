@@ -87,8 +87,8 @@ function VectorStoreRightPanel({
       {/* Header */}
       <div className="border-b border-border bg-card pl-6 pr-0 py-3">
         <div className="flex items-center justify-between pr-6">
-          <div className="flex items-center gap-5">
-            <h3 className="text-sm font-medium text-card-foreground">
+          <div className="flex items-center gap-4">
+            <h3 className="text-base font-medium text-card-foreground">
               {selectedTable ? (
                 <>
                   <span className="text-muted-foreground">{selectedSchema}.</span>
@@ -103,7 +103,7 @@ function VectorStoreRightPanel({
                 <button
                   type="button"
                   onClick={() => setActiveTab("data")}
-                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                     activeTab === "data"
                       ? "bg-card text-card-foreground shadow-sm"
                       : "text-muted-foreground hover:text-card-foreground"
@@ -114,7 +114,7 @@ function VectorStoreRightPanel({
                 <button
                   type="button"
                   onClick={() => setActiveTab("rag")}
-                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                     activeTab === "rag"
                       ? "bg-card text-card-foreground shadow-sm"
                       : "text-muted-foreground hover:text-card-foreground"
@@ -197,7 +197,7 @@ function VectorStoreRightPanel({
                   {tableData.columns.map((column, index) => (
                     <th
                       key={column.name}
-                      className={`px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider ${
+                      className={`px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide ${
                         index < tableData.columns.length - 1 ? 'border-r border-border' : ''
                       }`}
                     >
@@ -235,7 +235,7 @@ function VectorStoreRightPanel({
                     {tableData.columns.map((column, colIndex) => (
                       <td
                         key={`${rowIndex}-${column.name}`}
-                        className={`px-4 py-3 text-sm text-card-foreground ${
+                        className={`px-4 py-3 text-base text-card-foreground ${
                           colIndex < tableData.columns.length - 1 ? 'border-r border-border' : ''
                         }`}
                       >
@@ -267,17 +267,17 @@ function VectorStoreRightPanel({
       {/* Cell Content Modal */}
       {modalData && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-overlay flex items-center justify-center z-modal"
           onClick={handleCloseModal}
         >
           <div
-            className="bg-card rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col"
+            className="bg-card rounded-lg shadow-lg max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <div>
-                <h3 className="text-sm font-medium text-card-foreground">
+                <h3 className="text-base font-medium text-card-foreground">
                   {modalData.columnName}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -289,9 +289,9 @@ function VectorStoreRightPanel({
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopy}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg
+                  className="px-3 py-2 text-xs font-medium rounded-lg
                            bg-accent/10 text-accent hover:bg-accent/20
-                           transition-smooth flex items-center gap-1.5"
+                           transition-smooth flex items-center gap-2"
                 >
                   {copied ? (
                     <>
@@ -311,8 +311,8 @@ function VectorStoreRightPanel({
                 </button>
                 <button
                   onClick={handleCloseModal}
-                  className="p-1.5 text-muted-foreground hover:text-card-foreground
-                           hover:bg-muted rounded transition-smooth"
+                  className="p-2 text-muted-foreground hover:text-card-foreground
+                           hover:bg-muted rounded-sm transition-smooth"
                   aria-label="Close"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -324,7 +324,7 @@ function VectorStoreRightPanel({
 
             {/* Modal Content */}
             <div className="flex-1 overflow-auto px-6 py-4">
-              <pre className="text-sm text-card-foreground whitespace-pre-wrap break-words font-mono bg-surface p-4 rounded-lg border border-border">
+              <pre className="text-base text-card-foreground whitespace-pre-wrap break-words font-mono bg-surface p-4 rounded-lg border border-border">
                 {modalData.formattedValue}
               </pre>
             </div>

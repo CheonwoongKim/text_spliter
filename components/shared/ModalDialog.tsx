@@ -87,7 +87,7 @@ export default function ModalDialog({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-overlay flex items-center justify-center z-modal p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -97,7 +97,7 @@ export default function ModalDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`bg-surface shadow-xl w-full flex flex-col border border-border ${panelClassName}`}
+        className={`bg-surface shadow-lg w-full flex flex-col border border-border ${panelClassName}`}
         onKeyDown={trapFocus}
       >
         <div className={`border-b border-border px-6 py-4 flex items-center justify-between bg-card ${headerClassName}`}>
@@ -110,7 +110,7 @@ export default function ModalDialog({
             type="button"
             onClick={onClose}
             aria-label={`Close ${title}`}
-            className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth rounded"
+            className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth rounded-sm"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

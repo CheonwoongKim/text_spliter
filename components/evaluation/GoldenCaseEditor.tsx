@@ -131,7 +131,7 @@ export default function GoldenCaseEditor({
     return (
       <div className="h-full flex items-center justify-center px-10 text-center">
         <div>
-          <p className="text-sm font-medium text-card-foreground">케이스를 선택하세요</p>
+          <p className="text-base font-medium text-card-foreground">케이스를 선택하세요</p>
           <p className="text-xs text-muted-foreground mt-2">
             질문, 기준 답변과 기대 근거를 한 화면에서 편집할 수 있습니다.
           </p>
@@ -172,14 +172,14 @@ export default function GoldenCaseEditor({
     }
   };
 
-  const fieldClass = "w-full px-3 py-2.5 border border-border rounded-lg bg-surface text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60";
+  const fieldClass = "w-full px-3 py-3 border border-border rounded-lg bg-surface text-base text-card-foreground focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60";
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto px-8 py-7">
-        <div className="flex items-start justify-between gap-6 pb-5 border-b border-border">
+      <div className="max-w-4xl mx-auto px-8 py-8">
+        <div className="flex items-start justify-between gap-6 pb-4 border-b border-border">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {isNew ? "New golden case" : evaluationCase?.case_key}
             </p>
             <h3 className="text-lg font-semibold text-card-foreground mt-1">
@@ -187,12 +187,12 @@ export default function GoldenCaseEditor({
             </h3>
           </div>
           {!editable && (
-            <span className="px-2.5 py-1 rounded-full bg-muted text-xs text-muted-foreground">Frozen version</span>
+            <span className="px-3 py-1 rounded-full bg-muted text-xs text-muted-foreground">Frozen version</span>
           )}
         </div>
 
         {localError && (
-          <div className="mt-5 px-4 py-3 border border-red-500/20 bg-red-500/10 rounded-lg text-sm text-red-500">
+          <div className="mt-4 px-4 py-3 border border-danger-border bg-danger-surface rounded-lg text-base text-danger">
             {localError}
           </div>
         )}
@@ -236,7 +236,7 @@ export default function GoldenCaseEditor({
           <label className="block">
             <span className="block text-xs font-medium text-muted-foreground mb-2">Expected evidence</span>
             <textarea value={expectedEvidence} onChange={(event) => setExpectedEvidence(event.target.value)} disabled={!editable || saving} rows={5} className={`${fieldClass} font-mono`} placeholder="document_hash | page | block_id | chunk_key | note" />
-            <span className="block text-[11px] text-muted-foreground mt-2">
+            <span className="block text-xs text-muted-foreground mt-2">
               한 줄에 하나씩 입력합니다. 모르는 값은 비워 두고 `|` 구분자는 유지하세요.
             </span>
           </label>
@@ -247,16 +247,16 @@ export default function GoldenCaseEditor({
               <input value={tags} onChange={(event) => setTags(event.target.value)} disabled={!editable || saving} className={fieldClass} placeholder="table, korean, finance" />
             </label>
             <label className="flex items-center gap-3 pt-6 cursor-pointer">
-              <input type="checkbox" checked={answerable} onChange={(event) => setAnswerable(event.target.checked)} disabled={!editable || saving} className="w-4 h-4 rounded border-border text-accent focus:ring-accent" />
+              <input type="checkbox" checked={answerable} onChange={(event) => setAnswerable(event.target.checked)} disabled={!editable || saving} className="w-4 h-4 rounded-sm border-border text-accent focus:ring-accent" />
               <span>
-                <span className="block text-sm font-medium text-card-foreground">Answerable</span>
+                <span className="block text-base font-medium text-card-foreground">Answerable</span>
                 <span className="block text-xs text-muted-foreground">문서 근거만으로 답할 수 있는 질문</span>
               </span>
             </label>
           </div>
 
           <div className="pt-2 border-t border-border">
-            <h4 className="text-sm font-medium text-card-foreground mt-5 mb-4">Manual review rubric</h4>
+            <h4 className="text-base font-medium text-card-foreground mt-4 mb-4">Manual review rubric</h4>
             <div className="space-y-4">
               <label className="block">
                 <span className="block text-xs font-medium text-muted-foreground mb-2">Decision criteria</span>
@@ -282,7 +282,7 @@ export default function GoldenCaseEditor({
         </div>
 
         {editable && (
-          <div className="flex items-center justify-between gap-4 pt-5 border-t border-border">
+          <div className="flex items-center justify-between gap-4 pt-4 border-t border-border">
             <div>
               {!isNew && (
                 <button type="button" onClick={onDelete} disabled={saving} className={styles.dangerButton}>

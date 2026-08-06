@@ -3,6 +3,7 @@
 import { SplitResponse } from "@/lib/types";
 import { useState } from "react";
 import JsonView from "@uiw/react-json-view";
+import { JSON_VIEW_THEME } from "@/lib/json-view-theme";
 
 interface JsonViewComponentProps {
   result: SplitResponse;
@@ -25,7 +26,7 @@ export default function JsonViewComponent({ result }: JsonViewComponentProps) {
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-sm font-medium text-surface-foreground">
+        <h3 className="text-base font-medium text-surface-foreground">
           JSON Output
         </h3>
         <div className="flex gap-2">
@@ -78,34 +79,7 @@ export default function JsonViewComponent({ result }: JsonViewComponentProps) {
           collapsed={collapsed}
           displayDataTypes={false}
           enableClipboard={false}
-          style={{
-            backgroundColor: "transparent",
-            fontSize: "12px",
-            "--w-rjv-font-family": "monospace",
-            "--w-rjv-color": "rgb(229, 229, 229)",
-            "--w-rjv-key-string": "rgb(96, 165, 250)",
-            "--w-rjv-background-color": "transparent",
-            "--w-rjv-line-color": "rgb(82, 82, 82)",
-            "--w-rjv-arrow-color": "rgb(156, 163, 175)",
-            "--w-rjv-edit-color": "rgb(229, 229, 229)",
-            "--w-rjv-info-color": "rgb(156, 163, 175)",
-            "--w-rjv-update-color": "rgb(229, 229, 229)",
-            "--w-rjv-copied-color": "rgb(229, 229, 229)",
-            "--w-rjv-copied-success-color": "rgb(34, 197, 94)",
-            "--w-rjv-curlybraces-color": "rgb(229, 229, 229)",
-            "--w-rjv-colon-color": "rgb(229, 229, 229)",
-            "--w-rjv-brackets-color": "rgb(229, 229, 229)",
-            "--w-rjv-type-string-color": "rgb(96, 165, 250)",
-            "--w-rjv-type-int-color": "rgb(147, 197, 253)",
-            "--w-rjv-type-float-color": "rgb(147, 197, 253)",
-            "--w-rjv-type-bigint-color": "rgb(147, 197, 253)",
-            "--w-rjv-type-boolean-color": "rgb(251, 146, 60)",
-            "--w-rjv-type-date-color": "rgb(250, 204, 21)",
-            "--w-rjv-type-url-color": "rgb(96, 165, 250)",
-            "--w-rjv-type-null-color": "rgb(156, 163, 175)",
-            "--w-rjv-type-nan-color": "rgb(156, 163, 175)",
-            "--w-rjv-type-undefined-color": "rgb(156, 163, 175)",
-          } as any}
+          style={JSON_VIEW_THEME}
         />
       </div>
     </div>

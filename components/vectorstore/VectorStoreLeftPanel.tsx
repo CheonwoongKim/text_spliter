@@ -164,7 +164,7 @@ function VectorStoreLeftPanel({
       {/* Header */}
       <div className="border-b border-border bg-card px-6 py-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-card-foreground">
+          <h3 className="text-base font-medium text-card-foreground">
             Collections
           </h3>
           <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ function VectorStoreLeftPanel({
             value={selectedSchemaName}
             onChange={(e) => handleSchemaChange(e.target.value)}
             disabled={loading || schemas.length === 0}
-            className="w-full h-9 px-3 text-sm border border-border rounded-lg
+            className="w-full h-control-md px-3 text-base border border-border rounded-lg
                      focus:outline-none focus:ring-2 focus:ring-accent
                      bg-surface text-card-foreground disabled:opacity-50"
           >
@@ -247,7 +247,7 @@ function VectorStoreLeftPanel({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search collections..."
-            className="w-full h-9 pl-9 pr-3 text-sm border border-border rounded-lg
+            className="w-full h-control-md pl-10 pr-3 text-base border border-border rounded-lg
                      focus:outline-none focus:ring-2 focus:ring-accent
                      bg-surface text-card-foreground placeholder-light"
           />
@@ -280,8 +280,8 @@ function VectorStoreLeftPanel({
             {filteredTables.map((table) => (
               <div
                 key={`${selectedSchemaName}.${table.name}`}
-                className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg
-                         transition-all duration-200 group cursor-pointer ${
+                className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-lg
+                         transition-all duration-normal group cursor-pointer ${
                            config.selectedSchema === selectedSchemaName &&
                            config.selectedTable === table.name
                              ? "bg-accent/10 border border-accent/20 shadow-sm"
@@ -290,10 +290,10 @@ function VectorStoreLeftPanel({
               >
                 <button
                   onClick={() => handleTableSelect(selectedSchemaName, table.name)}
-                  className="flex items-start gap-2.5 flex-1 text-left"
+                  className="flex items-start gap-3 flex-1 text-left"
                 >
                   <svg
-                    className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                    className={`w-4 h-4 mt-1 flex-shrink-0 ${
                       config.selectedSchema === selectedSchemaName &&
                       config.selectedTable === table.name
                         ? "text-accent"
@@ -311,7 +311,7 @@ function VectorStoreLeftPanel({
                     />
                   </svg>
                   <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    <span className={`text-sm font-medium truncate ${
+                    <span className={`text-base font-medium truncate ${
                       config.selectedSchema === selectedSchemaName &&
                       config.selectedTable === table.name
                         ? "text-accent"
@@ -329,7 +329,7 @@ function VectorStoreLeftPanel({
                     e.stopPropagation();
                     handleDeleteTableClick(table.name);
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded transition-all flex-shrink-0"
+                  className="opacity-0 group-hover:opacity-100 p-2 text-muted-foreground hover:text-danger hover:bg-danger-surface rounded-sm transition-all flex-shrink-0"
                   title="Delete Table"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -344,7 +344,7 @@ function VectorStoreLeftPanel({
 
       {/* Create Table Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-medium text-card-foreground mb-4">
               Create Vector Collection
@@ -352,10 +352,10 @@ function VectorStoreLeftPanel({
 
             {message && (
               <div
-                className={`mb-4 p-3 rounded-lg text-sm ${
+                className={`mb-4 p-3 rounded-lg text-base ${
                   message.type === 'success'
-                    ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                    : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                    ? 'bg-success-surface text-success border border-success-border'
+                    : 'bg-danger-surface text-danger border border-danger-border'
                 }`}
               >
                 {message.text}
@@ -364,7 +364,7 @@ function VectorStoreLeftPanel({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
+                <label className="block text-base font-medium text-card-foreground mb-2">
                   Collection Name *
                 </label>
                 <input
@@ -398,7 +398,7 @@ function VectorStoreLeftPanel({
                   setMessage(null);
                 }}
                 disabled={creating}
-                className="px-4 py-2 text-sm text-muted-foreground hover:text-card-foreground
+                className="px-4 py-2 text-base text-muted-foreground hover:text-card-foreground
                          disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
               >
                 Cancel
@@ -406,12 +406,12 @@ function VectorStoreLeftPanel({
               <button
                 onClick={handleCreateTable}
                 disabled={creating || !newTableName.trim()}
-                className="px-4 py-2 text-sm bg-accent text-white rounded-lg
+                className="px-4 py-2 text-base bg-accent text-accent-foreground rounded-lg
                          hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed
                          transition-smooth flex items-center gap-2"
               >
                 {creating && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-foreground"></div>
                 )}
                 {creating ? 'Creating...' : 'Create Collection'}
               </button>
@@ -422,7 +422,7 @@ function VectorStoreLeftPanel({
 
       {/* Delete Table Modal */}
       {showDeleteModal && tableToDelete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-medium text-card-foreground mb-4">
               Delete Collection
@@ -430,10 +430,10 @@ function VectorStoreLeftPanel({
 
             {message && (
               <div
-                className={`mb-4 p-3 rounded-lg text-sm ${
+                className={`mb-4 p-3 rounded-lg text-base ${
                   message.type === 'success'
-                    ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                    : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                    ? 'bg-success-surface text-success border border-success-border'
+                    : 'bg-danger-surface text-danger border border-danger-border'
                 }`}
               >
                 {message.text}
@@ -441,11 +441,11 @@ function VectorStoreLeftPanel({
             )}
 
             <div className="space-y-4">
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                <p className="text-sm text-card-foreground">
+              <div className="bg-danger-surface border border-danger-border rounded-lg p-4">
+                <p className="text-base text-card-foreground">
                   Are you sure you want to delete the collection <strong>{tableToDelete}</strong>?
                 </p>
-                <p className="text-sm text-red-500 mt-2">
+                <p className="text-base text-danger mt-2">
                   This action cannot be undone. All vector data in this collection will be permanently deleted.
                 </p>
               </div>
@@ -459,7 +459,7 @@ function VectorStoreLeftPanel({
                   setMessage(null);
                 }}
                 disabled={deleting}
-                className="px-4 py-2 text-sm text-muted-foreground hover:text-card-foreground
+                className="px-4 py-2 text-base text-muted-foreground hover:text-card-foreground
                          disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
               >
                 Cancel
@@ -467,12 +467,12 @@ function VectorStoreLeftPanel({
               <button
                 onClick={handleDeleteTableConfirm}
                 disabled={deleting}
-                className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg
-                         hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed
+                className="px-4 py-2 text-base bg-danger-action text-danger-action-foreground rounded-lg
+                         hover:bg-danger-action/80 disabled:opacity-50 disabled:cursor-not-allowed
                          transition-smooth flex items-center gap-2"
               >
                 {deleting && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-danger-action-foreground"></div>
                 )}
                 {deleting ? 'Deleting...' : 'Delete Collection'}
               </button>
