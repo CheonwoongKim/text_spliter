@@ -295,13 +295,13 @@ export default function LicensesPanel() {
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="py-8 px-6 bg-surface sticky top-0 z-10">
+        <div className="py-8 px-6 bg-surface sticky top-0 z-navigation">
           <div className="max-w-5xl mx-auto">
             <div className="mb-6">
               <h2 className="text-2xl font-semibold text-card-foreground mb-2">
                 Connect
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 Configure API keys and credentials for AI models, document parsers, and databases
               </p>
             </div>
@@ -311,7 +311,7 @@ export default function LicensesPanel() {
               <div className="inline-flex gap-1 bg-muted rounded-lg p-1">
               <button
                 onClick={() => setActiveTab("embedding")}
-                className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
                   activeTab === "embedding"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-surface-foreground"
@@ -321,7 +321,7 @@ export default function LicensesPanel() {
               </button>
               <button
                 onClick={() => setActiveTab("parser")}
-                className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
                   activeTab === "parser"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-surface-foreground"
@@ -331,7 +331,7 @@ export default function LicensesPanel() {
               </button>
               <button
                 onClick={() => setActiveTab("database")}
-                className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
                   activeTab === "database"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-surface-foreground"
@@ -343,7 +343,7 @@ export default function LicensesPanel() {
 
               <div className="flex items-center gap-8">
                 {saved && (
-                  <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                  <span className="text-base text-success flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
@@ -353,7 +353,7 @@ export default function LicensesPanel() {
                 <button
                   onClick={handleReset}
                   disabled={loading}
-                  className="text-sm text-muted-foreground hover:text-card-foreground transition-smooth flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-base text-muted-foreground hover:text-card-foreground transition-smooth flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -363,7 +363,7 @@ export default function LicensesPanel() {
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="text-sm text-accent hover:text-accent/80 font-medium transition-smooth flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-base text-accent hover:text-accent/80 font-medium transition-smooth flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -397,7 +397,7 @@ export default function LicensesPanel() {
               {/* OpenAI Card */}
               <div className="py-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
+                  <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center flex-shrink-0 p-1">
                     <Image
                       src="/logos/openai.webp"
                       alt="OpenAI"
@@ -446,13 +446,13 @@ export default function LicensesPanel() {
                         placeholder="sk-..."
                         className="w-full h-10 px-3 border border-border rounded-lg
                                  focus:outline-none focus:ring-2 focus:ring-accent
-                                 bg-surface text-card-foreground text-sm
+                                 bg-surface text-card-foreground text-base
                                  placeholder-light"
                       />
                     </div>
                     {testResults.openai.status !== 'idle' && testResults.openai.status !== 'testing' && (
                       <div className={`mt-2 text-xs flex items-center gap-1 ${
-                        testResults.openai.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        testResults.openai.status === 'success' ? 'text-success' : 'text-danger'
                       }`}>
                         {testResults.openai.status === 'success' ? (
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -478,7 +478,7 @@ export default function LicensesPanel() {
                 {/* Upstage Parser Card */}
                 <div className="py-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
+                    <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center flex-shrink-0 p-1">
                       <Image
                         src="/logos/upstage.webp"
                         alt="Upstage"
@@ -527,13 +527,13 @@ export default function LicensesPanel() {
                           placeholder="up_..."
                           className="w-full h-10 px-3 border border-border rounded-lg
                                    focus:outline-none focus:ring-2 focus:ring-accent
-                                   bg-surface text-card-foreground text-sm
+                                   bg-surface text-card-foreground text-base
                                    placeholder-light"
                         />
                       </div>
                       {testResults.upstage.status !== 'idle' && testResults.upstage.status !== 'testing' && (
                         <div className={`mt-2 text-xs flex items-center gap-1 ${
-                          testResults.upstage.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          testResults.upstage.status === 'success' ? 'text-success' : 'text-danger'
                         }`}>
                           {testResults.upstage.status === 'success' ? (
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -554,7 +554,7 @@ export default function LicensesPanel() {
                 {/* LlamaIndex Parser Card */}
                 <div className="py-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
+                    <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center flex-shrink-0 p-1">
                       <Image
                         src="/logos/llamaindex.webp"
                         alt="LlamaIndex"
@@ -603,13 +603,13 @@ export default function LicensesPanel() {
                           placeholder="llx-..."
                           className="w-full h-10 px-3 border border-border rounded-lg
                                    focus:outline-none focus:ring-2 focus:ring-accent
-                                   bg-surface text-card-foreground text-sm
+                                   bg-surface text-card-foreground text-base
                                    placeholder-light"
                         />
                       </div>
                       {testResults.llama.status !== 'idle' && testResults.llama.status !== 'testing' && (
                         <div className={`mt-2 text-xs flex items-center gap-1 ${
-                          testResults.llama.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          testResults.llama.status === 'success' ? 'text-success' : 'text-danger'
                         }`}>
                           {testResults.llama.status === 'success' ? (
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -630,7 +630,7 @@ export default function LicensesPanel() {
                 {/* Azure Parser Card */}
                 <div className="py-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
+                    <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center flex-shrink-0 p-1">
                       <Image
                         src="/logos/azure.webp"
                         alt="Azure"
@@ -680,7 +680,7 @@ export default function LicensesPanel() {
                             placeholder="Enter your Azure API key"
                             className="w-full h-10 px-3 border border-border rounded-lg
                                      focus:outline-none focus:ring-2 focus:ring-accent
-                                     bg-surface text-card-foreground text-sm
+                                     bg-surface text-card-foreground text-base
                                      placeholder-light"
                           />
                         </div>
@@ -695,14 +695,14 @@ export default function LicensesPanel() {
                             placeholder="https://YOUR-RESOURCE.cognitiveservices.azure.com"
                             className="w-full h-10 px-3 border border-border rounded-lg
                                      focus:outline-none focus:ring-2 focus:ring-accent
-                                     bg-surface text-card-foreground text-sm
+                                     bg-surface text-card-foreground text-base
                                      placeholder-light"
                           />
                         </div>
                       </div>
                       {testResults.azure.status !== 'idle' && testResults.azure.status !== 'testing' && (
                         <div className={`mt-2 text-xs flex items-center gap-1 ${
-                          testResults.azure.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          testResults.azure.status === 'success' ? 'text-success' : 'text-danger'
                         }`}>
                           {testResults.azure.status === 'success' ? (
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -723,7 +723,7 @@ export default function LicensesPanel() {
                 {/* Google Parser Card */}
                 <div className="py-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
+                    <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center flex-shrink-0 p-1">
                       <Image
                         src="/logos/google-cloud.webp"
                         alt="Google Cloud"
@@ -764,7 +764,7 @@ export default function LicensesPanel() {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-xs font-medium text-muted-foreground mb-2">
-                            Service Account Email <span className="text-red-500">*</span>
+                            Service Account Email <span className="text-danger">*</span>
                           </label>
                           <input
                             type="password"
@@ -773,7 +773,7 @@ export default function LicensesPanel() {
                             placeholder="your-service-account@project.iam.gserviceaccount.com"
                             className="w-full h-10 px-3 border border-border rounded-lg
                                      focus:outline-none focus:ring-2 focus:ring-accent
-                                     bg-surface text-card-foreground text-sm
+                                     bg-surface text-card-foreground text-base
                                      placeholder-light"
                           />
                           <p className="text-xs text-muted-foreground mt-1">
@@ -782,7 +782,7 @@ export default function LicensesPanel() {
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-muted-foreground mb-2">
-                            Private Key <span className="text-red-500">*</span>
+                            Private Key <span className="text-danger">*</span>
                           </label>
                           <textarea
                             value={keys.googleParserPrivateKey}
@@ -796,7 +796,7 @@ export default function LicensesPanel() {
                             style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
                             className="w-full px-3 py-2 border border-border rounded-lg
                                      focus:outline-none focus:ring-2 focus:ring-accent
-                                     bg-surface text-card-foreground text-sm
+                                     bg-surface text-card-foreground text-base
                                      placeholder-light font-mono resize-none"
                           />
                           <p className="text-xs text-muted-foreground mt-1">
@@ -805,7 +805,7 @@ export default function LicensesPanel() {
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-muted-foreground mb-2">
-                            Project ID <span className="text-red-500">*</span>
+                            Project ID <span className="text-danger">*</span>
                           </label>
                           <input
                             type="password"
@@ -814,7 +814,7 @@ export default function LicensesPanel() {
                             placeholder="your-project-id or 123456789"
                             className="w-full h-10 px-3 border border-border rounded-lg
                                      focus:outline-none focus:ring-2 focus:ring-accent
-                                     bg-surface text-card-foreground text-sm
+                                     bg-surface text-card-foreground text-base
                                      placeholder-light"
                           />
                           <p className="text-xs text-muted-foreground mt-1">
@@ -824,7 +824,7 @@ export default function LicensesPanel() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs font-medium text-muted-foreground mb-2">
-                              Location <span className="text-red-500">*</span>
+                              Location <span className="text-danger">*</span>
                             </label>
                             <input
                               type="password"
@@ -833,7 +833,7 @@ export default function LicensesPanel() {
                               placeholder="us, eu, or us-central1"
                               className="w-full h-10 px-3 border border-border rounded-lg
                                        focus:outline-none focus:ring-2 focus:ring-accent
-                                       bg-surface text-card-foreground text-sm
+                                       bg-surface text-card-foreground text-base
                                        placeholder-light"
                             />
                             <p className="text-xs text-muted-foreground mt-1">
@@ -842,7 +842,7 @@ export default function LicensesPanel() {
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-muted-foreground mb-2">
-                              Processor ID <span className="text-red-500">*</span>
+                              Processor ID <span className="text-danger">*</span>
                             </label>
                             <input
                               type="password"
@@ -851,7 +851,7 @@ export default function LicensesPanel() {
                               placeholder="9f9bd205a57448a5"
                               className="w-full h-10 px-3 border border-border rounded-lg
                                        focus:outline-none focus:ring-2 focus:ring-accent
-                                       bg-surface text-card-foreground text-sm
+                                       bg-surface text-card-foreground text-base
                                        placeholder-light"
                             />
                             <p className="text-xs text-muted-foreground mt-1">
@@ -862,7 +862,7 @@ export default function LicensesPanel() {
                       </div>
                       {testResults.google.status !== 'idle' && testResults.google.status !== 'testing' && (
                         <div className={`mt-2 text-xs flex items-center gap-1 ${
-                          testResults.google.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          testResults.google.status === 'success' ? 'text-success' : 'text-danger'
                         }`}>
                           {testResults.google.status === 'success' ? (
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -883,8 +883,8 @@ export default function LicensesPanel() {
                 {/* Docling Parser Card */}
                 <div className="py-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 text-card-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
@@ -914,7 +914,7 @@ export default function LicensesPanel() {
                             placeholder="http://localhost:5001"
                             className="w-full h-10 px-3 border border-border rounded-lg
                                      focus:outline-none focus:ring-2 focus:ring-accent
-                                     bg-surface text-card-foreground text-sm
+                                     bg-surface text-card-foreground text-base
                                      placeholder-light"
                           />
                           <p className="text-xs text-muted-foreground mt-1">
@@ -932,7 +932,7 @@ export default function LicensesPanel() {
                             placeholder="Required only when X-Api-Key authentication is enabled"
                             className="w-full h-10 px-3 border border-border rounded-lg
                                      focus:outline-none focus:ring-2 focus:ring-accent
-                                     bg-surface text-card-foreground text-sm
+                                     bg-surface text-card-foreground text-base
                                      placeholder-light"
                           />
                         </div>
@@ -940,8 +940,8 @@ export default function LicensesPanel() {
                       {testResults.docling.status !== 'idle' && testResults.docling.status !== 'testing' && (
                         <div className={`mt-2 text-xs ${
                           testResults.docling.status === 'success'
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-red-600 dark:text-red-400'
+                            ? 'text-success'
+                            : 'text-danger'
                         }`}>
                           {testResults.docling.message}
                         </div>
@@ -957,7 +957,7 @@ export default function LicensesPanel() {
             <div>
               <div className="py-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
+                  <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center flex-shrink-0 p-1">
                     <Image
                       src="/logos/supabase.png"
                       alt="Supabase"
@@ -969,7 +969,7 @@ export default function LicensesPanel() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <h4 className="text-base font-medium text-card-foreground">Managed Supabase Vector Store</h4>
-                      <span className="px-2.5 py-1 rounded-full bg-green-500/10 text-[10px] font-medium text-green-500">
+                      <span className="px-3 py-1 rounded-full bg-success-surface text-xs font-medium text-success">
                         Connected
                       </span>
                     </div>

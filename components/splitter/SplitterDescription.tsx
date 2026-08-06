@@ -14,10 +14,10 @@ function SplitterDescription({
 
   return (
     <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-      <h3 className="text-sm font-medium text-accent mb-2">
+      <h3 className="text-base font-medium text-accent mb-2">
         {info.name}
       </h3>
-      <p className="text-sm text-surface-foreground mb-3">
+      <p className="text-base text-surface-foreground mb-3">
         {info.description}
       </p>
       <div>

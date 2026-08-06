@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { authFetch, handleUnauthorized } from "@/lib/auth";
+import { JSON_VIEW_THEME } from "@/lib/json-view-theme";
 import JsonView from "@uiw/react-json-view";
-import { darkTheme } from "@uiw/react-json-view/dark";
 
 interface ParseResultDetailPanelProps {
   resultId: number;
@@ -220,7 +220,7 @@ export default function ParseResultDetailPanel({
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-sm text-muted-foreground">Loading parse result...</p>
+          <p className="text-base text-muted-foreground">Loading parse result...</p>
         </div>
       </div>
     );
@@ -249,7 +249,7 @@ export default function ParseResultDetailPanel({
           </button>
           <div>
             <h2 className="text-base font-semibold text-surface-foreground">{result.file_name}</h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-base text-muted-foreground mt-1">
               Parser: {result.parser_type} • {(result.file_size / 1024).toFixed(1)} KB • {new Date(result.created_at).toLocaleString()}
             </p>
           </div>
@@ -257,7 +257,7 @@ export default function ParseResultDetailPanel({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 text-sm font-medium bg-muted text-surface-foreground hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth rounded-md"
+          className="px-4 py-2 text-base font-medium bg-muted text-surface-foreground hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth rounded-lg"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
@@ -291,7 +291,7 @@ export default function ParseResultDetailPanel({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  <p className="text-sm text-muted-foreground">Loading preview...</p>
+                  <p className="text-base text-muted-foreground">Loading preview...</p>
                 </div>
               </div>
             ) : previewUrl ? (
@@ -316,7 +316,7 @@ export default function ParseResultDetailPanel({
                       <svg className="w-16 h-16 mx-auto mb-4 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z" />
                       </svg>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-base text-muted-foreground">
                         Preview not available for this file type
                       </p>
                     </div>
@@ -328,15 +328,15 @@ export default function ParseResultDetailPanel({
                 <div className="text-center max-w-sm">
                   {/* File Icon based on mime type */}
                   {result.mime_type.startsWith('application/pdf') ? (
-                    <svg className="w-20 h-20 mx-auto mb-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-20 h-20 mx-auto mb-4 text-danger" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18.5,9H13V3.5L18.5,9M6,20V4H12V10H18V20H6Z" />
                     </svg>
                   ) : result.mime_type.startsWith('image/') ? (
-                    <svg className="w-20 h-20 mx-auto mb-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-20 h-20 mx-auto mb-4 text-accent" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z" />
                     </svg>
                   ) : (
-                    <svg className="w-20 h-20 mx-auto mb-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-20 h-20 mx-auto mb-4 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z" />
                     </svg>
                   )}
@@ -345,7 +345,7 @@ export default function ParseResultDetailPanel({
                   <h4 className="text-lg font-semibold text-surface-foreground mb-2">
                     {result.file_name}
                   </h4>
-                  <div className="space-y-1 text-sm text-muted-foreground mb-4">
+                  <div className="space-y-1 text-base text-muted-foreground mb-4">
                     <p>Type: {result.mime_type}</p>
                     <p>Size: {(result.file_size / 1024).toFixed(2)} KB</p>
                     <p>Parser: {result.parser_type}</p>
@@ -355,16 +355,16 @@ export default function ParseResultDetailPanel({
                   </div>
 
                   {/* Info Message */}
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <div className="bg-warning-surface border border-warning-border rounded-lg p-4">
                     <div className="flex items-start gap-2">
-                      <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-warning flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
                       </svg>
                       <div className="flex-1 text-left">
-                        <p className="text-xs font-medium text-yellow-800 dark:text-yellow-200">
+                        <p className="text-xs font-medium text-warning">
                           Original file preview unavailable
                         </p>
-                        <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                        <p className="text-xs text-warning mt-1">
                           The original file was not saved during parsing. Only the parsed content is available for editing.
                         </p>
                       </div>
@@ -383,7 +383,7 @@ export default function ParseResultDetailPanel({
             {result.text_content && (
               <button
                 onClick={() => handleViewModeChange("text")}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-smooth ${
+                className={`px-3 py-2 text-xs font-medium rounded-sm transition-smooth ${
                   viewMode === "text"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -395,7 +395,7 @@ export default function ParseResultDetailPanel({
             {result.html_content && (
               <button
                 onClick={() => handleViewModeChange("html")}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-smooth ${
+                className={`px-3 py-2 text-xs font-medium rounded-sm transition-smooth ${
                   viewMode === "html"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -407,7 +407,7 @@ export default function ParseResultDetailPanel({
             {result.markdown_content && (
               <button
                 onClick={() => handleViewModeChange("markdown")}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-smooth ${
+                className={`px-3 py-2 text-xs font-medium rounded-sm transition-smooth ${
                   viewMode === "markdown"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -419,7 +419,7 @@ export default function ParseResultDetailPanel({
             {result.json_content && (
               <button
                 onClick={() => handleViewModeChange("json")}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-smooth ${
+                className={`px-3 py-2 text-xs font-medium rounded-sm transition-smooth ${
                   viewMode === "json"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -433,7 +433,7 @@ export default function ParseResultDetailPanel({
             {viewMode === "json" && typeof editedContent === 'object' ? (
               // JSON viewer with syntax highlighting
               <div className="h-full overflow-auto">
-                <JsonView value={editedContent} style={darkTheme} />
+                <JsonView value={editedContent} style={JSON_VIEW_THEME} />
               </div>
             ) : (
               // Simple text editor for text, markdown, html formats
@@ -453,7 +453,7 @@ export default function ParseResultDetailPanel({
                     setEditedContent(e.target.value);
                   }
                 }}
-                className="w-full h-full p-4 bg-muted border border-border rounded-lg resize-none font-mono text-sm text-surface-foreground focus-ring"
+                className="w-full h-full p-4 bg-muted border border-border rounded-lg resize-none font-mono text-base text-surface-foreground focus-ring"
                 placeholder="Edit content here..."
               />
             )}

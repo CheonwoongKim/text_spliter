@@ -21,7 +21,7 @@ function ChunkCard({ chunk }: ChunkCardProps) {
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-2">
-          <span className="inline-block px-2 py-1 bg-accent/10 text-accent text-xs font-medium rounded">
+          <span className="inline-block px-2 py-1 bg-accent/10 text-accent text-xs font-medium rounded-sm">
             Chunk #{chunk.index + 1}
           </span>
           <span className="text-xs text-muted-foreground">
@@ -30,7 +30,7 @@ function ChunkCard({ chunk }: ChunkCardProps) {
         </div>
         <button
           onClick={copyToClipboard}
-          className="text-xs px-2 py-1 bg-subtle hover:bg-secondary-background rounded transition-smooth"
+          className="text-xs px-2 py-1 bg-subtle hover:bg-secondary-background rounded-sm transition-smooth"
           title="Copy"
         >
           {copied ? "✓ Copied" : "Copy"}
@@ -39,7 +39,7 @@ function ChunkCard({ chunk }: ChunkCardProps) {
 
       {/* Content */}
       <div className="mb-3">
-        <p className="text-sm text-card-foreground whitespace-pre-wrap break-words font-mono leading-relaxed">
+        <p className="text-base text-card-foreground whitespace-pre-wrap break-words font-mono leading-6">
           {chunk.content}
         </p>
       </div>

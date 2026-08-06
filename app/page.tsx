@@ -407,7 +407,7 @@ export default function Home() {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="min-w-0 flex-1 flex flex-col">
         {/* Header */}
         <Header
           title={
@@ -431,11 +431,11 @@ export default function Home() {
 
       {/* Error Banner */}
       {(activeMenu === "parser" ? parserError : error) && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 px-10 py-3">
+        <div className="bg-danger-surface border-b border-danger-border px-4 sm:px-6 lg:px-10 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <svg
-                className="h-5 w-5 text-red-400 mr-2"
+                className="h-5 w-5 text-danger mr-2"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -447,13 +447,13 @@ export default function Home() {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-sm text-red-800 dark:text-red-200">
+              <span className="text-base text-danger">
                 {activeMenu === "parser" ? parserError : error}
               </span>
             </div>
             <button
               onClick={() => activeMenu === "parser" ? setParserError(null) : setError(null)}
-              className="text-red-800 dark:text-red-200 hover:text-red-900 dark:hover:text-red-100"
+              className="text-danger hover:text-danger/80"
               aria-label="Close error message"
             >
               <svg
@@ -518,7 +518,7 @@ export default function Home() {
               </div>
             </div>
           ) : activeMenu === "parser" ? (
-            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-10 px-10">
+            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-6 lg:gap-10 px-4 sm:px-6 lg:px-10">
               {/* Parser Left Panel */}
               <div className="h-full overflow-hidden lg:col-span-3">
                 <ParserLeftPanel
@@ -546,7 +546,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-10 px-10">
+            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-6 lg:gap-10 px-4 sm:px-6 lg:px-10">
               {/* Left Panel */}
               <div className="h-full overflow-hidden lg:col-span-3">
                 <LeftPanel

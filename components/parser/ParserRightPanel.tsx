@@ -3,7 +3,7 @@
 import { memo, useCallback, useState, useMemo, useEffect } from "react";
 import type { CSSProperties } from "react";
 import JsonView from '@uiw/react-json-view';
-import { darkTheme } from '@uiw/react-json-view/dark';
+import { JSON_VIEW_THEME } from "@/lib/json-view-theme";
 import type { ParseResponse, ParserViewMode, ParserConfig } from "@/lib/types";
 import ParseComparisonWorkbench from "@/components/parser/ParseComparisonWorkbench";
 
@@ -149,12 +149,12 @@ function ParserRightPanel({
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-card-foreground">Parse Experiment</h3>
-                <span className="px-2 py-0.5 rounded-full bg-muted text-[11px] text-muted-foreground">
+                <h3 className="text-base font-semibold text-card-foreground">Parse Experiment</h3>
+                <span className="px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
                   {runs.length} run{runs.length === 1 ? "" : "s"}
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 설정을 바꿔 다시 실행하면 같은 문서의 비교 후보로 누적됩니다.
               </p>
             </div>
@@ -163,7 +163,7 @@ function ParserRightPanel({
                 <button
                   type="button"
                   onClick={() => setComparisonMode(false)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-smooth ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-smooth ${
                     !comparisonMode ? "bg-card text-card-foreground shadow-sm" : "text-muted-foreground"
                   }`}
                 >
@@ -173,7 +173,7 @@ function ParserRightPanel({
                   type="button"
                   onClick={() => runs.length >= 2 && setComparisonMode(true)}
                   disabled={runs.length < 2}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-smooth ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-smooth ${
                     comparisonMode ? "bg-card text-card-foreground shadow-sm" : "text-muted-foreground"
                   } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >
@@ -183,7 +183,7 @@ function ParserRightPanel({
               <button
                 type="button"
                 onClick={onClearRuns}
-                className="px-2.5 py-1.5 text-xs text-muted-foreground hover:text-card-foreground"
+                className="px-3 py-2 text-xs text-muted-foreground hover:text-card-foreground"
               >
                 Clear
               </button>
@@ -207,7 +207,7 @@ function ParserRightPanel({
                   <p className="text-xs font-medium text-card-foreground truncate">
                     {run.run?.engineId || run.metadata?.parserType || `Run ${index + 1}`}
                   </p>
-                  <p className="text-[11px] text-muted-foreground truncate mt-1">
+                  <p className="text-xs text-muted-foreground truncate mt-1">
                     {[run.run?.model, run.run?.version].filter(Boolean).join(" · ") || `Run ${index + 1}`}
                   </p>
                 </button>
@@ -219,26 +219,26 @@ function ParserRightPanel({
 
       {/* Document Information */}
       {!comparisonMode && <div>
-        <h3 className="text-sm font-medium text-surface-foreground mb-4">
+        <h3 className="text-base font-medium text-surface-foreground mb-4">
           Document Information
         </h3>
         {result?.metadata ? (
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">File Name</p>
-              <p className="text-sm text-card-foreground font-medium truncate">
+              <p className="text-base text-card-foreground font-medium truncate">
                 {result.metadata.fileName}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">File Size</p>
-              <p className="text-sm text-card-foreground font-medium">
+              <p className="text-base text-card-foreground font-medium">
                 {(result.metadata.fileSize / 1024).toFixed(2)} KB
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">MIME Type</p>
-              <p className="text-sm text-card-foreground font-medium">
+              <p className="text-base text-card-foreground font-medium">
                 {result.metadata.mimeType}
               </p>
             </div>
@@ -246,7 +246,7 @@ function ParserRightPanel({
               <p className="text-xs text-muted-foreground mb-1">
                 Processing Time
               </p>
-              <p className="text-sm text-card-foreground font-medium">
+              <p className="text-base text-card-foreground font-medium">
                 {result.metadata.processingTime}ms
               </p>
             </div>
@@ -254,13 +254,13 @@ function ParserRightPanel({
               <>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Engine</p>
-                  <p className="text-sm text-card-foreground font-medium">
+                  <p className="text-base text-card-foreground font-medium">
                     {result.run.engineId}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Model / Version</p>
-                  <p className="text-sm text-card-foreground font-medium">
+                  <p className="text-base text-card-foreground font-medium">
                     {[result.run.model, result.run.version].filter(Boolean).join(" · ") || "-"}
                   </p>
                 </div>
@@ -271,21 +271,21 @@ function ParserRightPanel({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">File Name</p>
-              <p className="text-sm text-muted-foreground">-</p>
+              <p className="text-base text-muted-foreground">-</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">File Size</p>
-              <p className="text-sm text-muted-foreground">-</p>
+              <p className="text-base text-muted-foreground">-</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">MIME Type</p>
-              <p className="text-sm text-muted-foreground">-</p>
+              <p className="text-base text-muted-foreground">-</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">
                 Processing Time
               </p>
-              <p className="text-sm text-muted-foreground">-</p>
+              <p className="text-base text-muted-foreground">-</p>
             </div>
           </div>
         )}
@@ -303,7 +303,7 @@ function ParserRightPanel({
                   key={tab.key}
                   onClick={() => tab.hasData && setViewMode(tab.key)}
                   disabled={!tab.hasData}
-                  className={`px-3 py-1 text-xs font-medium rounded transition-smooth ${
+                  className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth ${
                     viewMode === tab.key
                       ? "bg-card text-card-foreground shadow-sm"
                       : tab.hasData
@@ -324,8 +324,8 @@ function ParserRightPanel({
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-3 py-1.5 text-xs bg-accent/10 text-accent hover:bg-accent/20
-                           rounded-md transition-smooth flex items-center gap-2
+                  className="px-3 py-2 text-xs bg-accent/10 text-accent hover:bg-accent/20
+                           rounded-lg transition-smooth flex items-center gap-2
                            disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? (
@@ -391,8 +391,8 @@ function ParserRightPanel({
                 {/* Copy Button */}
                 <button
                   onClick={handleCopy}
-                  className="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80
-                           text-muted-foreground rounded-md transition-smooth
+                  className="px-3 py-2 text-xs bg-muted hover:bg-muted/80
+                           text-muted-foreground rounded-lg transition-smooth
                            flex items-center gap-2"
                 >
                   {copied ? (
@@ -439,7 +439,7 @@ function ParserRightPanel({
         <div className={`flex-1 overflow-auto rounded-lg ${comparisonMode ? "bg-transparent" : "p-6 bg-card"}`}>
           {!result ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 파싱된 콘텐츠가 여기에 표시됩니다
               </p>
             </div>
@@ -453,33 +453,33 @@ function ParserRightPanel({
             <>
               {viewMode === "text" && (
                 result.text ? (
-                  <pre className="text-sm text-card-foreground whitespace-pre-wrap font-mono">
+                  <pre className="text-base text-card-foreground whitespace-pre-wrap font-mono">
                     {result.text}
                   </pre>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-base text-muted-foreground italic">
                     Text content not available
                   </p>
                 )
               )}
               {viewMode === "html" && (
                 result.html ? (
-                  <pre className="text-sm text-card-foreground whitespace-pre-wrap font-mono">
+                  <pre className="text-base text-card-foreground whitespace-pre-wrap font-mono">
                     {result.html}
                   </pre>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-base text-muted-foreground italic">
                     HTML content not available
                   </p>
                 )
               )}
               {viewMode === "markdown" && (
                 result.markdown ? (
-                  <pre className="text-sm text-card-foreground whitespace-pre-wrap font-mono">
+                  <pre className="text-base text-card-foreground whitespace-pre-wrap font-mono">
                     {result.markdown}
                   </pre>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-base text-muted-foreground italic">
                     Markdown content not available
                   </p>
                 )
@@ -490,7 +490,7 @@ function ParserRightPanel({
                     <JsonView
                       value={typeof result.json === "string" ? JSON.parse(result.json) : result.json}
                       style={{
-                        ...darkTheme,
+                        ...JSON_VIEW_THEME,
                         '--w-rjv-background-color': 'transparent',
                       } as CSSProperties}
                       collapsed={2}
@@ -499,7 +499,7 @@ function ParserRightPanel({
                     />
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-base text-muted-foreground italic">
                     JSON content not available
                   </p>
                 )
@@ -510,7 +510,7 @@ function ParserRightPanel({
                     <JsonView
                       value={result.document}
                       style={{
-                        ...darkTheme,
+                        ...JSON_VIEW_THEME,
                         '--w-rjv-background-color': 'transparent',
                       } as CSSProperties}
                       collapsed={3}
@@ -519,7 +519,7 @@ function ParserRightPanel({
                     />
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-base text-muted-foreground italic">
                     Normalized document content not available
                   </p>
                 )
@@ -531,7 +531,7 @@ function ParserRightPanel({
                       <JsonView
                         value={result.raw}
                         style={{
-                          ...darkTheme,
+                          ...JSON_VIEW_THEME,
                           '--w-rjv-background-color': 'transparent',
                         } as CSSProperties}
                         collapsed={3}
@@ -539,13 +539,13 @@ function ParserRightPanel({
                         enableClipboard={true}
                       />
                     ) : (
-                      <pre className="text-sm text-card-foreground whitespace-pre-wrap font-mono">
+                      <pre className="text-base text-card-foreground whitespace-pre-wrap font-mono">
                         {String(result.raw)}
                       </pre>
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-base text-muted-foreground italic">
                     Raw provider response not available
                   </p>
                 )

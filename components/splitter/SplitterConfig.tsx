@@ -25,7 +25,7 @@ const INPUT_BASE_CLASS = `w-full h-12 px-3 border border-border rounded-lg
                    bg-card text-card-foreground placeholder-light
                    transition-smooth`;
 
-const LABEL_CLASS = "block text-sm text-muted-foreground mb-1";
+const LABEL_CLASS = "block text-base text-muted-foreground mb-1";
 const HELP_TEXT_CLASS = "text-xs text-muted-foreground mt-2";
 
 function SplitterConfig({
@@ -45,7 +45,7 @@ function SplitterConfig({
 }: SplitterConfigProps) {
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium text-surface-foreground">
+      <h3 className="text-base font-medium text-surface-foreground">
         Configuration
       </h3>
 
@@ -138,7 +138,7 @@ function SplitterConfig({
             value={separator || ""}
             onChange={(e) => onSeparatorChange?.(e.target.value || undefined)}
             placeholder="\n\n,\n, , (default)"
-            className={`${INPUT_BASE_CLASS} font-mono text-sm`}
+            className={`${INPUT_BASE_CLASS} font-mono text-base`}
           />
           <p className={HELP_TEXT_CLASS}>
             Enter separators separated by commas. Leave empty to use default: [&quot;\n\n&quot;, &quot;\n&quot;, &quot; &quot;, &quot;&quot;]

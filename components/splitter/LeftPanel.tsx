@@ -32,7 +32,7 @@ const LeftPanel = memo(function LeftPanel({
 }: LeftPanelProps) {
   return (
     <div className="h-full flex flex-col relative">
-      <div className="flex-1 overflow-y-auto py-6 pb-24">
+      <div className="flex-1 overflow-y-auto py-6 pb-16">
         {/* Text Input */}
         <div className="mb-10 h-[400px]">
           <TextInput
@@ -83,7 +83,7 @@ const LeftPanel = memo(function LeftPanel({
             onClick={onReset}
             disabled={loading}
             className="text-muted-foreground hover:text-surface-foreground disabled:opacity-disabled
-                     disabled:cursor-not-allowed font-medium text-sm
+                     disabled:cursor-not-allowed font-medium text-base
                      transition-smooth flex items-center gap-2"
           >
             <svg
@@ -106,8 +106,8 @@ const LeftPanel = memo(function LeftPanel({
           <button
             onClick={onSplit}
             disabled={loading}
-            className="text-white hover:text-white/90 disabled:text-muted-foreground
-                     disabled:cursor-not-allowed font-medium text-sm
+            className="text-accent hover:text-accent/80 disabled:text-muted-foreground
+                     disabled:cursor-not-allowed font-medium text-base
                      transition-smooth flex items-center gap-2"
           >
           {loading ? (

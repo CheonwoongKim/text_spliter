@@ -320,7 +320,7 @@ const FilesPanel = memo(function FilesPanel() {
         {/* Single Row: Breadcrumb, Search, Actions */}
         <div className="grid grid-cols-3 gap-6 items-center">
           {/* Left: Breadcrumb Navigation */}
-          <nav className="flex items-center gap-2 text-sm">
+          <nav className="flex items-center gap-2 text-base">
             <button
               onClick={() => setCurrentPath([])}
               className="text-muted-foreground hover:text-card-foreground transition-smooth"
@@ -349,7 +349,7 @@ const FilesPanel = memo(function FilesPanel() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search files..."
-              className="w-full h-9 pl-9 pr-9 text-sm bg-surface border border-border rounded-lg
+              className="w-full h-control-md pl-10 pr-10 text-base bg-surface border border-border rounded-lg
                        focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent
                        placeholder-light text-card-foreground transition-smooth"
             />
@@ -369,7 +369,7 @@ const FilesPanel = memo(function FilesPanel() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-card-foreground rounded transition-smooth"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-card-foreground rounded-sm transition-smooth"
                 title="Clear search"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -384,7 +384,7 @@ const FilesPanel = memo(function FilesPanel() {
             <button
               onClick={fetchFiles}
               disabled={loading}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
+              className="flex items-center gap-2 px-3 py-2 text-base text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
             >
               {loading ? (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -417,7 +417,7 @@ const FilesPanel = memo(function FilesPanel() {
             <button
               onClick={handleFileSelect}
               disabled={uploading}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
+              className="flex items-center gap-2 px-3 py-2 text-base text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
             >
               {uploading ? (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -461,11 +461,11 @@ const FilesPanel = memo(function FilesPanel() {
 
       {/* Error Banner */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 px-10 py-3">
+        <div className="bg-danger-surface border-b border-danger-border px-10 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
               <svg
-                className="h-5 w-5 text-red-400 flex-shrink-0"
+                className="h-5 w-5 text-danger flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -478,9 +478,9 @@ const FilesPanel = memo(function FilesPanel() {
                 />
               </svg>
               <div className="flex-1">
-                <p className="text-sm text-red-800 dark:text-red-200 font-medium">{error}</p>
+                <p className="text-base text-danger font-medium">{error}</p>
                 {error.includes("Storage service error") && (
-                  <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                  <p className="text-xs text-danger mt-1">
                     The storage service is experiencing issues. Please contact the administrator or try again later.
                   </p>
                 )}
@@ -492,13 +492,13 @@ const FilesPanel = memo(function FilesPanel() {
                   setError(null);
                   fetchFiles();
                 }}
-                className="px-3 py-1.5 text-xs font-medium text-red-800 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-smooth"
+                className="px-3 py-2 text-xs font-medium text-danger hover:bg-danger-surface rounded-sm transition-smooth"
               >
                 Retry
               </button>
               <button
                 onClick={() => setError(null)}
-                className="text-red-800 dark:text-red-200 hover:text-red-900 dark:hover:text-red-100"
+                className="text-danger hover:text-danger/80"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -535,10 +535,10 @@ const FilesPanel = memo(function FilesPanel() {
                 d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
               />
             </svg>
-            <p className="text-sm text-muted-foreground mb-2">No files uploaded yet</p>
+            <p className="text-base text-muted-foreground mb-2">No files uploaded yet</p>
             <button
               onClick={handleFileSelect}
-              className="text-sm text-accent hover:text-accent/80 transition-smooth"
+              className="text-base text-accent hover:text-accent/80 transition-smooth"
             >
               Upload your first file
             </button>
@@ -558,7 +558,7 @@ const FilesPanel = memo(function FilesPanel() {
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
-            <p className="text-sm text-muted-foreground mb-2">No files found</p>
+            <p className="text-base text-muted-foreground mb-2">No files found</p>
             <p className="text-xs text-muted-foreground">Try adjusting your search</p>
           </div>
         ) : (
@@ -590,10 +590,10 @@ const FilesPanel = memo(function FilesPanel() {
 
                   {/* Folder Info */}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-card-foreground truncate" title={folder}>
+                    <p className="text-base font-medium text-card-foreground truncate" title={folder}>
                       {folder}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Folder</p>
+                    <p className="text-xs text-muted-foreground mt-1">Folder</p>
                   </div>
 
                   {/* Arrow Icon */}
@@ -639,12 +639,12 @@ const FilesPanel = memo(function FilesPanel() {
                   {/* File Info */}
                   <div className="min-w-0 flex-1">
                     <p
-                      className="text-sm font-medium text-card-foreground truncate"
+                      className="text-base font-medium text-card-foreground truncate"
                       title={file.filename}
                     >
                       {file.displayName}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {formatFileSize(file.file_size)}
                     </p>
                   </div>
@@ -666,13 +666,13 @@ const FilesPanel = memo(function FilesPanel() {
 
                     {/* Dropdown Menu */}
                     {openMenuId === file.id && (
-                      <div className="absolute right-0 top-full mt-1 w-40 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-10">
+                      <div className="absolute right-0 top-full mt-1 w-40 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-dropdown">
                         <button
                           onClick={(event) => {
                             event.stopPropagation();
                             handleDownload(file.storage_key, file.filename);
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-card-foreground hover:bg-muted transition-smooth flex items-center gap-2"
+                          className="w-full px-4 py-3 text-left text-base text-card-foreground hover:bg-muted transition-smooth flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -684,7 +684,7 @@ const FilesPanel = memo(function FilesPanel() {
                             event.stopPropagation();
                             handleDelete(file.storage_key);
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-smooth flex items-center gap-2"
+                          className="w-full px-4 py-3 text-left text-base text-danger hover:bg-danger-surface transition-smooth flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

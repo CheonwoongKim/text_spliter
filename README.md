@@ -2,6 +2,10 @@
 
 LangChain 기반 텍스트 분할 및 문서 파싱을 시각적으로 테스트할 수 있는 Next.js 웹 애플리케이션입니다.
 
+## 디자인 시스템
+
+UI는 [BGK Design System](docs/DESIGN_SYSTEM.md)의 원칙과 토큰을 따릅니다. 원시 디자인 값은 `styles/design-tokens.css`에서 관리하며, 컴포넌트는 Tailwind의 의미 기반 유틸리티를 사용합니다. UI 변경 전후에 `npm run check:design`으로 토큰 규칙을 확인하세요.
+
 ## 주요 기능
 
 ### 📄 Text Splitter

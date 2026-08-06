@@ -4,6 +4,10 @@ import { memo, useCallback, useState, useEffect } from "react";
 import type { ParserType, ParserConfig } from "@/lib/types";
 import { getAuthToken } from "@/lib/auth";
 import { getDocumentEngine, listDocumentEngines } from "@/lib/document-engines";
+import {
+  getParserFileTypeProfile,
+  isParserFileSupported,
+} from "@/lib/parser-file-types";
 
 const documentEngines = listDocumentEngines();
 
@@ -42,6 +46,10 @@ function ParserLeftPanel({
   const [experimentEngines, setExperimentEngines] = useState<ParserType[]>([
     config.parserType,
   ]);
+  const acceptedFileProfile = getParserFileTypeProfile(experimentEngines);
+  const selectedFileSupported = selectedFile
+    ? isParserFileSupported(selectedFile.name, experimentEngines)
+    : true;
 
   const toggleExperimentEngine = useCallback((parserType: ParserType) => {
     setExperimentEngines((current) => {
@@ -59,11 +67,16 @@ function ParserLeftPanel({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
+        if (!isParserFileSupported(file.name, experimentEngines)) {
+          e.target.value = "";
+          alert(`Choose a supported file type: ${acceptedFileProfile.label}`);
+          return;
+        }
         onFileSelect(file, null);  // null indicates this is a direct upload
         setSelectedFileKey(null);
       }
     },
-    [onFileSelect]
+    [acceptedFileProfile.label, experimentEngines, onFileSelect]
   );
 
   const handleParserTypeChange = useCallback(
@@ -231,16 +244,9 @@ function ParserLeftPanel({
     }
   }, [uploadMode, fetchStorageFiles]);
 
-  const acceptedFileTypes = config.parserType === "Docling"
-    ? ".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.html,.htm,.md,.txt"
-    : ".pdf,.png,.jpg,.jpeg,.docx,.pptx";
-  const acceptedFileLabel = config.parserType === "Docling"
-    ? "PDF, images, Office, HTML, Markdown, CSV, TXT"
-    : "PDF, PNG, JPG, JPEG, DOCX, PPTX";
-
   return (
     <div className="h-full flex flex-col relative">
-      <div className="flex-1 overflow-y-auto py-6 pb-24">
+      <div className="flex-1 overflow-y-auto py-6 pb-16">
         {/* File Upload Section */}
         <div className="mb-10">
           {/* Header with tabs */}
@@ -248,7 +254,7 @@ function ParserLeftPanel({
             <div className="flex gap-1 bg-muted rounded-lg p-1">
               <button
                 onClick={() => setUploadMode("upload")}
-                className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
                   uploadMode === "upload"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -258,7 +264,7 @@ function ParserLeftPanel({
               </button>
               <button
                 onClick={() => setUploadMode("select")}
-                className={`px-3 py-1 text-xs font-medium rounded transition-smooth whitespace-nowrap ${
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
                   uploadMode === "select"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -273,6 +279,11 @@ function ParserLeftPanel({
               </span>
             )}
           </div>
+          {selectedFile && !selectedFileSupported && (
+            <p role="alert" className="mb-2 text-xs text-danger">
+              This file is not supported by every selected parser. Choose: {acceptedFileProfile.label}.
+            </p>
+          )}
 
           {/* File Upload Content */}
           <div className="h-[300px]">
@@ -304,7 +315,7 @@ function ParserLeftPanel({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <div>
-                        <p className="text-sm font-medium text-card-foreground mb-1">{selectedFile.name}</p>
+                        <p className="text-base font-medium text-card-foreground mb-1">{selectedFile.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {selectedFile.type || 'Unknown type'} • {(selectedFile.size / 1024).toFixed(2)} KB
                           {selectedFileKey && <span> • from storage</span>}
@@ -315,7 +326,7 @@ function ParserLeftPanel({
                   <input
                     id="file-upload"
                     type="file"
-                    accept={acceptedFileTypes}
+                    accept={acceptedFileProfile.accept}
                     onChange={handleFileChange}
                     disabled={loading}
                     className="hidden"
@@ -333,17 +344,17 @@ function ParserLeftPanel({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                   <div className="text-center">
-                    <p className="text-sm font-medium text-surface-foreground mb-1">
+                    <p className="text-base font-medium text-surface-foreground mb-1">
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {acceptedFileLabel} (max 100MB)
+                      {acceptedFileProfile.label} (max 100MB)
                     </p>
                   </div>
                   <input
                     id="file-upload"
                     type="file"
-                    accept={acceptedFileTypes}
+                    accept={acceptedFileProfile.accept}
                     onChange={handleFileChange}
                     disabled={loading}
                     className="hidden"
@@ -384,38 +395,47 @@ function ParserLeftPanel({
                     <svg className="w-12 h-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                     </svg>
-                    <p className="text-sm text-muted-foreground text-center">
+                    <p className="text-base text-muted-foreground text-center">
                       No files in storage.<br />Upload files in the Files page.
                     </p>
                   </div>
                 ) : (
                   <div className="flex-1 overflow-y-auto p-2">
-                    {storageFiles.map((file) => (
-                      <button
-                        key={file.id}
-                        onClick={() => handleSelectFile(file.storage_key, file.filename)}
-                        disabled={loading}
-                        className={`w-full text-left p-3 mb-2 rounded-lg border transition-smooth ${
-                          selectedFileKey === file.storage_key
-                            ? "border-accent bg-accent/10"
-                            : "border-border hover:border-accent/50 hover:bg-muted"
-                        } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-muted-foreground flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-surface-foreground truncate">
-                              {file.filename}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {(file.file_size / 1024).toFixed(2)} KB
-                            </p>
+                    {storageFiles.map((file) => {
+                      const supported = isParserFileSupported(
+                        file.filename,
+                        experimentEngines
+                      );
+                      return (
+                        <button
+                          key={file.id}
+                          onClick={() => handleSelectFile(file.storage_key, file.filename)}
+                          disabled={loading || !supported}
+                          title={supported ? undefined : `Supported types: ${acceptedFileProfile.label}`}
+                          className={`w-full text-left p-3 mb-2 rounded-lg border transition-smooth ${
+                            selectedFileKey === file.storage_key
+                              ? "border-accent bg-accent/10"
+                              : "border-border hover:border-accent/50 hover:bg-muted"
+                          } ${loading || !supported ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-muted-foreground flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-base font-medium text-surface-foreground truncate">
+                                {file.filename}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {supported
+                                  ? `${(file.file_size / 1024).toFixed(2)} KB`
+                                  : "Not supported by all selected parsers"}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -425,11 +445,11 @@ function ParserLeftPanel({
 
         {/* Document processing engine selection */}
         <div className="mb-6">
-          <h3 className="text-sm font-medium text-surface-foreground mb-4">
+          <h3 className="text-base font-medium text-surface-foreground mb-4">
             Document Processing Engine
           </h3>
         <div>
-          <label className="block text-sm text-muted-foreground mb-2">
+          <label className="block text-base text-muted-foreground mb-2">
             Engine
           </label>
           <select
@@ -446,11 +466,11 @@ function ParserLeftPanel({
               </option>
             ))}
           </select>
-          <div className="flex flex-wrap gap-1.5 mt-3">
+          <div className="flex flex-wrap gap-2 mt-3">
             {selectedEngine.stages.map((stage) => (
               <span
                 key={stage}
-                className="px-2 py-1 text-[11px] font-medium rounded-md bg-muted text-muted-foreground"
+                className="px-2 py-1 text-xs font-medium rounded-lg bg-muted text-muted-foreground"
               >
                 {stage === "ocr" ? "OCR" :
                   stage === "layout" ? "Layout" :
@@ -458,7 +478,7 @@ function ParserLeftPanel({
                   stage === "visual-understanding" ? "Vision" : "Extraction"}
               </span>
             ))}
-            <span className="px-2 py-1 text-[11px] font-medium rounded-md border border-border text-muted-foreground">
+            <span className="px-2 py-1 text-xs font-medium rounded-lg border border-border text-muted-foreground">
               {selectedEngine.deployment === "self-hosted" ? "Self-hosted" : "Managed"}
             </span>
           </div>
@@ -470,15 +490,15 @@ function ParserLeftPanel({
               : "텍스트뿐 아니라 레이아웃과 구조를 문서 표현으로 변환합니다."}
           </p>
 
-          <div className="mt-5 pt-5 border-t border-border">
+          <div className="mt-4 pt-4 border-t border-border">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <p className="text-sm font-medium text-card-foreground">Experiment batch</p>
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p className="text-base font-medium text-card-foreground">Experiment batch</p>
+                <p className="text-xs text-muted-foreground mt-1">
                   체크한 엔진을 같은 원본에 순차 실행합니다.
                 </p>
               </div>
-              <span className="shrink-0 px-2 py-1 rounded-full bg-muted text-[11px] text-muted-foreground">
+              <span className="shrink-0 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
                 {experimentEngines.length} selected
               </span>
             </div>
@@ -489,7 +509,7 @@ function ParserLeftPanel({
                 return (
                   <label
                     key={engine.id}
-                    className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-smooth ${
+                    className={`flex items-center gap-3 rounded-lg border px-3 py-3 cursor-pointer transition-smooth ${
                       checked
                         ? "border-accent/60 bg-accent/5"
                         : "border-border hover:border-border-darkest"
@@ -500,19 +520,19 @@ function ParserLeftPanel({
                       checked={checked}
                       onChange={() => toggleExperimentEngine(engine.parserType)}
                       disabled={loading || (checked && experimentEngines.length === 1)}
-                      className="w-4 h-4 rounded border-border text-accent focus:ring-2 focus:ring-accent/20"
+                      className="w-4 h-4 rounded-sm border-border text-accent focus:ring-2 focus:ring-accent/20"
                     />
                     <span className="min-w-0 flex-1 text-xs font-medium text-card-foreground truncate">
                       {engine.displayName}
                     </span>
                     {editing && (
-                      <span className="text-[10px] font-medium text-accent">Editing settings</span>
+                      <span className="text-xs font-medium text-accent">Editing settings</span>
                     )}
                   </label>
                 );
               })}
             </div>
-            <p className="text-[11px] leading-4 text-muted-foreground mt-3">
+            <p className="text-xs leading-4 text-muted-foreground mt-3">
               위 Engine 선택은 옵션 편집 대상을 바꾸며, 체크된 모든 엔진의 현재 설정이 배치에 사용됩니다.
             </p>
           </div>
@@ -521,7 +541,7 @@ function ParserLeftPanel({
 
         {/* Parser Settings */}
         <div className="mb-6">
-          <h3 className="text-sm font-medium text-surface-foreground mb-4">
+          <h3 className="text-base font-medium text-surface-foreground mb-4">
             Parser Settings
           </h3>
 
@@ -530,7 +550,7 @@ function ParserLeftPanel({
           {/* Azure Output Format */}
           {config.parserType === "Azure" && (
             <div className="mb-4">
-              <label className="block text-sm text-muted-foreground mb-2">
+              <label className="block text-base text-muted-foreground mb-2">
                 Output Format
               </label>
               <select
@@ -552,7 +572,7 @@ function ParserLeftPanel({
 
           {config.parserType === "Upstage" && (
             <div className="mb-4">
-              <label className="block text-sm text-muted-foreground mb-2">
+              <label className="block text-base text-muted-foreground mb-2">
                 OCR Language
               </label>
               <input
@@ -574,7 +594,7 @@ function ParserLeftPanel({
           {/* Azure specific settings */}
           {config.parserType === "Azure" && (
             <div className="mb-4">
-              <label className="block text-sm text-muted-foreground mb-2">
+              <label className="block text-base text-muted-foreground mb-2">
                 Azure Model ID
               </label>
               <select
@@ -599,7 +619,7 @@ function ParserLeftPanel({
           {config.parserType === "LlamaIndex" && (
             <>
               <div className="mb-4">
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   Parsing Tier
                 </label>
                 <select
@@ -620,7 +640,7 @@ function ParserLeftPanel({
                 </p>
               </div>
               <div className="mb-4">
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   Parser Version
                 </label>
                 <input
@@ -635,7 +655,7 @@ function ParserLeftPanel({
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   Page Range (Optional)
                 </label>
                 <input
@@ -653,7 +673,7 @@ function ParserLeftPanel({
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
                   OCR Options
                 </p>
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   OCR Language
                 </label>
                 <input
@@ -673,13 +693,13 @@ function ParserLeftPanel({
           {/* Google specific settings */}
           {config.parserType === "Google" && (
             <>
-              <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                <p className="text-xs text-blue-700 dark:text-blue-300">
+              <div className="mb-4 bg-accent/10 border border-accent/20 rounded-lg p-3">
+                <p className="text-xs text-accent">
                   Google Document AI는 JSON 형식으로만 응답합니다. 텍스트는 응답에서 자동으로 추출됩니다.
                 </p>
               </div>
               <div className="mb-4">
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   Processor Location
                 </label>
                 <input
@@ -697,7 +717,7 @@ function ParserLeftPanel({
                 </p>
               </div>
               <div className="mb-4">
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   Processor ID
                 </label>
                 <input
@@ -720,13 +740,13 @@ function ParserLeftPanel({
           {/* Docling specific settings */}
           {config.parserType === "Docling" && (
             <>
-              <div className="mb-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
-                <p className="text-xs text-purple-700 dark:text-purple-300">
+              <div className="mb-4 bg-muted border border-border rounded-lg p-3">
+                <p className="text-xs text-muted-foreground">
                   Docling (IBM Research)은 PDF, DOCX, PPTX, XLSX, HTML, 이미지 등 다양한 문서 형식을 지원합니다.
                 </p>
               </div>
               <div className="mb-4">
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   Output Format
                 </label>
                 <select
@@ -746,7 +766,7 @@ function ParserLeftPanel({
                 </p>
               </div>
               <div className="mb-4">
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   Parser Pipeline
                 </label>
                 <select
@@ -765,7 +785,7 @@ function ParserLeftPanel({
                 </p>
               </div>
               <div className="mb-4">
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   Table Structure Mode
                 </label>
                 <select
@@ -786,17 +806,17 @@ function ParserLeftPanel({
                   checked={config.extractImages || false}
                   onChange={handleExtractImagesChange}
                   disabled={loading}
-                  className="w-4 h-4 rounded border-border text-accent
+                  className="w-4 h-4 rounded-sm border-border text-accent
                            focus:ring-2 focus:ring-accent/20 disabled:opacity-disabled
                            disabled:cursor-not-allowed"
                 />
-                <span className="text-sm text-card-foreground">Embed Images</span>
+                <span className="text-base text-card-foreground">Embed Images</span>
               </label>
               <div className="mb-4 border-t border-border pt-4">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
                   OCR Options
                 </p>
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label className="block text-base text-muted-foreground mb-2">
                   OCR Mode
                 </label>
                 <select
@@ -814,7 +834,7 @@ function ParserLeftPanel({
               </div>
               {config.doclingOcrMode !== "disabled" && (
                 <div className="mb-4">
-                  <label className="block text-sm text-muted-foreground mb-2">
+                  <label className="block text-base text-muted-foreground mb-2">
                     OCR Language
                   </label>
                   <input
@@ -842,7 +862,7 @@ function ParserLeftPanel({
             onClick={onReset}
             disabled={loading}
             className="text-muted-foreground hover:text-surface-foreground disabled:opacity-disabled
-                     disabled:cursor-not-allowed font-medium text-sm
+                     disabled:cursor-not-allowed font-medium text-base
                      transition-smooth flex items-center gap-2"
           >
             <svg
@@ -864,9 +884,9 @@ function ParserLeftPanel({
           {/* Parse Button */}
           <button
             onClick={() => onParse(experimentEngines)}
-            disabled={loading || !selectedFile || experimentEngines.length === 0}
-            className="text-white hover:text-white/90 disabled:text-muted-foreground
-                     disabled:cursor-not-allowed font-medium text-sm
+            disabled={loading || !selectedFile || !selectedFileSupported || experimentEngines.length === 0}
+            className="text-accent hover:text-accent/80 disabled:text-muted-foreground
+                     disabled:cursor-not-allowed font-medium text-base
                      transition-smooth flex items-center gap-2"
           >
           {loading ? (

@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { syncAuthSession } from "@/lib/auth";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -45,20 +46,23 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-surface px-4">
+      <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
+        <ThemeToggle showLabel />
+      </div>
       <div className="w-full max-w-sm">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-card-foreground mb-2">
+          <h1 className="text-2xl font-bold text-card-foreground mb-2">
             BGK
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Supabase Authentication
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-8">
-            <label className="block text-sm font-medium text-surface-foreground mb-2">
+            <label className="block text-base font-medium text-surface-foreground mb-2">
               Email
             </label>
             <input
@@ -66,7 +70,7 @@ export default function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
-              className="w-full h-12 px-0 border-0 border-b border-border
+              className="w-full h-control-xl px-0 border-0 border-b border-border
                        focus:outline-none focus:ring-0 focus:ring-offset-0
                        focus:border-0 focus:border-b-2 focus:border-accent
                        bg-transparent text-card-foreground
@@ -77,7 +81,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-8">
-            <label className="block text-sm font-medium text-surface-foreground mb-2">
+            <label className="block text-base font-medium text-surface-foreground mb-2">
               Password
             </label>
             <input
@@ -85,7 +89,7 @@ export default function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Password"
-              className="w-full h-12 px-0 border-0 border-b border-border
+              className="w-full h-control-xl px-0 border-0 border-b border-border
                        focus:outline-none focus:ring-0 focus:ring-offset-0
                        focus:border-0 focus:border-b-2 focus:border-accent
                        bg-transparent text-card-foreground
@@ -97,13 +101,13 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="mb-5 text-sm text-red-400" role="alert">
+            <p className="mb-4 text-base text-danger" role="alert">
               {error}
             </p>
           )}
 
           {message && (
-            <p className="mb-5 text-sm text-emerald-400" role="status">
+            <p className="mb-4 text-base text-success" role="status">
               {message}
             </p>
           )}
@@ -111,7 +115,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-card hover:bg-muted
+            className="w-full h-control-xl bg-card hover:bg-muted
                      text-card-foreground font-medium rounded-lg
                      border border-border transition-smooth
                      flex items-center justify-center gap-2
@@ -127,7 +131,7 @@ export default function LoginPage() {
               setError(null);
               setMessage(null);
             }}
-            className="mt-14 w-full text-center text-sm text-muted-foreground hover:text-card-foreground"
+            className="mt-16 w-full text-center text-base text-muted-foreground hover:text-card-foreground"
           >
             {mode === "signin" ? "계정이 없나요? 회원가입" : "이미 계정이 있나요? 로그인"}
           </button>

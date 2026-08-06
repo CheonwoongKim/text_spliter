@@ -25,7 +25,7 @@ function SplitterSelector({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-surface-foreground mb-2">
+      <label className="block text-base font-medium text-surface-foreground mb-2">
         Splitter Type
       </label>
       <select

@@ -7,12 +7,13 @@
     "dev:supabase": "node scripts/dev-with-supabase.mjs",
     "ragas:setup": "node scripts/setup-ragas-worker.mjs",
     "ragas:test": "services/ragas-worker/.venv/bin/python -m pytest services/ragas-worker/tests",
+    "check:design": "node scripts/check-design-system.mjs",
     "test:unit": "tsx --test tests/*.test.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
-    "verify": "npm run lint && npm run typecheck && npm run test:unit && npm run build"
+    "verify": "npm run check:design && npm run lint && npm run typecheck && npm run test:unit && npm run build"
   },
   "engines": {
     "node": ">=20.9.0"
