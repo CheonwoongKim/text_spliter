@@ -51,18 +51,18 @@ export default function LoginPage() {
         <ThemeToggle showLabel />
       </div>
       <div className="w-full max-w-sm">
-        <div className="text-center mb-12">
-          <h1 className="text-2xl font-bold text-card-foreground mb-2">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold tracking-tight leading-7 text-card-foreground mb-1">
             BGK
           </h1>
-          <p className="text-base text-muted-foreground">
+          <p className="text-xs font-normal leading-4 tracking-normal text-muted-foreground">
             Supabase Authentication
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-8">
-            <label className="block text-base font-medium text-surface-foreground mb-2">
+          <div className="mb-4">
+            <label className="block text-xs font-semibold leading-4 tracking-wide uppercase text-muted-foreground mb-1">
               Email
             </label>
             <input
@@ -70,18 +70,18 @@ export default function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
-              className="w-full h-control-xl px-0 border-0 border-b border-border
+              className="w-full h-control-lg px-0 border-0 border-b border-border
                        focus:outline-none focus:ring-0 focus:ring-offset-0
                        focus:border-0 focus:border-b-2 focus:border-accent
-                       bg-transparent text-card-foreground
-                       placeholder-light focus:placeholder-transparent"
+                       bg-transparent text-base font-normal leading-5 tracking-normal text-card-foreground
+                       placeholder-light focus:placeholder-transparent transition-smooth"
               autoComplete="email"
               required
             />
           </div>
 
-          <div className="mb-8">
-            <label className="block text-base font-medium text-surface-foreground mb-2">
+          <div className="mb-6">
+            <label className="block text-xs font-semibold leading-4 tracking-wide uppercase text-muted-foreground mb-1">
               Password
             </label>
             <input
@@ -89,11 +89,11 @@ export default function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Password"
-              className="w-full h-control-xl px-0 border-0 border-b border-border
+              className="w-full h-control-lg px-0 border-0 border-b border-border
                        focus:outline-none focus:ring-0 focus:ring-offset-0
                        focus:border-0 focus:border-b-2 focus:border-accent
-                       bg-transparent text-card-foreground
-                       placeholder-light focus:placeholder-transparent"
+                       bg-transparent text-base font-normal leading-5 tracking-normal text-card-foreground
+                       placeholder-light focus:placeholder-transparent transition-smooth"
               autoComplete="current-password"
               minLength={6}
               required
@@ -101,13 +101,13 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="mb-4 text-base text-danger" role="alert">
+            <p className="mb-3 text-xs font-medium leading-4 text-danger" role="alert">
               {error}
             </p>
           )}
 
           {message && (
-            <p className="mb-4 text-base text-success" role="status">
+            <p className="mb-3 text-xs font-medium leading-4 text-success" role="status">
               {message}
             </p>
           )}
@@ -115,11 +115,11 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-control-xl bg-card hover:bg-muted
-                     text-card-foreground font-medium rounded-lg
+            className="w-full h-control-lg bg-card hover:bg-muted
+                     text-card-foreground text-base font-medium leading-5 tracking-tight rounded-lg
                      border border-border transition-smooth
                      flex items-center justify-center gap-2
-                     disabled:cursor-not-allowed disabled:opacity-60"
+                     disabled:cursor-not-allowed disabled:opacity-disabled"
           >
             {loading ? "처리 중..." : mode === "signin" ? "로그인" : "계정 생성"}
           </button>
@@ -131,7 +131,7 @@ export default function LoginPage() {
               setError(null);
               setMessage(null);
             }}
-            className="mt-16 w-full text-center text-base text-muted-foreground hover:text-card-foreground"
+            className="mt-6 w-full text-center text-xs font-medium leading-4 tracking-normal text-muted-foreground hover:text-card-foreground transition-smooth"
           >
             {mode === "signin" ? "계정이 없나요? 회원가입" : "이미 계정이 있나요? 로그인"}
           </button>
