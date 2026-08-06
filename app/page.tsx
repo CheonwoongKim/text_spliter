@@ -8,15 +8,23 @@ import LeftPanel from "@/components/splitter/LeftPanel";
 import RightPanel from "@/components/splitter/RightPanel";
 import ParserLeftPanel from "@/components/parser/ParserLeftPanel";
 import ParserRightPanel from "@/components/parser/ParserRightPanel";
-import LicensesPanel from "@/components/connect/LicensesPanel";
+import SettingsPanel, { type SettingsSection } from "@/components/settings/SettingsPanel";
 import VectorStoreLeftPanel from "@/components/vectorstore/VectorStoreLeftPanel";
 import VectorStoreRightPanel from "@/components/vectorstore/VectorStoreRightPanel";
 import StoragePanel from "@/components/storage/StoragePanel";
 import FilesPanel from "@/components/storage/FilesPanel";
 import ParseResultDetailPanel from "@/components/parser/ParseResultDetailPanel";
 import EvaluationPanel from "@/components/evaluation/EvaluationPanel";
-import type { AppMenu } from "@/components/layout/Sidebar";
 import { getAuthToken } from "@/lib/auth";
+import { useDocumentEngineSettings } from "@/lib/hooks/useDocumentEngineSettings";
+import { isVisionEngine } from "@/lib/document-engines";
+import {
+  APP_MENU_META,
+  APP_MENU_STORAGE_KEY,
+  DEFAULT_APP_MENU,
+  normalizeAppMenu,
+  type AppMenu,
+} from "@/lib/navigation";
 import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 import type {
   SplitterConfig,
@@ -24,8 +32,9 @@ import type {
   ViewMode,
   SplitResponse,
   SplitRequest,
-  ParserConfig,
-  ParserType,
+  DocumentEngineConfig,
+  DocumentEngineType,
+  ParserExperimentPlan,
   ParseResponse,
   VectorStoreConfig,
   DatabaseSchema,
@@ -35,8 +44,34 @@ import type {
 
 export default function Home() {
   // State
-  const [activeMenu, setActiveMenu] = useState<AppMenu | "parse-detail">("storage");
+  const [activeMenu, setActiveMenu] = useState<AppMenu | "parse-detail">(DEFAULT_APP_MENU);
   const [selectedParseResultId, setSelectedParseResultId] = useState<number | null>(null);
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>("connections");
+  const [settingsParserEngine, setSettingsParserEngine] = useState<DocumentEngineType>("Upstage");
+
+  useEffect(() => {
+    try {
+      setActiveMenu(normalizeAppMenu(window.localStorage.getItem(APP_MENU_STORAGE_KEY)));
+    } catch {
+      setActiveMenu(DEFAULT_APP_MENU);
+    }
+  }, []);
+
+  const handleMenuChange = useCallback((menu: AppMenu) => {
+    setSelectedParseResultId(null);
+    setActiveMenu(menu);
+    try {
+      window.localStorage.setItem(APP_MENU_STORAGE_KEY, menu);
+    } catch {
+      // Navigation still works when storage is unavailable.
+    }
+  }, []);
+
+  const handleOpenParserSettings = useCallback((engineType: DocumentEngineType) => {
+    setSettingsParserEngine(engineType);
+    setSettingsSection("document-engines");
+    handleMenuChange("settings");
+  }, [handleMenuChange]);
 
   // Splitter state
   const [text, setText] = useState("");
@@ -57,18 +92,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   // Parser state
-  const [parserConfig, setParserConfig] = useState<ParserConfig>({
-    parserType: "Upstage",
-    upstageOutputFormat: "markdown",
-    llamaTier: "agentic",
-    llamaVersion: "latest",
-    doclingOutputFormat: "markdown",
-    doclingOcrMode: "auto",
-    doclingPipeline: "standard",
-    doclingTableMode: "accurate",
-    extractImages: false,
-    extractTables: false,
-  });
+  const [primaryParserEngine, setPrimaryParserEngine] = useState<DocumentEngineType>("Upstage");
+  const parserSettings = useDocumentEngineSettings();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileStorageKey, setSelectedFileStorageKey] = useState<string | null>(null);
   const [parseResult, setParseResult] = useState<ParseResponse | null>(null);
@@ -142,16 +167,6 @@ export default function Home() {
   }, [text, config, sourceMetadata]);
 
   // Parser handlers
-  const handleParserConfigChange = useCallback(
-    (updates: Partial<ParserConfig>) => {
-      setParserConfig((prev) => ({
-        ...prev,
-        ...updates,
-      }));
-    },
-    []
-  );
-
   const handleFileSelect = useCallback((file: File | null, storageKey?: string | null) => {
     setSelectedFile(file);
     setSelectedFileStorageKey(storageKey || null);
@@ -173,13 +188,18 @@ export default function Home() {
     setError(null);
   }, []);
 
-  const handleParse = useCallback(async (parserTypes: ParserType[]) => {
+  const handleParse = useCallback(async (plan: ParserExperimentPlan) => {
     if (!selectedFile) {
       alert("Please select a file to parse.");
       return;
     }
 
-    const engines = Array.from(new Set(parserTypes));
+    const seenEngines = new Set<DocumentEngineType>();
+    const engines = plan.engines.filter(({ parserType }) => {
+      if (seenEngines.has(parserType)) return false;
+      seenEngines.add(parserType);
+      return true;
+    });
     if (engines.length === 0) {
       alert("Please select at least one parser.");
       return;
@@ -195,52 +215,66 @@ export default function Home() {
       }
 
       const failures: string[] = [];
+      const experimentId = crypto.randomUUID();
+      let primaryResult: ParseResponse | null = null;
+      let fallbackResult: ParseResponse | null = null;
 
       // Run sequentially to avoid provider rate spikes and retain successful
       // candidates even when one of the configured engines fails.
-      for (const parserType of engines) {
+      for (const { parserType, config: engineConfig } of engines) {
         try {
           const formData = new FormData();
           formData.append("file", selectedFile);
-          formData.append("parserType", parserType);
+          const visionEngine = isVisionEngine(parserType);
+          if (visionEngine) {
+            formData.append("engineType", parserType);
+            formData.append("config", JSON.stringify(engineConfig));
+          } else {
+            formData.append("parserType", parserType);
+          }
+          formData.append("experimentId", experimentId);
+          formData.append(
+            "experimentRole",
+            parserType === plan.primaryEngine ? "primary" : "additional"
+          );
 
-          if (parserConfig.language) formData.append("language", parserConfig.language);
-          if (parserConfig.extractImages !== undefined) {
-            formData.append("extractImages", String(parserConfig.extractImages));
+          if (engineConfig.language) formData.append("language", engineConfig.language);
+          if (engineConfig.extractImages !== undefined) {
+            formData.append("extractImages", String(engineConfig.extractImages));
           }
-          if (parserConfig.extractTables !== undefined) {
-            formData.append("extractTables", String(parserConfig.extractTables));
+          if (engineConfig.extractTables !== undefined) {
+            formData.append("extractTables", String(engineConfig.extractTables));
           }
-          if (parserConfig.pageRange) formData.append("pageRange", parserConfig.pageRange);
-          if (parserConfig.upstageOutputFormat) {
-            formData.append("upstageOutputFormat", parserConfig.upstageOutputFormat);
+          if (engineConfig.pageRange) formData.append("pageRange", engineConfig.pageRange);
+          if (engineConfig.upstageOutputFormat) {
+            formData.append("upstageOutputFormat", engineConfig.upstageOutputFormat);
           }
-          if (parserConfig.azureModelId) formData.append("azureModelId", parserConfig.azureModelId);
-          if (parserConfig.azureOutputFormat) {
-            formData.append("azureOutputFormat", parserConfig.azureOutputFormat);
+          if (engineConfig.azureModelId) formData.append("azureModelId", engineConfig.azureModelId);
+          if (engineConfig.azureOutputFormat) {
+            formData.append("azureOutputFormat", engineConfig.azureOutputFormat);
           }
-          if (parserConfig.llamaTier) formData.append("llamaTier", parserConfig.llamaTier);
-          if (parserConfig.llamaVersion) formData.append("llamaVersion", parserConfig.llamaVersion);
-          if (parserConfig.doclingOutputFormat) {
-            formData.append("doclingOutputFormat", parserConfig.doclingOutputFormat);
+          if (engineConfig.llamaTier) formData.append("llamaTier", engineConfig.llamaTier);
+          if (engineConfig.llamaVersion) formData.append("llamaVersion", engineConfig.llamaVersion);
+          if (engineConfig.doclingOutputFormat) {
+            formData.append("doclingOutputFormat", engineConfig.doclingOutputFormat);
           }
-          if (parserConfig.doclingOcrMode) {
-            formData.append("doclingOcrMode", parserConfig.doclingOcrMode);
+          if (engineConfig.doclingOcrMode) {
+            formData.append("doclingOcrMode", engineConfig.doclingOcrMode);
           }
-          if (parserConfig.doclingPipeline) {
-            formData.append("doclingPipeline", parserConfig.doclingPipeline);
+          if (engineConfig.doclingPipeline) {
+            formData.append("doclingPipeline", engineConfig.doclingPipeline);
           }
-          if (parserConfig.doclingTableMode) {
-            formData.append("doclingTableMode", parserConfig.doclingTableMode);
+          if (engineConfig.doclingTableMode) {
+            formData.append("doclingTableMode", engineConfig.doclingTableMode);
           }
-          if (parserConfig.googleProcessorId) {
-            formData.append("googleProcessorId", parserConfig.googleProcessorId);
+          if (engineConfig.googleProcessorId) {
+            formData.append("googleProcessorId", engineConfig.googleProcessorId);
           }
-          if (parserConfig.googleLocation) {
-            formData.append("googleLocation", parserConfig.googleLocation);
+          if (engineConfig.googleLocation) {
+            formData.append("googleLocation", engineConfig.googleLocation);
           }
 
-          const response = await fetch("/api/parse", {
+          const response = await fetch(visionEngine ? "/api/vision" : "/api/parse", {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
             body: formData,
@@ -252,7 +286,12 @@ export default function Home() {
           }
 
           const data: ParseResponse = await response.json();
-          setParseResult(data);
+          if (parserType === plan.primaryEngine) {
+            primaryResult = data;
+            setParseResult(data);
+          } else if (!fallbackResult) {
+            fallbackResult = data;
+          }
           setParseRuns((previousRuns) => [...previousRuns, data]);
         } catch (engineError) {
           const message = engineError instanceof Error
@@ -263,9 +302,11 @@ export default function Home() {
         }
       }
 
+      setParseResult(primaryResult || fallbackResult);
+
       if (failures.length > 0) {
         setParserError(
-          `${engines.length - failures.length}/${engines.length} parsers completed. ${failures.join(" | ")}`
+          `${engines.length - failures.length}/${engines.length} document engines completed. ${failures.join(" | ")}`
         );
       }
     } catch (err) {
@@ -276,7 +317,7 @@ export default function Home() {
     } finally {
       setParserLoading(false);
     }
-  }, [selectedFile, parserConfig]);
+  }, [selectedFile]);
 
   const handleSelectParseRun = useCallback((runId: string) => {
     const selectedRun = parseRuns.find((run) => run.run?.id === runId);
@@ -403,30 +444,14 @@ export default function Home() {
       {/* Sidebar */}
       <Sidebar
         activeMenu={activeMenu === "parse-detail" ? "storage" : activeMenu}
-        onMenuChange={setActiveMenu}
+        onMenuChange={handleMenuChange}
       />
 
       {/* Main Content */}
       <div className="min-w-0 flex-1 flex flex-col">
         {/* Header */}
         <Header
-          title={
-            activeMenu === "parser"
-              ? "Parser"
-              : activeMenu === "licenses"
-              ? "Connect"
-              : activeMenu === "vectorstore"
-              ? "Vector Database"
-              : activeMenu === "storage"
-              ? "Results"
-              : activeMenu === "evaluation"
-              ? "Evaluation"
-              : activeMenu === "files"
-              ? "Files"
-              : activeMenu === "parse-detail"
-              ? "Parse Result Detail"
-              : "Text Splitter"
-          }
+          title={activeMenu === "parse-detail" ? "Parse Result Detail" : APP_MENU_META[activeMenu].title}
         />
 
       {/* Error Banner */}
@@ -478,8 +503,23 @@ export default function Home() {
       <main className="flex-1 overflow-hidden bg-surface">
         <ErrorBoundary>
           <div className="h-full">
-            {activeMenu === "licenses" ? (
-              <LicensesPanel />
+            {activeMenu === "settings" ? (
+              <SettingsPanel
+                activeSection={settingsSection}
+                onSectionChange={setSettingsSection}
+                selectedParserEngine={settingsParserEngine}
+                onSelectedParserEngineChange={setSettingsParserEngine}
+                parserConfigs={parserSettings.configs}
+                savedParserConfigs={parserSettings.savedConfigs}
+                persistedParserEngines={parserSettings.persistedEngines}
+                dirtyParserEngines={parserSettings.dirtyEngines}
+                parserSettingsLoading={parserSettings.loading}
+                parserSettingsSavingEngine={parserSettings.savingEngine}
+                parserSettingsError={parserSettings.error}
+                onParserConfigChange={parserSettings.updateConfig}
+                onSaveParserConfig={parserSettings.saveConfig}
+                onReloadParserSettings={parserSettings.reload}
+              />
             ) : activeMenu === "storage" ? (
               <StoragePanel onNavigateToDetail={handleNavigateToParseDetail} />
             ) : activeMenu === "files" ? (
@@ -522,10 +562,16 @@ export default function Home() {
               {/* Parser Left Panel */}
               <div className="h-full overflow-hidden lg:col-span-3">
                 <ParserLeftPanel
-                  config={parserConfig}
+                  primaryEngine={primaryParserEngine}
+                  engineConfigs={parserSettings.savedConfigs}
+                  persistedEngines={parserSettings.persistedEngines}
+                  settingsLoading={parserSettings.loading}
+                  settingsReady={parserSettings.ready}
+                  settingsError={parserSettings.error}
                   loading={parserLoading}
                   selectedFile={selectedFile}
-                  onConfigChange={handleParserConfigChange}
+                  onPrimaryEngineChange={setPrimaryParserEngine}
+                  onOpenSettings={handleOpenParserSettings}
                   onFileSelect={handleFileSelect}
                   onParse={handleParse}
                   onReset={handleParserReset}
@@ -539,7 +585,10 @@ export default function Home() {
                   runs={parseRuns}
                   selectedFile={selectedFile}
                   selectedFileStorageKey={selectedFileStorageKey}
-                  config={parserConfig}
+                  config={{
+                    parserType: primaryParserEngine,
+                    ...parserSettings.savedConfigs[primaryParserEngine],
+                  } satisfies DocumentEngineConfig & { parserType: DocumentEngineType }}
                   onSelectRun={handleSelectParseRun}
                   onClearRuns={handleClearParseRuns}
                 />

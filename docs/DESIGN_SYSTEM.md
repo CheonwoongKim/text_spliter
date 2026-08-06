@@ -20,13 +20,13 @@ BGK는 디자인을 보여주기 위한 서비스가 아니라 문서를 처리�
 
 기본 UI는 중립색으로 구성합니다. 색상은 주요 액션과 실제 상태를 구분할 때만 사용합니다.
 
-### 5. Same meaning in every theme
+### 5. One theme for the MVP
 
-라이트와 다크는 동일한 semantic token을 사용합니다. 컴포넌트에서 `dark:` 색상을 직접 선택하지 않습니다.
+MVP는 라이트 테마 하나만 제공합니다. 테마 상태, 토글, 다크 전용 토큰과 컴포넌트의 `dark:` 분기를 추가하지 않습니다.
 
 ### 6. Accessible by default
 
-본문은 12px보다 작게 만들지 않습니다. 키보드 포커스를 숨기지 않으며 색상만으로 상태를 전달하지 않습니다. 모션 감소 설정을 존중합니다.
+본문은 13px보다 작게 만들지 않습니다. 키보드 포커스를 숨기지 않으며 색상만으로 상태를 전달하지 않습니다. 모션 감소 설정을 존중합니다.
 
 ## Source of truth
 
@@ -41,21 +41,38 @@ styles/design-tokens.css → tailwind.config.ts → app/globals.css / components
 
 ## Typography
 
-UI에는 Geist Sans 하나만 사용합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
+UI에는 Spoqa Han Sans Neo 하나만 사용합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
 
-최소 font size는 `12px`, 최대 font size는 `24px`입니다.
+핵심 UI의 최소 font size는 `13px`, 최대 font size는 `24px`입니다. `11px`은 좁은 대시보드 메뉴 label에만 사용하는 예외 토큰입니다.
 
 | Utility | Size / line-height | Role |
 | --- | --- | --- |
-| `text-xs` | 12 / 16px | label, metadata, table heading |
-| `text-base` | 14 / 20px | body, input, button, table cell |
-| `text-lg` | 16 / 24px | section heading |
-| `text-xl` | 20 / 28px | page heading |
-| `text-2xl` | 24 / 32px | product name, standalone title |
+| `text-2xs` | 11 / 16px | dashboard navigation label only |
+| `text-xs` | 13 / 20px | label, metadata, table heading |
+| `text-base` | 15 / 24px | body, input, button, table cell |
+| `text-lg` | 17 / 26px | section heading |
+| `text-xl` | 20 / 30px | page heading |
+| `text-2xl` | 24 / 36px | product name, standalone title |
 
 허용 font weight는 `400`, `500`, `600`, `700`입니다. 일반 본문은 `400`, 컨트롤은 `500`, 제목은 `600`, 제품명만 `700`을 사용합니다.
 
-Letter spacing은 기본 `normal`, 제품명은 `tight`, 대문자 metadata는 `wide`만 사용합니다.
+한글 중심 UI의 가독성을 위해 기본 자간은 `-0.01em`, 행간은 본문 기준 `1.6`으로 사용합니다. 제품명은 `tight`(`-0.02em`), 대문자 metadata는 `wide`(`0.04em`)만 사용하며, 고정폭 데이터는 자간을 `0`으로 유지합니다.
+
+## Form fields
+
+Label은 필드의 의미를 명확하게 설명합니다. Placeholder는 label이나 입력 지시를 반복하지 않고, 사용자가 입력 형식을 바로 이해할 수 있는 실제 예시만 제공합니다.
+
+입력필드 label은 `text-xs`(13px)와 `400` weight를 사용합니다. Placeholder는 `fg-placeholder` 토큰으로 본문과 명확히 구분하고, 입력값보다 시각적으로 강조하지 않습니다.
+
+입력필드 포커스 테두리는 파란색 accent가 아니라 `surface-foreground`를 사용해 검정 계열로 표시합니다.
+
+- 이메일 label + `예: name@company.com`
+- 페이지 범위 label + `예: 1-5 또는 1,3,5-10`
+- 잘못된 예: `이메일을 입력하세요`, `값을 입력하세요`
+
+Placeholder는 보조 정보일 뿐이므로 label을 대신할 수 없습니다. 모든 입력 필드는 화면에 표시되는 label과 연결합니다.
+
+비밀번호, API key, private key처럼 민감한 값에는 실제 값처럼 보이는 예시를 제공하지 않습니다. 비밀번호는 `영문, 숫자, 특수문자 포함 8자리 이상 입력`처럼 보안 조건만 안내할 수 있고, 그 외 민감한 필드는 placeholder를 생략합니다.
 
 ## Spacing
 
@@ -85,6 +102,7 @@ Spacing은 다음 9개 값만 사용합니다. `0`은 값 없음의 의미로 �
 | `h-control-xl` | 48px | primary input and button |
 | `h-topbar` | 64px | top bar including border |
 | `w-sidebar` | 80px | app navigation |
+| `max-w-auth` | 400px | authentication form |
 
 ## Radius
 
@@ -128,7 +146,7 @@ UI에서 사용할 수 있는 색상 역할은 아래가 전부입니다.
 - `brand`: 외부 공급자 로고의 흰색 캔버스
 - `overlay`: modal backdrop
 
-`red-500`, `blue-50`, `white`, `black` 같은 Tailwind palette 직접 사용과 컴포넌트의 `dark:` 색상 분기는 금지합니다.
+`red-500`, `blue-50`, `white`, `black` 같은 Tailwind palette 직접 사용은 금지합니다. MVP에는 다크 테마와 `dark:` 분기를 추가하지 않습니다.
 
 ## Motion and elevation
 

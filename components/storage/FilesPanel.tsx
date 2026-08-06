@@ -180,7 +180,7 @@ const FilesPanel = memo(function FilesPanel() {
     try {
       const token = getAuthToken();
       if (!token) {
-        throw new Error("Please login to Storage first (Connect page)");
+        throw new Error("Please login to Storage first (Connections page)");
       }
 
       const response = await fetch(
@@ -217,7 +217,7 @@ const FilesPanel = memo(function FilesPanel() {
     try {
       const token = getAuthToken();
       if (!token) {
-        setError("Please login to Storage first (Connect page)");
+        setError("Please login to Storage first (Connections page)");
         return;
       }
 

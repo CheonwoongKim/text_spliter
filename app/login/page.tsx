@@ -46,7 +46,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-auth">
         <div className="text-center mb-10">
           <h1 className="text-2xl font-bold text-card-foreground mb-2">
             BGK
@@ -70,7 +70,7 @@ export default function LoginPage() {
                 placeholder="예: name@company.com"
                 className="h-control-xl w-full rounded-lg border border-border
                          bg-card px-4 text-card-foreground placeholder-light
-                         transition-smooth focus:outline-none focus:border-surface-foreground"
+                         transition-smooth focus-ring"
                 autoComplete="email"
                 required
               />
@@ -88,7 +88,7 @@ export default function LoginPage() {
                 placeholder="영문, 숫자, 특수문자 포함 8자리 이상 입력"
                 className="h-control-xl w-full rounded-lg border border-border
                          bg-card px-4 text-card-foreground placeholder-light
-                         transition-smooth focus:outline-none focus:border-surface-foreground"
+                         transition-smooth focus-ring"
                 autoComplete="current-password"
                 minLength={6}
                 required

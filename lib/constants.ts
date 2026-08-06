@@ -44,6 +44,12 @@ export const MODAL_PREVIEW_LENGTH = 200;
  */
 export const API_KEY_NAMES = {
   OPENAI_EMBEDDING: 'openaiEmbedding',
+  GEMINI_VISION: 'geminiVision',
+  ANTHROPIC_VISION: 'anthropicVision',
+  QWEN_VISION: 'qwenVision',
+  QWEN_VISION_ENDPOINT: 'qwenVisionEndpoint',
+  NATIVE_DOCUMENT_RENDERER_ENDPOINT: 'nativeDocumentRendererEndpoint',
+  NATIVE_DOCUMENT_RENDERER_API_KEY: 'nativeDocumentRendererApiKey',
   UPSTAGE_PARSER: 'upstageParser',
   LLAMA_PARSER: 'llamaParser',
   AZURE_PARSER_KEY: 'azureParserKey',
@@ -65,6 +71,12 @@ export const API_KEY_NAMES = {
 
 export const CONNECT_KEY_NAMES = [
   API_KEY_NAMES.OPENAI_EMBEDDING,
+  API_KEY_NAMES.GEMINI_VISION,
+  API_KEY_NAMES.ANTHROPIC_VISION,
+  API_KEY_NAMES.QWEN_VISION,
+  API_KEY_NAMES.QWEN_VISION_ENDPOINT,
+  API_KEY_NAMES.NATIVE_DOCUMENT_RENDERER_ENDPOINT,
+  API_KEY_NAMES.NATIVE_DOCUMENT_RENDERER_API_KEY,
   API_KEY_NAMES.UPSTAGE_PARSER,
   API_KEY_NAMES.LLAMA_PARSER,
   API_KEY_NAMES.AZURE_PARSER_KEY,
@@ -110,6 +122,9 @@ export const FILE_UPLOAD_CONFIG = {
     'image/webp',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
     'application/msword', // doc
+    'application/x-hwp',
+    'application/vnd.hancom.hwp',
+    'application/vnd.hancom.hwpx',
     'text/plain',
   ],
 } as const;
@@ -138,6 +153,16 @@ export const CHUNK_CONFIG_LIMITS = {
  */
 export const PARSER_TYPES = ['Upstage', 'LlamaIndex', 'Azure', 'Google', 'Docling'] as const;
 export type ParserType = typeof PARSER_TYPES[number];
+
+export const VISION_ENGINE_TYPES = [
+  'OpenAI Vision',
+  'Gemini Vision',
+  'Claude Vision',
+  'Qwen Vision',
+] as const;
+export type VisionEngineType = typeof VISION_ENGINE_TYPES[number];
+export const DOCUMENT_ENGINE_TYPES = [...PARSER_TYPES, ...VISION_ENGINE_TYPES] as const;
+export type DocumentEngineType = typeof DOCUMENT_ENGINE_TYPES[number];
 
 /**
  * Splitter Types

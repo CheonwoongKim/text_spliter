@@ -6,6 +6,12 @@ import { getDecryptedApiKeyMap } from '@/lib/api-key-store';
 
 interface ApiKeys {
   openaiEmbedding?: string;
+  geminiVision?: string;
+  anthropicVision?: string;
+  qwenVision?: string;
+  qwenVisionEndpoint?: string;
+  nativeDocumentRendererEndpoint?: string;
+  nativeDocumentRendererApiKey?: string;
   upstageParser?: string;
   llamaParser?: string;
   azureParserKey?: string;
@@ -74,6 +80,25 @@ export async function POST(request: NextRequest) {
       case 'openai':
         return await testOpenAI(keys.openaiEmbedding);
 
+      case 'gemini':
+        return await testGemini(keys.geminiVision);
+
+      case 'anthropic':
+        return await testAnthropic(keys.anthropicVision);
+
+      case 'qwen':
+        return await testOpenAICompatible(
+          'Qwen',
+          keys.qwenVision,
+          keys.qwenVisionEndpoint
+        );
+
+      case 'renderer':
+        return await testNativeRenderer(
+          keys.nativeDocumentRendererEndpoint,
+          keys.nativeDocumentRendererApiKey
+        );
+
       case 'upstage':
         return await testUpstage(keys.upstageParser);
 
@@ -138,6 +163,120 @@ async function testOpenAI(apiKey?: string): Promise<NextResponse> {
     }
 
     return NextResponse.json({ success: true, message: 'OpenAI API connection successful' });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : 'Connection failed' },
+      { status: 200 }
+    );
+  }
+}
+
+async function testGemini(apiKey?: string): Promise<NextResponse> {
+  if (!apiKey) {
+    return NextResponse.json(
+      { success: false, error: 'Gemini API key not configured' },
+      { status: 400 }
+    );
+  }
+  try {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1', {
+      headers: { 'x-goog-api-key': apiKey },
+    });
+    if (!response.ok) {
+      const details = await response.text();
+      return NextResponse.json(
+        { success: false, error: `Gemini connection failed: ${details}` },
+        { status: 200 }
+      );
+    }
+    return NextResponse.json({ success: true, message: 'Gemini API connection successful' });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : 'Connection failed' },
+      { status: 200 }
+    );
+  }
+}
+
+async function testAnthropic(apiKey?: string): Promise<NextResponse> {
+  if (!apiKey) {
+    return NextResponse.json(
+      { success: false, error: 'Anthropic API key not configured' },
+      { status: 400 }
+    );
+  }
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/models?limit=1', {
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+    });
+    if (!response.ok) {
+      const details = await response.text();
+      return NextResponse.json(
+        { success: false, error: `Anthropic connection failed: ${details}` },
+        { status: 200 }
+      );
+    }
+    return NextResponse.json({ success: true, message: 'Anthropic API connection successful' });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : 'Connection failed' },
+      { status: 200 }
+    );
+  }
+}
+
+async function testOpenAICompatible(
+  provider: string,
+  apiKey?: string,
+  endpoint?: string
+): Promise<NextResponse> {
+  if (!apiKey || !endpoint) {
+    return NextResponse.json(
+      { success: false, error: `${provider} API key and endpoint are required` },
+      { status: 400 }
+    );
+  }
+  try {
+    const response = await fetch(`${endpoint.replace(/\/+$/, '')}/models`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (!response.ok) {
+      const details = await response.text();
+      return NextResponse.json(
+        { success: false, error: `${provider} connection failed: ${details}` },
+        { status: 200 }
+      );
+    }
+    return NextResponse.json({ success: true, message: `${provider} API connection successful` });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : 'Connection failed' },
+      { status: 200 }
+    );
+  }
+}
+
+async function testNativeRenderer(endpoint?: string, apiKey?: string): Promise<NextResponse> {
+  if (!endpoint) {
+    return NextResponse.json(
+      { success: false, error: 'Native document renderer endpoint is required' },
+      { status: 400 }
+    );
+  }
+  try {
+    const headers: Record<string, string> = {};
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+    const response = await fetch(`${endpoint.replace(/\/+$/, '')}/health`, { headers });
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: `Renderer health check failed (HTTP ${response.status})` },
+        { status: 200 }
+      );
+    }
+    return NextResponse.json({ success: true, message: 'Native document renderer is reachable' });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Connection failed' },

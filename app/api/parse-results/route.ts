@@ -4,7 +4,7 @@ import { getUserEmailFromToken, getUserFromToken } from '@/lib/auth-server';
 import { assertUserDocumentKey, uploadDocument } from '@/lib/document-storage';
 import type { ParseResponse } from '@/lib/types';
 import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
-import { validateParserType, validatePagination, validateId, ValidationError } from '@/lib/validation';
+import { validateDocumentEngineType, validatePagination, validateId, ValidationError } from '@/lib/validation';
 import { PAGINATION_API_CONFIG } from '@/lib/constants';
 
 interface ParseResult {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const providedFileStorageKey = formData.get('fileStorageKey') as string | null;
 
     // Validate inputs
-    const parserType = validateParserType(parserTypeRaw);
+    const parserType = validateDocumentEngineType(parserTypeRaw);
 
     if (!resultStr) {
       return NextResponse.json(

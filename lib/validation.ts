@@ -9,6 +9,7 @@ import {
   SPLITTER_TYPES,
   CHUNK_CONFIG_LIMITS,
   API_KEY_NAMES,
+  DOCUMENT_ENGINE_TYPES,
 } from './constants';
 
 export class ValidationError extends Error {
@@ -64,6 +65,19 @@ export function validateParserType(parserType: unknown): (typeof PARSER_TYPES)[n
   }
 
   return parserType as (typeof PARSER_TYPES)[number];
+}
+
+/** Validate a parser or vision document engine. */
+export function validateDocumentEngineType(engineType: unknown): (typeof DOCUMENT_ENGINE_TYPES)[number] {
+  if (
+    !engineType
+    || typeof engineType !== 'string'
+    || !(DOCUMENT_ENGINE_TYPES as readonly string[]).includes(engineType)
+  ) {
+    throw new ValidationError(`Invalid document engine. Must be one of: ${DOCUMENT_ENGINE_TYPES.join(', ')}`);
+  }
+
+  return engineType as (typeof DOCUMENT_ENGINE_TYPES)[number];
 }
 
 /**

@@ -123,6 +123,20 @@ export interface SplitterDescription {
 
 // Parser types
 export type ParserType = "Upstage" | "LlamaIndex" | "Azure" | "Google" | "Docling";
+export type VisionEngineType =
+  | "OpenAI Vision"
+  | "Gemini Vision"
+  | "Claude Vision"
+  | "Qwen Vision";
+export type DocumentEngineType = ParserType | VisionEngineType;
+export type DocumentEngineKind = "parser" | "vision";
+export type VisionInputPreference = "auto" | "native-document" | "page-images";
+export type VisionInputMode =
+  | "native-document"
+  | "native-page-capture"
+  | "rasterized-fallback"
+  | "original-image";
+export type VisionPdfDetail = "auto" | "low" | "high";
 export type LlamaParseTier = "fast" | "cost_effective" | "agentic" | "agentic_plus";
 export type DoclingOutputFormat = "markdown" | "html" | "json";
 export type DoclingOcrMode = "disabled" | "auto" | "force";
@@ -161,6 +175,30 @@ export interface ParserConfig {
   doclingTableMode?: DoclingTableMode;
 }
 
+export type ParserEngineConfig = Omit<ParserConfig, "parserType">;
+export type ParserEngineConfigMap = Record<ParserType, ParserEngineConfig>;
+
+export interface VisionEngineConfig {
+  modelId?: string;
+  inputPreference?: VisionInputPreference;
+  pdfDetail?: VisionPdfDetail;
+  maxOutputTokens?: number;
+  prompt?: string;
+}
+
+export type DocumentEngineConfig = ParserEngineConfig & VisionEngineConfig;
+export type DocumentEngineConfigMap = Record<DocumentEngineType, DocumentEngineConfig>;
+
+export interface ParserExperimentEngine {
+  parserType: DocumentEngineType;
+  config: DocumentEngineConfig;
+}
+
+export interface ParserExperimentPlan {
+  primaryEngine: DocumentEngineType;
+  engines: ParserExperimentEngine[];
+}
+
 // Parse request
 export interface ParseRequest {
   file: File;
@@ -177,6 +215,15 @@ export interface ParseRunMetadata {
   version?: string;
   status: ParseRunStatus;
   config: JsonObject;
+  settingsSchemaVersion?: number;
+  experimentId?: string;
+  role?: "primary" | "additional";
+  engineKind?: DocumentEngineKind;
+  inputMode?: VisionInputMode;
+  renderer?: {
+    name: string;
+    version?: string;
+  };
   startedAt: string;
   completedAt?: string;
 }
@@ -206,7 +253,9 @@ export interface ParseResponse {
     mimeType: string;
     pageCount?: number;
     processingTime: number;
-    parserType: ParserType;
+    parserType: DocumentEngineType;
+    engineKind?: DocumentEngineKind;
+    inputMode?: VisionInputMode;
     parserVersion?: string;
     documentHash?: string;
   };

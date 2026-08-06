@@ -364,7 +364,7 @@ function VectorStoreLeftPanel({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-base font-medium text-card-foreground mb-2">
+                <label className="block text-xs font-medium text-card-foreground mb-2">
                   Collection Name *
                 </label>
                 <input

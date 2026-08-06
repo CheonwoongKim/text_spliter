@@ -1,4 +1,5 @@
-import type { ParserType } from "@/lib/types";
+import { isVisionEngine } from "@/lib/document-engines";
+import type { DocumentEngineType, ParserType } from "@/lib/types";
 
 const STANDARD_EXTENSIONS = [
   ".pdf",
@@ -23,15 +24,30 @@ const DOCLING_EXTENSIONS = [
   ".txt",
 ] as const;
 
-function extensionsForParser(parserType: ParserType): readonly string[] {
-  return parserType === "Docling" ? DOCLING_EXTENSIONS : STANDARD_EXTENSIONS;
+const VISION_EXTENSIONS = [
+  ".pdf",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".webp",
+  ".doc",
+  ".docx",
+  ".hwp",
+  ".hwpx",
+  ".ppt",
+  ".pptx",
+] as const;
+
+function extensionsForEngine(engineType: DocumentEngineType): readonly string[] {
+  if (isVisionEngine(engineType)) return VISION_EXTENSIONS;
+  return engineType === ("Docling" satisfies ParserType) ? DOCLING_EXTENSIONS : STANDARD_EXTENSIONS;
 }
 
-export function getParserFileTypeProfile(parserTypes: ParserType[]) {
-  const effectiveTypes = parserTypes.length > 0 ? parserTypes : ["Upstage" as const];
-  const extensions = extensionsForParser(effectiveTypes[0]).filter((extension) =>
-    effectiveTypes.every((parserType) =>
-      extensionsForParser(parserType).includes(extension)
+export function getParserFileTypeProfile(engineTypes: DocumentEngineType[]) {
+  const effectiveTypes = engineTypes.length > 0 ? engineTypes : ["Upstage" as const];
+  const extensions = extensionsForEngine(effectiveTypes[0]).filter((extension) =>
+    effectiveTypes.every((engineType) =>
+      extensionsForEngine(engineType).includes(extension)
     )
   );
 
@@ -44,10 +60,10 @@ export function getParserFileTypeProfile(parserTypes: ParserType[]) {
 
 export function isParserFileSupported(
   filename: string,
-  parserTypes: ParserType[]
+  engineTypes: DocumentEngineType[]
 ): boolean {
   const normalizedName = filename.trim().toLowerCase();
-  return getParserFileTypeProfile(parserTypes).extensions.some((extension) =>
+  return getParserFileTypeProfile(engineTypes).extensions.some((extension) =>
     normalizedName.endsWith(extension)
   );
 }

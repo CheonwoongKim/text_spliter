@@ -7,6 +7,12 @@ import { getAuthToken } from "@/lib/auth";
 interface LicenseKeys {
   // OpenAI (kept as openaiEmbedding for stored-key backward compatibility)
   openaiEmbedding: string;
+  geminiVision: string;
+  anthropicVision: string;
+  qwenVision: string;
+  qwenVisionEndpoint: string;
+  nativeDocumentRendererEndpoint: string;
+  nativeDocumentRendererApiKey: string;
 
   // Parsers
   upstageParser: string;
@@ -26,6 +32,10 @@ type TestStatus = 'idle' | 'testing' | 'success' | 'error';
 
 interface TestResults {
   openai: { status: TestStatus; message?: string };
+  gemini: { status: TestStatus; message?: string };
+  anthropic: { status: TestStatus; message?: string };
+  qwen: { status: TestStatus; message?: string };
+  renderer: { status: TestStatus; message?: string };
   upstage: { status: TestStatus; message?: string };
   llama: { status: TestStatus; message?: string };
   azure: { status: TestStatus; message?: string };
@@ -40,6 +50,20 @@ function credentialsForService(
   switch (service) {
     case 'openai':
       return { openaiEmbedding: keys.openaiEmbedding };
+    case 'gemini':
+      return { geminiVision: keys.geminiVision };
+    case 'anthropic':
+      return { anthropicVision: keys.anthropicVision };
+    case 'qwen':
+      return {
+        qwenVision: keys.qwenVision,
+        qwenVisionEndpoint: keys.qwenVisionEndpoint,
+      };
+    case 'renderer':
+      return {
+        nativeDocumentRendererEndpoint: keys.nativeDocumentRendererEndpoint,
+        nativeDocumentRendererApiKey: keys.nativeDocumentRendererApiKey,
+      };
     case 'upstage':
       return { upstageParser: keys.upstageParser };
     case 'llama':
@@ -65,9 +89,91 @@ function credentialsForService(
   }
 }
 
-export default function LicensesPanel() {
+interface LicensesPanelProps {
+  embedded?: boolean;
+}
+
+interface CredentialCardProps {
+  title: string;
+  description: string;
+  fields: Array<{
+    key: keyof LicenseKeys;
+    label: string;
+    placeholder: string;
+    type?: "text" | "password";
+  }>;
+  result: { status: TestStatus; message?: string };
+  values: LicenseKeys;
+  onChange: (key: keyof LicenseKeys, value: string) => void;
+  onTest: () => void;
+  testDisabled: boolean;
+}
+
+function CredentialCard({
+  title,
+  description,
+  fields,
+  result,
+  values,
+  onChange,
+  onTest,
+  testDisabled,
+}: CredentialCardProps) {
+  return (
+    <div className="border-b border-border py-6 last:border-b-0">
+      <div className="flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-base font-semibold text-card-foreground">
+          {title.slice(0, 1)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center justify-between gap-4">
+            <h4 className="text-base font-medium text-card-foreground">{title}</h4>
+            <button
+              type="button"
+              onClick={onTest}
+              disabled={testDisabled || result.status === "testing"}
+              className="text-xs font-medium text-accent transition-smooth hover:text-accent/80 disabled:cursor-not-allowed disabled:opacity-disabled"
+            >
+              {result.status === "testing" ? "Testing..." : "Test"}
+            </button>
+          </div>
+          <p className="mb-4 text-xs text-muted-foreground">{description}</p>
+          <div className="space-y-4">
+            {fields.map((field) => (
+              <label key={field.key} className="block">
+                <span className="mb-2 block text-xs font-medium text-muted-foreground">
+                  {field.label}
+                </span>
+                <input
+                  type={field.type || "password"}
+                  value={values[field.key]}
+                  onChange={(event) => onChange(field.key, event.target.value)}
+                  placeholder={field.placeholder}
+                  className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-base text-card-foreground placeholder-light focus-ring"
+                />
+              </label>
+            ))}
+          </div>
+          {result.status !== "idle" && result.status !== "testing" && (
+            <p className={`mt-3 text-xs ${result.status === "success" ? "text-success" : "text-danger"}`}>
+              {result.message}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function LicensesPanel({ embedded = false }: LicensesPanelProps) {
   const [keys, setKeys] = useState<LicenseKeys>({
     openaiEmbedding: "",
+    geminiVision: "",
+    anthropicVision: "",
+    qwenVision: "",
+    qwenVisionEndpoint: "",
+    nativeDocumentRendererEndpoint: "",
+    nativeDocumentRendererApiKey: "",
     upstageParser: "",
     llamaParser: "",
     azureParserKey: "",
@@ -84,9 +190,13 @@ export default function LicensesPanel() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dirtyKeys, setDirtyKeys] = useState<Set<keyof LicenseKeys>>(new Set());
-  const [activeTab, setActiveTab] = useState<"embedding" | "parser" | "database">("embedding");
+  const [activeTab, setActiveTab] = useState<"embedding" | "vision" | "parser" | "database">("embedding");
   const [testResults, setTestResults] = useState<TestResults>({
     openai: { status: 'idle' },
+    gemini: { status: 'idle' },
+    anthropic: { status: 'idle' },
+    qwen: { status: 'idle' },
+    renderer: { status: 'idle' },
     upstage: { status: 'idle' },
     llama: { status: 'idle' },
     azure: { status: 'idle' },
@@ -193,6 +303,12 @@ export default function LicensesPanel() {
 
       const emptyKeys: LicenseKeys = {
         openaiEmbedding: "",
+        geminiVision: "",
+        anthropicVision: "",
+        qwenVision: "",
+        qwenVisionEndpoint: "",
+        nativeDocumentRendererEndpoint: "",
+        nativeDocumentRendererApiKey: "",
         upstageParser: "",
         llamaParser: "",
         azureParserKey: "",
@@ -216,6 +332,10 @@ export default function LicensesPanel() {
         setDirtyKeys(new Set());
         setTestResults({
           openai: { status: 'idle' },
+          gemini: { status: 'idle' },
+          anthropic: { status: 'idle' },
+          qwen: { status: 'idle' },
+          renderer: { status: 'idle' },
           upstage: { status: 'idle' },
           llama: { status: 'idle' },
           azure: { status: 'idle' },
@@ -295,16 +415,18 @@ export default function LicensesPanel() {
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="py-8 px-6 bg-surface sticky top-0 z-navigation">
+        <div className={`${embedded ? "py-4" : "py-8"} px-6 bg-surface sticky top-0 z-navigation`}>
           <div className="max-w-5xl mx-auto">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold text-card-foreground mb-2">
-                Connect
-              </h2>
-              <p className="text-base text-muted-foreground">
-                Configure API keys and credentials for AI models, document parsers, and databases
-              </p>
-            </div>
+            {!embedded && (
+              <div className="mb-6">
+                <h2 className="text-2xl font-semibold text-card-foreground mb-2">
+                  Connections
+                </h2>
+                <p className="text-base text-muted-foreground">
+                  Configure API keys and credentials for AI models, document parsers, and databases
+                </p>
+              </div>
+            )}
 
             {/* Tabs and Buttons */}
             <div className="flex items-center justify-between">
@@ -318,6 +440,16 @@ export default function LicensesPanel() {
                 }`}
               >
                 AI Models
+              </button>
+              <button
+                onClick={() => setActiveTab("vision")}
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
+                  activeTab === "vision"
+                    ? "bg-card text-card-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-surface-foreground"
+                }`}
+              >
+                Vision Models
               </button>
               <button
                 onClick={() => setActiveTab("parser")}
@@ -470,6 +602,72 @@ export default function LicensesPanel() {
                 </div>
               </div>
             </div>
+            )}
+
+            {activeTab === "vision" && (
+              <div>
+                <div className="rounded-lg border border-border bg-muted px-4 py-3">
+                  <p className="text-xs text-muted-foreground">
+                    PDF는 OpenAI, Gemini, Claude에 원본으로 전달합니다. Qwen의 PDF와 Office/HWP 문서는 아래 네이티브 렌더러가 만든 페이지 이미지를 사용합니다.
+                  </p>
+                </div>
+                <CredentialCard
+                  title="OpenAI Vision"
+                  description="Embedding/RAG와 같은 OpenAI API 키를 Vision 문서 비교에도 사용합니다."
+                  fields={[{ key: "openaiEmbedding", label: "API Key", placeholder: "sk-..." }]}
+                  values={keys}
+                  result={testResults.openai}
+                  onChange={handleChange}
+                  onTest={() => handleTestConnection("openai")}
+                  testDisabled={!keys.openaiEmbedding}
+                />
+                <CredentialCard
+                  title="Gemini Vision"
+                  description="Google AI Gemini API 키입니다. Google Document AI 서비스 계정과 별도로 관리합니다."
+                  fields={[{ key: "geminiVision", label: "API Key", placeholder: "AIza..." }]}
+                  values={keys}
+                  result={testResults.gemini}
+                  onChange={handleChange}
+                  onTest={() => handleTestConnection("gemini")}
+                  testDisabled={!keys.geminiVision}
+                />
+                <CredentialCard
+                  title="Claude Vision"
+                  description="Anthropic Messages API에서 PDF 원본과 페이지 이미지를 처리합니다."
+                  fields={[{ key: "anthropicVision", label: "API Key", placeholder: "sk-ant-..." }]}
+                  values={keys}
+                  result={testResults.anthropic}
+                  onChange={handleChange}
+                  onTest={() => handleTestConnection("anthropic")}
+                  testDisabled={!keys.anthropicVision}
+                />
+                <CredentialCard
+                  title="Qwen Vision"
+                  description="Alibaba Model Studio 또는 호환 배포의 OpenAI-compatible endpoint를 사용합니다."
+                  fields={[
+                    { key: "qwenVision", label: "API Key", placeholder: "API key" },
+                    { key: "qwenVisionEndpoint", label: "Compatible API base URL", placeholder: "https://.../compatible-mode/v1", type: "text" },
+                  ]}
+                  values={keys}
+                  result={testResults.qwen}
+                  onChange={handleChange}
+                  onTest={() => handleTestConnection("qwen")}
+                  testDisabled={!keys.qwenVision || !keys.qwenVisionEndpoint}
+                />
+                <CredentialCard
+                  title="Native document renderer"
+                  description="Word/Hancom 원본 렌더러가 DOC/DOCX/HWP/HWPX를 중간 PDF 없이 PNG 페이지로 캡처하는 서비스입니다."
+                  fields={[
+                    { key: "nativeDocumentRendererEndpoint", label: "Renderer base URL", placeholder: "https://renderer.example.com", type: "text" },
+                    { key: "nativeDocumentRendererApiKey", label: "API Key (optional)", placeholder: "Renderer API key" },
+                  ]}
+                  values={keys}
+                  result={testResults.renderer}
+                  onChange={handleChange}
+                  onTest={() => handleTestConnection("renderer")}
+                  testDisabled={!keys.nativeDocumentRendererEndpoint}
+                />
+              </div>
             )}
 
             {/* Document Parsers Section */}

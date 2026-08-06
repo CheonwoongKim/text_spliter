@@ -864,7 +864,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
               )}
 
               <div>
-                <label className="block text-base font-medium text-card-foreground mb-2">
+                <label className="block text-xs font-medium text-card-foreground mb-2">
                   Vector Collection <span className="text-danger">*</span>
                 </label>
                 {vdbTablesLoading ? (
@@ -903,7 +903,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
               </div>
 
               <div>
-                <label className="block text-base font-medium text-card-foreground mb-2">
+                <label className="block text-xs font-medium text-card-foreground mb-2">
                   Batch Size
                 </label>
                 <input

@@ -1,4 +1,4 @@
-import type { ParserType } from "@/lib/types";
+import type { DocumentEngineType } from "@/lib/types";
 import {
   DOCUMENT_IR_SCHEMA_VERSION,
   createDocumentRegion,
@@ -23,7 +23,7 @@ interface LegacyPage {
 }
 
 export interface NormalizeDocumentInput {
-  parserType: ParserType;
+  parserType: DocumentEngineType;
   raw?: unknown;
   text?: string;
   markdown?: string;

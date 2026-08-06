@@ -10,11 +10,22 @@ function tokenNames(prefix: string) {
     .map((match) => match[1]);
 }
 
-test("typography is limited to five sizes between 12px and 24px", () => {
-  assert.deepEqual(tokenNames("ds-font-size"), ["xs", "base", "lg", "xl", "2xl"]);
-  assert.match(tokens, /--ds-font-size-xs: 0\.75rem/);
+test("typography has five core sizes and one navigation-only 11px size", () => {
+  assert.deepEqual(tokenNames("ds-font-size"), ["2xs", "xs", "base", "lg", "xl", "2xl"]);
+  assert.match(tokens, /--ds-font-size-2xs: 0\.6875rem/);
+  assert.match(tokens, /--ds-font-size-xs: 0\.8125rem/);
+  assert.match(tokens, /--ds-font-size-base: 0\.9375rem/);
+  assert.match(tokens, /--ds-font-size-lg: 1\.0625rem/);
   assert.match(tokens, /--ds-font-size-2xl: 1\.5rem/);
-  assert.doesNotMatch(tokens, /--ds-font-size-(?:micro|2xs|caption|sm|3xl)/);
+  assert.doesNotMatch(tokens, /--ds-font-size-(?:micro|caption|sm|3xl)/);
+});
+
+test("Korean-first typography uses compact tracking and readable line height", () => {
+  assert.match(tokens, /--ds-line-height-xs: 1\.25rem/);
+  assert.match(tokens, /--ds-line-height-base: 1\.5rem/);
+  assert.match(tokens, /--ds-letter-spacing-normal: -0\.01em/);
+  assert.match(tokens, /--ds-letter-spacing-mono: 0/);
+  assert.match(tokens, /--ds-layout-auth-width: 25rem/);
 });
 
 test("spacing and radius expose only the approved scales", () => {
@@ -22,7 +33,7 @@ test("spacing and radius expose only the approved scales", () => {
   assert.deepEqual(tokenNames("ds-radius"), ["sm", "lg", "xl", "full"]);
 });
 
-test("themes expose only neutral, accent, and meaningful status colors", () => {
+test("the single light palette exposes only neutral, accent, and meaningful status colors", () => {
   for (const token of [
     "--ds-color-bg-canvas",
     "--ds-color-fg-default",
@@ -33,7 +44,7 @@ test("themes expose only neutral, accent, and meaningful status colors", () => {
   ]) {
     assert.match(tokens, new RegExp(`${token}:`), `missing ${token}`);
   }
-  assert.match(tokens, /\.dark\s*\{/);
+  assert.doesNotMatch(tokens, /\.dark\s*\{/);
   assert.doesNotMatch(tokens, /--ds-color-info|--ds-(?:neutral|blue)-/);
 });
 
