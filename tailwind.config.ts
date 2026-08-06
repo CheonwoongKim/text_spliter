@@ -95,6 +95,7 @@ const config: Config = {
       sm: "var(--ds-radius-sm)",
       lg: "var(--ds-radius-lg)",
       xl: "var(--ds-radius-xl)",
+      "2xl": "var(--ds-radius-2xl)",
       full: "var(--ds-radius-full)",
     },
     boxShadow: {

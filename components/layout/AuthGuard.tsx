@@ -1,5 +1,6 @@
 "use client";
 
+import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { clearAuthTokens, syncAuthSession } from "@/lib/auth";
@@ -9,32 +10,27 @@ interface AuthGuardProps {
   children: React.ReactNode;
 }
 
+const PUBLIC_PATHS = new Set(["/login", "/signup"]);
+
 export default function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const isPublicPath = PUBLIC_PATHS.has(pathname);
+  const [session, setSession] = useState<Session | null>(null);
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     let active = true;
-    const publicPaths = ["/login"];
-    const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
     const supabase = getBrowserSupabase();
 
-    const applySession = (session: Parameters<typeof syncAuthSession>[0]) => {
+    const applySession = (nextSession: Session | null) => {
       if (!active) return;
 
-      syncAuthSession(session);
-
-      if (!session && !isPublicPath) {
-        router.replace("/login");
-      } else if (session && isPublicPath) {
-        router.replace("/");
-      } else {
-        setIsChecking(false);
-      }
+      syncAuthSession(nextSession);
+      setSession(nextSession);
+      setIsChecking(false);
     };
 
-    setIsChecking(true);
     void supabase.auth.getSession().then(({ data, error }) => {
       if (error) {
         console.error("[AuthGuard] Failed to restore Supabase session:", error);
@@ -54,10 +50,22 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       active = false;
       authListener.subscription.unsubscribe();
     };
-  }, [pathname, router]);
+  }, []);
 
-  // Show loading spinner while checking auth
-  if (isChecking) {
+  const needsRedirect =
+    !isChecking && ((!session && !isPublicPath) || (Boolean(session) && isPublicPath));
+
+  useEffect(() => {
+    if (isChecking) return;
+
+    if (!session && !isPublicPath) {
+      router.replace("/login");
+    } else if (session && isPublicPath) {
+      router.replace("/");
+    }
+  }, [isChecking, isPublicPath, router, session]);
+
+  if (isChecking || needsRedirect) {
     return (
       <div className="h-screen flex items-center justify-center bg-surface">
         <div className="flex flex-col items-center gap-4">

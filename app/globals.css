@@ -1,35 +1,5 @@
 @import "../styles/design-tokens.css";
 
-@font-face {
-  font-family: "Spoqa Han Sans Neo";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src:
-    local("Spoqa Han Sans Neo Regular"),
-    url("https://cdn.jsdelivr.net/gh/spoqa/spoqa-han-sans@3.3.0/Subset/SpoqaHanSansNeo/SpoqaHanSansNeo-Regular.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Spoqa Han Sans Neo";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src:
-    local("Spoqa Han Sans Neo Medium"),
-    url("https://cdn.jsdelivr.net/gh/spoqa/spoqa-han-sans@3.3.0/Subset/SpoqaHanSansNeo/SpoqaHanSansNeo-Medium.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Spoqa Han Sans Neo";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src:
-    local("Spoqa Han Sans Neo Bold"),
-    url("https://cdn.jsdelivr.net/gh/spoqa/spoqa-han-sans@3.3.0/Subset/SpoqaHanSansNeo/SpoqaHanSansNeo-Bold.woff2") format("woff2");
-}
-
 /**
  * BGK Design System - Global Styles
  */

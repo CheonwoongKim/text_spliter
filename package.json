@@ -8,7 +8,7 @@
     "ragas:setup": "node scripts/setup-ragas-worker.mjs",
     "ragas:test": "services/ragas-worker/.venv/bin/python -m pytest services/ragas-worker/tests",
     "check:design": "node scripts/check-design-system.mjs",
-    "test:unit": "tsx --test tests/*.test.ts",
+    "test:unit": "tsx --test tests/*.test.ts tests/*.test.tsx",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
@@ -32,6 +32,8 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/jsdom": "^28.0.3",
     "@types/node": "^22.10.2",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19.2.18",
@@ -39,6 +41,7 @@
     "autoprefixer": "^10.4.21",
     "eslint": "^9.17.0",
     "eslint-config-next": "^16.3.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.7",

@@ -9,7 +9,7 @@ const RULES = [
   {
     name: "unsupported font size",
     pattern: /\btext-(?:micro|caption|sm|3xl|4xl|5xl|6xl|7xl|8xl|9xl|\[[^\]]+\])/g,
-    guidance: "Use text-xs, text-base, text-lg, text-xl, or text-2xl. text-2xs is navigation-only.",
+    guidance: "Use text-xs, text-base, text-lg, text-xl, or text-2xl. text-2xs is for compact navigation and authentication labels only.",
   },
   {
     name: "unsupported font weight",
@@ -28,8 +28,8 @@ const RULES = [
   },
   {
     name: "unsupported radius",
-    pattern: /\brounded\b(?!-)|\brounded(?:-[trbl]{1,2})?-(?:none|xs|md|2xl|3xl|\[[^\]]+\])/g,
-    guidance: "Use rounded-sm, rounded-lg, rounded-xl, or rounded-full.",
+    pattern: /\brounded\b(?!-)|\brounded(?:-[trbl]{1,2})?-(?:none|xs|md|3xl|\[[^\]]+\])/g,
+    guidance: "Use rounded-sm, rounded-lg, rounded-xl, rounded-2xl, or rounded-full.",
   },
   {
     name: "raw Tailwind color",

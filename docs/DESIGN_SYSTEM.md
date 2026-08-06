@@ -41,13 +41,13 @@ styles/design-tokens.css → tailwind.config.ts → app/globals.css / components
 
 ## Typography
 
-UI에는 Spoqa Han Sans Neo 하나만 사용합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
+UI에는 Spoqa Han Sans Neo 하나만 사용합니다. WOFF2 파일은 프로젝트에서 자체 호스팅하고 `next/font/local`의 fallback metric 보정을 적용해 font swap 레이아웃 이동을 줄입니다. 모든 굵기를 선로딩하지 않고 각 화면에서 실제 사용하는 굵기만 브라우저가 요청합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
 
-핵심 UI의 최소 font size는 `13px`, 최대 font size는 `24px`입니다. `11px`은 좁은 대시보드 메뉴 label에만 사용하는 예외 토큰입니다.
+핵심 UI의 최소 font size는 `13px`, 최대 font size는 `24px`입니다. `11px`은 좁은 대시보드 메뉴와 인증 입력필드 label에만 사용하는 예외 토큰입니다.
 
 | Utility | Size / line-height | Role |
 | --- | --- | --- |
-| `text-2xs` | 11 / 16px | dashboard navigation label only |
+| `text-2xs` | 11 / 16px | compact navigation and authentication label only |
 | `text-xs` | 13 / 20px | label, metadata, table heading |
 | `text-base` | 15 / 24px | body, input, button, table cell |
 | `text-lg` | 17 / 26px | section heading |
@@ -62,7 +62,9 @@ UI에는 Spoqa Han Sans Neo 하나만 사용합니다. Geist Mono는 JSON, 코�
 
 Label은 필드의 의미를 명확하게 설명합니다. Placeholder는 label이나 입력 지시를 반복하지 않고, 사용자가 입력 형식을 바로 이해할 수 있는 실제 예시만 제공합니다.
 
-입력필드 label은 `text-xs`(13px)와 `400` weight를 사용합니다. Placeholder는 `fg-placeholder` 토큰으로 본문과 명확히 구분하고, 입력값보다 시각적으로 강조하지 않습니다.
+일반 입력필드 label은 `text-xs`(13px), 로그인·회원가입 입력필드 label은 `text-2xs`(11px)를 사용하며 weight는 모두 `400`입니다. 인증 입력값과 Placeholder는 `text-xs`(13px)를 사용합니다. Placeholder는 `fg-placeholder` 토큰으로 본문과 명확히 구분하고, 입력값보다 시각적으로 강조하지 않습니다.
+
+로그인과 회원가입은 각각 `/login`, `/signup` 경로를 사용합니다. 회원가입 비밀번호는 8자 이상이며 영문 대문자·소문자, 숫자, 특수문자를 모두 포함해야 하고 비밀번호 확인 값과 일치해야 합니다. 이 규칙은 클라이언트 검증과 로컬 `supabase/config.toml`에 동일하게 적용합니다. 운영 Supabase 프로젝트도 Auth 설정의 password strength를 같은 값으로 유지해야 합니다.
 
 입력필드 포커스 테두리는 파란색 accent가 아니라 `surface-foreground`를 사용해 검정 계열로 표시합니다.
 
@@ -72,7 +74,7 @@ Label은 필드의 의미를 명확하게 설명합니다. Placeholder는 label�
 
 Placeholder는 보조 정보일 뿐이므로 label을 대신할 수 없습니다. 모든 입력 필드는 화면에 표시되는 label과 연결합니다.
 
-비밀번호, API key, private key처럼 민감한 값에는 실제 값처럼 보이는 예시를 제공하지 않습니다. 비밀번호는 `영문, 숫자, 특수문자 포함 8자리 이상 입력`처럼 보안 조건만 안내할 수 있고, 그 외 민감한 필드는 placeholder를 생략합니다.
+비밀번호, API key, private key처럼 민감한 값에는 실제 값처럼 보이는 예시를 제공하지 않습니다. 비밀번호는 `영문 대·소문자, 숫자, 특수문자 포함 8자리 이상 입력`처럼 보안 조건만 안내할 수 있고, 그 외 민감한 필드는 placeholder를 생략합니다.
 
 ## Spacing
 
@@ -102,7 +104,7 @@ Spacing은 다음 9개 값만 사용합니다. `0`은 값 없음의 의미로 �
 | `h-control-xl` | 48px | primary input and button |
 | `h-topbar` | 64px | top bar including border |
 | `w-sidebar` | 80px | app navigation |
-| `max-w-auth` | 400px | authentication form |
+| `max-w-auth` | 360px | authentication form |
 
 ## Radius
 
@@ -111,9 +113,10 @@ Spacing은 다음 9개 값만 사용합니다. `0`은 값 없음의 의미로 �
 | `rounded-sm` | 4px | badge, checkbox, compact item |
 | `rounded-lg` | 8px | button, input, panel |
 | `rounded-xl` | 12px | modal and large interactive region |
+| `rounded-2xl` | 16px | prominent authentication control |
 | `rounded-full` | full | circle and pill only |
 
-기본값 `rounded`와 `rounded-md`는 사용하지 않습니다.
+기본값 `rounded`와 `rounded-md`는 사용하지 않습니다. `rounded-2xl`은 인증 입력필드와 주요 인증 버튼에만 사용합니다.
 
 ## Color
 
