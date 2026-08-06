@@ -8,8 +8,8 @@ const ALLOWED_SPACING = new Set(["0", "1", "2", "3", "4", "6", "8", "10", "12", 
 const RULES = [
   {
     name: "unsupported font size",
-    pattern: /\btext-(?:micro|2xs|caption|sm|3xl|4xl|5xl|6xl|7xl|8xl|9xl|\[[^\]]+\])/g,
-    guidance: "Use text-xs, text-base, text-lg, text-xl, or text-2xl.",
+    pattern: /\btext-(?:micro|caption|sm|3xl|4xl|5xl|6xl|7xl|8xl|9xl|\[[^\]]+\])/g,
+    guidance: "Use text-xs, text-base, text-lg, text-xl, or text-2xl. text-2xs is navigation-only.",
   },
   {
     name: "unsupported font weight",
@@ -59,7 +59,7 @@ const RULES = [
   {
     name: "component theme color branch",
     pattern: /\bdark:(?:bg|text|border|ring)-[^\s"'`}]+/g,
-    guidance: "Theme differences belong in styles/design-tokens.css.",
+    guidance: "The MVP uses a single light theme; remove dark theme branches.",
   },
   {
     name: "arbitrary spacing",

@@ -1,5 +1,35 @@
 @import "../styles/design-tokens.css";
 
+@font-face {
+  font-family: "Spoqa Han Sans Neo";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local("Spoqa Han Sans Neo Regular"),
+    url("https://cdn.jsdelivr.net/gh/spoqa/spoqa-han-sans@3.3.0/Subset/SpoqaHanSansNeo/SpoqaHanSansNeo-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Spoqa Han Sans Neo";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    local("Spoqa Han Sans Neo Medium"),
+    url("https://cdn.jsdelivr.net/gh/spoqa/spoqa-han-sans@3.3.0/Subset/SpoqaHanSansNeo/SpoqaHanSansNeo-Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Spoqa Han Sans Neo";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    local("Spoqa Han Sans Neo Bold"),
+    url("https://cdn.jsdelivr.net/gh/spoqa/spoqa-han-sans@3.3.0/Subset/SpoqaHanSansNeo/SpoqaHanSansNeo-Bold.woff2") format("woff2");
+}
+
 /**
  * BGK Design System - Global Styles
  */
@@ -31,6 +61,14 @@
     line-height: var(--ds-line-height-base);
   }
 
+  /* Preserve data alignment while the Korean-first UI uses tighter tracking. */
+  code,
+  pre,
+  kbd,
+  samp {
+    letter-spacing: var(--ds-letter-spacing-mono);
+  }
+
   /* Heading styles */
   h1 {
     @apply text-2xl font-semibold;
@@ -46,6 +84,10 @@
 }
 
 @layer utilities {
+  .font-mono {
+    letter-spacing: var(--ds-letter-spacing-mono);
+  }
+
   /* Text balance utility */
   .text-balance {
     text-wrap: balance;
@@ -80,21 +122,12 @@
 
   /* Focus visible utility */
   .focus-ring {
-    @apply focus:outline-none focus:border-2 focus:border-accent;
+    @apply focus:outline-none focus:border-surface-foreground;
   }
 
   /* Transition utilities */
   .transition-smooth {
     @apply transition-all duration-normal ease-standard;
-  }
-
-  .theme-transitioning,
-  .theme-transitioning *,
-  .theme-transitioning *::before,
-  .theme-transitioning *::after {
-    transition-property: color, background-color, border-color, fill, stroke;
-    transition-duration: var(--ds-duration-normal);
-    transition-timing-function: var(--ds-ease-standard);
   }
 
   /* Placeholder utility for very light text */

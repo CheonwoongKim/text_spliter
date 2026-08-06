@@ -8,6 +8,7 @@ import type {
   ParserType,
 } from "@/lib/types";
 import { getDocumentEngine } from "@/lib/document-engines";
+import { PARSER_SETTINGS_SCHEMA_VERSION } from "@/lib/parser-engine-settings";
 import { normalizeDocument } from "@/lib/normalize-document";
 import { getDecryptedApiKeyMap } from "@/lib/api-key-store";
 import { getUserEmailFromToken } from "@/lib/auth-server";
@@ -76,11 +77,20 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const parserType = formData.get("parserType") as ParserType;
+    const requestedExperimentId = formData.get("experimentId");
+    const experimentId = typeof requestedExperimentId === "string"
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestedExperimentId)
+      ? requestedExperimentId
+      : undefined;
+    const requestedExperimentRole = formData.get("experimentRole");
+    const experimentRole = requestedExperimentRole === "primary"
+      || requestedExperimentRole === "additional"
+      ? requestedExperimentRole
+      : undefined;
 
     // Get parser settings
     const language = formData.get("language") as string | null;
     const extractImages = formData.get("extractImages") === "true";
-    const extractTables = formData.get("extractTables") === "true";
     const pageRange = formData.get("pageRange") as string | null;
 
     // Azure specific
@@ -202,6 +212,10 @@ export async function POST(request: NextRequest) {
     let normalizedPages: ParseResponse["pages"];
     let parserVersion: string | undefined;
     let parserModel: string | undefined;
+    let resolvedAzureModelId: string | undefined;
+    let resolvedAzureOutputFormat: string | undefined;
+    let resolvedGoogleLocation: string | undefined;
+    let resolvedGoogleProcessorId: string | undefined;
 
     // Parse based on parser type
     if (parserType === "Upstage") {
@@ -375,11 +389,13 @@ export async function POST(request: NextRequest) {
       // Convert file to base64
       // Determine model ID (use setting or default to prebuilt-layout for better markdown support)
       const modelId = azureModelId || "prebuilt-layout";
+      resolvedAzureModelId = modelId;
       parserModel = modelId;
       parserVersion = "2024-11-30";
 
       // Determine output format
       const outputContentFormat = azureOutputFormat || "markdown";
+      resolvedAzureOutputFormat = outputContentFormat;
 
       // Start analysis with output format
       const analyzeUrl = `${endpoint}/formrecognizer/documentModels/${modelId}:analyze?api-version=2024-11-30&outputContentFormat=${outputContentFormat}`;
@@ -472,6 +488,8 @@ export async function POST(request: NextRequest) {
       if (!location || !processorId) {
         throw new Error("Google Document AI requires location and processor ID. Please set them in settings or APIs page.");
       }
+      resolvedGoogleLocation = location;
+      resolvedGoogleProcessorId = processorId;
 
       // Convert file to base64
       const base64 = fileBuffer.toString("base64");
@@ -585,23 +603,39 @@ export async function POST(request: NextRequest) {
     }
 
     const processingTime = Date.now() - startTime;
-    const runConfig: JsonObject = {
-      language: language || null,
-      pageRange: pageRange || null,
-      extractImages,
-      extractTables,
-      upstageOutputFormat: (formData.get("upstageOutputFormat") as string | null) || null,
-      llamaTier,
-      llamaVersion,
-      azureModelId: azureModelId || null,
-      azureOutputFormat: azureOutputFormat || null,
-      googleProcessorId: googleProcessorId || null,
-      googleLocation: googleLocation || null,
-      doclingOutputFormat,
-      doclingOcrMode,
-      doclingPipeline,
-      doclingTableMode,
-    };
+    let runConfig: JsonObject;
+    if (parserType === "Upstage") {
+      runConfig = {
+        language: language || null,
+        outputFormats: ["html", "text", "markdown"],
+      };
+    } else if (parserType === "LlamaIndex") {
+      runConfig = {
+        llamaTier,
+        llamaVersion,
+        language: language || null,
+        pageRange: pageRange || null,
+      };
+    } else if (parserType === "Azure") {
+      runConfig = {
+        azureModelId: resolvedAzureModelId || "prebuilt-layout",
+        azureOutputFormat: resolvedAzureOutputFormat || "markdown",
+      };
+    } else if (parserType === "Google") {
+      runConfig = {
+        googleLocation: resolvedGoogleLocation || null,
+        googleProcessorId: resolvedGoogleProcessorId || null,
+      };
+    } else {
+      runConfig = {
+        doclingOutputFormat,
+        doclingOcrMode,
+        doclingPipeline,
+        doclingTableMode,
+        extractImages,
+        language: language || null,
+      };
+    }
 
     const normalizedDocument = normalizeDocument({
       parserType,
@@ -624,6 +658,9 @@ export async function POST(request: NextRequest) {
         version: parserVersion,
         status: "succeeded",
         config: runConfig,
+        settingsSchemaVersion: PARSER_SETTINGS_SCHEMA_VERSION,
+        experimentId,
+        role: experimentRole,
         startedAt,
         completedAt: new Date().toISOString(),
       },

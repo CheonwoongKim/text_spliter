@@ -3,7 +3,7 @@
  *
  * A deliberately small system for a function-first product:
  * - one UI typeface and one data typeface
- * - five font sizes
+ * - five core font sizes and one navigation-only size
  * - a selective 4px spacing scale
  * - neutral surfaces, one accent, and three status colors
  */
@@ -11,7 +11,7 @@
 :root {
   color-scheme: light;
 
-  /* Theme colors: neutral + one accent */
+  /* Single light palette: neutral + one accent */
   --ds-color-bg-canvas: #fafafa;
   --ds-color-bg-raised: #ffffff;
   --ds-color-bg-muted: #f5f5f5;
@@ -19,7 +19,7 @@
   --ds-color-fg-default: #171717;
   --ds-color-fg-strong: #262626;
   --ds-color-fg-muted: #525252;
-  --ds-color-fg-placeholder: #737373;
+  --ds-color-fg-placeholder: #a3a3a3;
   --ds-color-border-default: #d4d4d4;
   --ds-color-border-strong: #a3a3a3;
   --ds-color-accent: #2563eb;
@@ -40,26 +40,29 @@
   --ds-color-danger-action: #dc2626;
   --ds-color-danger-action-foreground: #ffffff;
 
-  /* Typography: 12px minimum, 24px maximum */
-  --ds-font-family-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Typography: 13px core minimum; 11px navigation-only exception */
+  --ds-font-family-sans: "Spoqa Han Sans Neo", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --ds-font-family-mono: var(--font-geist-mono), Menlo, Monaco, "Courier New", monospace;
-  --ds-font-size-xs: 0.75rem;
-  --ds-font-size-base: 0.875rem;
-  --ds-font-size-lg: 1rem;
+  --ds-font-size-2xs: 0.6875rem;
+  --ds-font-size-xs: 0.8125rem;
+  --ds-font-size-base: 0.9375rem;
+  --ds-font-size-lg: 1.0625rem;
   --ds-font-size-xl: 1.25rem;
   --ds-font-size-2xl: 1.5rem;
-  --ds-line-height-xs: 1rem;
-  --ds-line-height-base: 1.25rem;
-  --ds-line-height-lg: 1.5rem;
-  --ds-line-height-xl: 1.75rem;
-  --ds-line-height-2xl: 2rem;
+  --ds-line-height-2xs: 1rem;
+  --ds-line-height-xs: 1.25rem;
+  --ds-line-height-base: 1.5rem;
+  --ds-line-height-lg: 1.625rem;
+  --ds-line-height-xl: 1.875rem;
+  --ds-line-height-2xl: 2.25rem;
   --ds-leading-4: 1rem;
   --ds-leading-5: 1.25rem;
   --ds-leading-6: 1.5rem;
   --ds-leading-7: 1.75rem;
-  --ds-letter-spacing-tight: -0.025em;
-  --ds-letter-spacing-normal: 0;
-  --ds-letter-spacing-wide: 0.05em;
+  --ds-letter-spacing-tight: -0.02em;
+  --ds-letter-spacing-normal: -0.01em;
+  --ds-letter-spacing-wide: 0.04em;
+  --ds-letter-spacing-mono: 0;
 
   /* Spacing: 4, 8, 12, 16, 24, 32, 40, 48, 64px */
   --ds-space-1: 0.25rem;
@@ -104,31 +107,5 @@
   --ds-control-xl: 3rem;
   --ds-layout-topbar-height: 4rem;
   --ds-layout-sidebar-width: 5rem;
-}
-
-.dark {
-  color-scheme: dark;
-  --ds-color-bg-canvas: #000000;
-  --ds-color-bg-raised: #0a0a0a;
-  --ds-color-bg-muted: #171717;
-  --ds-color-bg-secondary: #171717;
-  --ds-color-fg-default: #fafafa;
-  --ds-color-fg-strong: #fafafa;
-  --ds-color-fg-muted: #a3a3a3;
-  --ds-color-fg-placeholder: #737373;
-  --ds-color-border-default: #262626;
-  --ds-color-border-strong: #404040;
-  --ds-color-accent: #fafafa;
-  --ds-color-accent-foreground: #000000;
-  --ds-color-success: #86efac;
-  --ds-color-success-surface: rgb(34 197 94 / 0.12);
-  --ds-color-success-border: rgb(134 239 172 / 0.28);
-  --ds-color-warning: #fde68a;
-  --ds-color-warning-surface: rgb(245 158 11 / 0.12);
-  --ds-color-warning-border: rgb(253 230 138 / 0.28);
-  --ds-color-danger: #fecaca;
-  --ds-color-danger-surface: rgb(239 68 68 / 0.12);
-  --ds-color-danger-border: rgb(254 202 202 / 0.28);
-  --ds-color-danger-action: #f87171;
-  --ds-color-danger-action-foreground: #000000;
+  --ds-layout-auth-width: 25rem;
 }

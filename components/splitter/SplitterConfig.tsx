@@ -25,7 +25,7 @@ const INPUT_BASE_CLASS = `w-full h-12 px-3 border border-border rounded-lg
                    bg-card text-card-foreground placeholder-light
                    transition-smooth`;
 
-const LABEL_CLASS = "block text-base text-muted-foreground mb-1";
+const LABEL_CLASS = "block text-xs text-muted-foreground mb-1";
 const HELP_TEXT_CLASS = "text-xs text-muted-foreground mt-2";
 
 function SplitterConfig({

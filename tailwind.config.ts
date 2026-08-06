@@ -13,7 +13,6 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: "class",
   theme: {
     colors: {
       inherit: "inherit",
@@ -68,6 +67,7 @@ const config: Config = {
       mono: ["var(--ds-font-family-mono)"],
     },
     fontSize: {
+      "2xs": ["var(--ds-font-size-2xs)", { lineHeight: "var(--ds-line-height-2xs)" }],
       xs: ["var(--ds-font-size-xs)", { lineHeight: "var(--ds-line-height-xs)" }],
       base: ["var(--ds-font-size-base)", { lineHeight: "var(--ds-line-height-base)" }],
       lg: ["var(--ds-font-size-lg)", { lineHeight: "var(--ds-line-height-lg)" }],
@@ -120,6 +120,9 @@ const config: Config = {
       toast: "var(--ds-z-toast)",
     },
     extend: {
+      maxWidth: {
+        auth: "var(--ds-layout-auth-width)",
+      },
       spacing: {
         "1": "var(--ds-space-1)",
         "2": "var(--ds-space-2)",

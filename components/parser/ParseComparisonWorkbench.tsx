@@ -60,7 +60,8 @@ function runId(run: ParseResponse, index: number): string {
 function runLabel(run: ParseResponse, index: number): string {
   const engine = run.run?.engineId || run.metadata?.parserType || `Run ${index + 1}`;
   const model = run.run?.model;
-  return model ? `${engine} · ${model}` : engine;
+  const role = run.run?.role === "primary" ? " · Primary" : "";
+  return model ? `${engine} · ${model}${role}` : `${engine}${role}`;
 }
 
 function comparisonContent(run?: ParseResponse): { format: string; content: string } {
@@ -188,6 +189,9 @@ function ResultColumn({
           {run?.metadata?.processingTime !== undefined && (
             <span>{run.metadata.processingTime}ms</span>
           )}
+          {run?.run?.inputMode && (
+            <span>· {run.run.inputMode}</span>
+          )}
           {statistics && (
             <>
               <span>·</span>
@@ -216,6 +220,13 @@ export default function ParseComparisonWorkbench({
     () => runs.map((run, index) => ({ id: runId(run, index), run, index })),
     [runs]
   );
+  const latestExperimentId = useMemo(
+    () => [...runEntries]
+      .reverse()
+      .find((entry) => entry.run.run?.experimentId)
+      ?.run.run?.experimentId,
+    [runEntries]
+  );
   const [runAId, setRunAId] = useState("");
   const [runBId, setRunBId] = useState("");
   const [winnerId, setWinnerId] = useState<string | undefined>();
@@ -224,10 +235,17 @@ export default function ParseComparisonWorkbench({
   const [copiedEvaluation, setCopiedEvaluation] = useState(false);
 
   useEffect(() => {
-    const ids = runEntries.map((entry) => entry.id);
-    if (!ids.includes(runAId)) setRunAId(ids[Math.max(0, ids.length - 2)] || "");
-    if (!ids.includes(runBId)) setRunBId(ids[ids.length - 1] || "");
-  }, [runEntries, runAId, runBId]);
+    const latestExperimentRuns = latestExperimentId
+      ? runEntries.filter((entry) => entry.run.run?.experimentId === latestExperimentId)
+      : runEntries;
+    const primary = latestExperimentRuns.find((entry) => entry.run.run?.role === "primary");
+    const additional = latestExperimentRuns.find((entry) => entry.run.run?.role === "additional");
+    const fallbackA = latestExperimentRuns[Math.max(0, latestExperimentRuns.length - 2)];
+    const fallbackB = latestExperimentRuns[latestExperimentRuns.length - 1];
+
+    setRunAId(primary?.id || fallbackA?.id || "");
+    setRunBId(additional?.id || fallbackB?.id || "");
+  }, [latestExperimentId, runEntries]);
 
   useEffect(() => {
     if (!selectedFile) {

@@ -4,7 +4,13 @@ import { memo, useCallback, useState, useMemo, useEffect } from "react";
 import type { CSSProperties } from "react";
 import JsonView from '@uiw/react-json-view';
 import { JSON_VIEW_THEME } from "@/lib/json-view-theme";
-import type { ParseResponse, ParserViewMode, ParserConfig } from "@/lib/types";
+import { summarizeDocumentEngineConfig } from "@/lib/document-engine-settings";
+import type {
+  DocumentEngineConfig,
+  DocumentEngineType,
+  ParseResponse,
+  ParserViewMode,
+} from "@/lib/types";
 import ParseComparisonWorkbench from "@/components/parser/ParseComparisonWorkbench";
 
 interface ParserRightPanelProps {
@@ -12,7 +18,7 @@ interface ParserRightPanelProps {
   runs?: ParseResponse[];
   selectedFile: File | null;
   selectedFileStorageKey?: string | null;
-  config: ParserConfig;
+  config: DocumentEngineConfig & { parserType: DocumentEngineType };
   onSelectRun?: (runId: string) => void;
   onClearRuns?: () => void;
 }
@@ -204,11 +210,20 @@ function ParserRightPanel({
                       : "border-border hover:border-border-darkest"
                   }`}
                 >
-                  <p className="text-xs font-medium text-card-foreground truncate">
-                    {run.run?.engineId || run.metadata?.parserType || `Run ${index + 1}`}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="min-w-0 flex-1 text-xs font-medium text-card-foreground truncate">
+                      {run.run?.engineId || run.metadata?.parserType || `Run ${index + 1}`}
+                    </p>
+                    {run.run?.role === "primary" && (
+                      <span className="shrink-0 rounded-sm bg-accent/10 px-2 py-1 text-xs font-medium text-accent">
+                        Primary
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground truncate mt-1">
-                    {[run.run?.model, run.run?.version].filter(Boolean).join(" · ") || `Run ${index + 1}`}
+                    {run.metadata?.parserType && run.run?.config
+                      ? summarizeDocumentEngineConfig(run.metadata.parserType, run.run.config)
+                      : [run.run?.model, run.run?.version].filter(Boolean).join(" · ") || `Run ${index + 1}`}
                   </p>
                 </button>
               );
@@ -264,6 +279,22 @@ function ParserRightPanel({
                     {[result.run.model, result.run.version].filter(Boolean).join(" · ") || "-"}
                   </p>
                 </div>
+                {result.run.inputMode && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Input handling</p>
+                    <p className="text-base text-card-foreground font-medium">
+                      {result.run.inputMode}
+                    </p>
+                  </div>
+                )}
+                {result.run.renderer && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Renderer</p>
+                    <p className="text-base text-card-foreground font-medium">
+                      {[result.run.renderer.name, result.run.renderer.version].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                )}
               </>
             )}
           </div>

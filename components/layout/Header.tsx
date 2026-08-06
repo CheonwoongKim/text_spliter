@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { signOut } from "@/lib/auth";
-import ThemeToggle from "@/components/theme/ThemeToggle";
 
 interface HeaderProps {
   title: string;
@@ -23,7 +22,6 @@ export default function Header({ title, isLoggedIn = true }: HeaderProps) {
         </h1>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           {isLoggedIn && (
             <button
               onClick={handleLogout}
