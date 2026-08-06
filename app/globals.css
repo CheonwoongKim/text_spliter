@@ -51,7 +51,16 @@
     text-wrap: balance;
   }
 
-  /* Custom scrollbar */
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Standards-based scrollbar with WebKit fallback */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ds-color-border-default) var(--ds-color-bg-muted);
+  }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 8px;
     height: 8px;
