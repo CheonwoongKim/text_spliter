@@ -46,7 +46,7 @@
 }
 
 @layer utilities {
-  /* Text balance utility */
+  /* Text balance & pretty utilities */
   .text-balance {
     text-wrap: balance;
   }
@@ -97,9 +97,25 @@
     transition-timing-function: var(--ds-ease-standard);
   }
 
-  /* Placeholder utility for very light text */
+  /* Placeholder utility */
   .placeholder-light::placeholder {
     color: var(--ds-color-fg-placeholder);
+  }
+
+  /* Panel Container Query utility for workbench split views */
+  .panel-container {
+    container-type: inline-size;
+  }
+
+  /* Interactive card utility leveraging CSS :has() */
+  .card-interactive {
+    @apply transition-smooth border border-border rounded-lg bg-card text-card-foreground;
+  }
+
+  .card-interactive:has(input:checked),
+  .card-interactive:has(input:focus-visible),
+  .card-interactive:has(button:focus-visible) {
+    border-color: var(--ds-color-accent);
   }
 }
 
