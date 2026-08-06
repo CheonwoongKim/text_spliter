@@ -9,6 +9,8 @@
 @layer base {
   /* Light Theme (Default) */
   :root {
+    color-scheme: light;
+
     /* Surface colors */
     --color-surface: #fafafa;
     --color-surface-foreground: #171717;
@@ -38,6 +40,8 @@
 
   /* Dark Theme */
   .dark {
+    color-scheme: dark;
+
     /* Surface colors */
     --color-surface: #000000;
     --color-surface-foreground: #fafafa;
@@ -98,12 +102,21 @@
 }
 
 @layer utilities {
-  /* Text balance utility */
+  /* Text balance & pretty utilities */
   .text-balance {
     text-wrap: balance;
   }
 
-  /* Custom scrollbar */
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Custom scrollbar - Standard CSS with Webkit fallback */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-darkest) var(--color-subtle);
+  }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -131,13 +144,25 @@
     @apply transition-all duration-200 ease-in-out;
   }
 
-  /* Placeholder utility for very light text */
+  /* Placeholder utility using color-mix */
   .placeholder-light::placeholder {
-    color: rgba(163, 163, 163, 0.25); /* Light mode: very light gray */
+    color: color-mix(in srgb, var(--color-border-darkest) 35%, transparent);
   }
 
-  .dark .placeholder-light::placeholder {
-    color: rgba(163, 163, 163, 0.25); /* Dark mode: very light gray */
+  /* Panel Container Query utility for workbench split views */
+  .panel-container {
+    container-type: inline-size;
+  }
+
+  /* Interactive card utility leveraging CSS :has() */
+  .card-interactive {
+    @apply transition-smooth border border-border rounded-lg bg-card text-card-foreground;
+  }
+
+  .card-interactive:has(input:checked),
+  .card-interactive:has(input:focus-visible),
+  .card-interactive:has(button:focus-visible) {
+    border-color: var(--color-accent);
   }
 }
 
