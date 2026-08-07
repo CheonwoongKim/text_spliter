@@ -1,9 +1,9 @@
 "use client";
 
+import { ArrowRight, CloudUpload, FileText, LoaderCircle, RotateCcw, X } from "lucide-react";
 import { memo, useCallback, useEffect, useState } from "react";
 import { getAuthToken } from "@/lib/auth";
 import { getDocumentEngine, listDocumentEngines } from "@/lib/document-engines";
-import { summarizeDocumentEngineConfig } from "@/lib/document-engine-settings";
 import { buildParserExperimentEngines } from "@/lib/parser-experiment";
 import {
   getParserFileTypeProfile,
@@ -56,7 +56,6 @@ function ParserLeftPanel({
   onParse,
   onReset,
 }: ParserLeftPanelProps) {
-  const selectedEngine = getDocumentEngine(primaryEngine);
   const [uploadMode, setUploadMode] = useState<"upload" | "select">("upload");
   const [storageFiles, setStorageFiles] = useState<StorageFile[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
@@ -65,6 +64,12 @@ function ParserLeftPanel({
   const experimentEngines = buildParserExperimentEngines(
     primaryEngine,
     additionalExperimentEngines
+  );
+  const primaryEngineDefinition = getDocumentEngine(primaryEngine);
+  const availableAdditionalEngines = documentEngines.filter(
+    (engine) =>
+      engine.engineType !== primaryEngine
+      && !additionalExperimentEngines.includes(engine.engineType)
   );
   const acceptedFileProfile = getParserFileTypeProfile(experimentEngines);
   const selectedFileSupported = selectedFile
@@ -79,17 +84,21 @@ function ParserLeftPanel({
     );
   }, [primaryEngine]);
 
-  const toggleExperimentEngine = useCallback((engineType: DocumentEngineType) => {
-    if (engineType === primaryEngine) return;
-
+  const addExperimentEngine = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    const engineType = event.target.value as DocumentEngineType;
+    if (!engineType || engineType === primaryEngine) return;
     setAdditionalExperimentEngines((current) =>
-      current.includes(engineType)
-        ? current.filter((candidate) => candidate !== engineType)
-        : [...current, engineType]
+      current.includes(engineType) ? current : [...current, engineType]
     );
   }, [primaryEngine]);
 
-  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const removeExperimentEngine = useCallback((engineType: DocumentEngineType) => {
+    setAdditionalExperimentEngines((current) =>
+      current.filter((candidate) => candidate !== engineType)
+    );
+  }, []);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -101,7 +110,7 @@ function ParserLeftPanel({
 
     onFileSelect(file, null);
     setSelectedFileKey(null);
-  }, [acceptedFileProfile.label, experimentEngines, onFileSelect]);
+  };
 
   const fetchStorageFiles = useCallback(async () => {
     const token = getAuthToken();
@@ -163,14 +172,14 @@ function ParserLeftPanel({
 
   return (
     <div className="relative flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto py-6 pb-16">
+      <div className="flex-1 overflow-y-auto py-6 pb-16 lg:pr-10">
         <section className="mb-10">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex gap-1 rounded-lg bg-muted p-1">
               <button
                 type="button"
                 onClick={() => setUploadMode("upload")}
-                className={`whitespace-nowrap rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
+                className={`whitespace-nowrap rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
                   uploadMode === "upload"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -181,7 +190,7 @@ function ParserLeftPanel({
               <button
                 type="button"
                 onClick={() => setUploadMode("select")}
-                className={`whitespace-nowrap rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
+                className={`whitespace-nowrap rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
                   uploadMode === "select"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -203,7 +212,7 @@ function ParserLeftPanel({
             </p>
           )}
 
-          <div className="h-[300px]">
+          <div className="h-parser-file-zone">
             {uploadMode === "upload" ? (
               selectedFile ? (
                 <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border">
@@ -221,14 +230,12 @@ function ParserLeftPanel({
                     </button>
                   </div>
                   <div className="flex min-h-0 flex-1 items-center gap-3 overflow-auto p-4">
-                    <svg className="h-8 w-8 shrink-0 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                    <FileText className="h-8 w-8 shrink-0 text-muted-foreground" strokeWidth={1} aria-hidden="true" />
                     <div className="min-w-0">
-                      <p className="truncate text-base font-medium text-card-foreground">
+                      <p className="truncate text-xs font-medium text-card-foreground">
                         {selectedFile.name}
                       </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="mt-1 text-2xs text-muted-foreground">
                         {selectedFile.type || "Unknown type"} · {(selectedFile.size / 1024).toFixed(2)} KB
                         {selectedFileKey ? " · from storage" : ""}
                       </p>
@@ -238,16 +245,21 @@ function ParserLeftPanel({
               ) : (
                 <label
                   htmlFor="file-upload"
-                  className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border transition-smooth hover:border-accent hover:bg-accent/5"
+                  className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-3
+                           rounded-lg border border-dashed border-border bg-upload-zone
+                           transition-smooth hover:border-solid hover:border-surface-foreground
+                           focus-within:border-solid focus-within:border-surface-foreground"
                 >
-                  <svg className="h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
+                  <CloudUpload
+                    className="h-6 w-6 text-muted-foreground"
+                    strokeWidth={1}
+                    aria-hidden="true"
+                  />
                   <div className="text-center">
-                    <p className="text-base font-medium text-card-foreground">
+                    <p className="text-xs font-medium text-card-foreground">
                       Click to upload or drag and drop
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-2xs text-muted-foreground">
                       {acceptedFileProfile.label} (max 50MB)
                     </p>
                   </div>
@@ -279,14 +291,14 @@ function ParserLeftPanel({
 
                 {loadingFiles ? (
                   <div className="flex flex-1 items-center justify-center">
-                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-accent" />
+                    <LoaderCircle className="h-icon-md w-icon-md animate-spin text-muted-foreground" strokeWidth={1} aria-hidden="true" />
                   </div>
                 ) : storageFiles.length === 0 ? (
                   <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
                     <svg className="h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                     </svg>
-                    <p className="text-base text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       No files in storage.<br />Upload files in the Files page.
                     </p>
                   </div>
@@ -303,14 +315,14 @@ function ParserLeftPanel({
                           title={supported ? undefined : `Supported types: ${acceptedFileProfile.label}`}
                           className={`mb-2 w-full rounded-lg border p-3 text-left transition-smooth ${
                             selectedFileKey === file.storage_key
-                              ? "border-accent bg-accent/10"
-                              : "border-border hover:border-accent/50 hover:bg-muted"
+                              ? "border-surface-foreground bg-upload-zone"
+                              : "border-border hover:border-border-darkest hover:bg-muted"
                           } ${loading || !supported ? "cursor-not-allowed opacity-disabled" : ""}`}
                         >
-                          <p className="truncate text-base font-medium text-card-foreground">
+                          <p className="truncate text-xs font-medium text-card-foreground">
                             {file.filename}
                           </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
+                          <p className="mt-1 text-2xs text-muted-foreground">
                             {supported
                               ? `${(file.file_size / 1024).toFixed(2)} KB`
                               : "Not supported by all selected engines"}
@@ -326,18 +338,33 @@ function ParserLeftPanel({
         </section>
 
         <section className="mb-6">
-          <h3 className="mb-4 text-base font-medium text-card-foreground">
-            Document processing engine
-          </h3>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+              Document processing engine
+            </h3>
+            <button
+              type="button"
+              onClick={() => onOpenSettings(primaryEngine)}
+              className="shrink-0 text-xs font-medium text-card-foreground transition-smooth hover:text-muted-foreground"
+            >
+              Engine settings
+            </button>
+          </div>
 
-          <label className="block text-xs text-muted-foreground mb-2">
-            Primary engine
-          </label>
+          <div>
+            <p className="text-xs font-medium text-card-foreground">1. Primary engine</p>
+            <p className="mt-1 text-2xs text-muted-foreground">
+              Required. Runs first and provides the main result.
+            </p>
+          </div>
+
           <select
             value={primaryEngine}
             onChange={(event) => onPrimaryEngineChange(event.target.value as DocumentEngineType)}
             disabled={loading}
-            className="h-control-xl w-full rounded-lg border border-border bg-card px-3 text-card-foreground transition-smooth focus-ring disabled:cursor-not-allowed disabled:opacity-disabled"
+            className="mt-3 h-control-xl w-full rounded-lg border border-border bg-card px-3 text-xs
+                     text-card-foreground transition-smooth focus-ring
+                     disabled:cursor-not-allowed disabled:opacity-disabled"
           >
             {documentEngines.map((engine) => (
               <option key={engine.id} value={engine.engineType}>
@@ -346,98 +373,85 @@ function ParserLeftPanel({
             ))}
           </select>
 
-          <div className="mt-3 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-xs text-muted-foreground" title={summarizeDocumentEngineConfig(primaryEngine, engineConfigs[primaryEngine])}>
-                {summarizeDocumentEngineConfig(primaryEngine, engineConfigs[primaryEngine])}
+          <p className="mt-2 text-2xs text-muted-foreground">
+            {primaryEngineDefinition.kind === "vision" ? "Vision model" : "Parser"}
+            {" · "}
+            {persistedEngines.has(primaryEngine) ? "Saved settings" : "Default settings"}
+          </p>
+
+          <div className="mt-6 border-t border-border-subtle pt-6">
+            <div className="mb-3">
+              <p className="text-xs font-medium text-card-foreground">
+                2. Additional engines <span className="font-normal text-muted-foreground">(optional)</span>
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {persistedEngines.has(primaryEngine) ? "Saved profile" : "Built-in default"}
+              <p className="mt-1 text-2xs text-muted-foreground">
+                Run after Primary when you want to compare results.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenSettings(primaryEngine)}
-              className="shrink-0 text-xs font-medium text-accent transition-smooth hover:text-accent/80"
+
+            <select
+              value=""
+              onChange={addExperimentEngine}
+              disabled={loading || availableAdditionalEngines.length === 0}
+              aria-label="Add an additional engine"
+              className="h-control-xl w-full rounded-lg border border-border bg-card px-3 text-xs
+                       text-card-foreground transition-smooth focus-ring
+                       disabled:cursor-not-allowed disabled:opacity-disabled"
             >
-              Open settings
-            </button>
-          </div>
+              <option value="">
+                {availableAdditionalEngines.length === 0 ? "All engines added" : "Add an engine"}
+              </option>
+              {availableAdditionalEngines.map((engine) => (
+                <option key={engine.id} value={engine.engineType}>
+                  {engine.kind === "vision" ? `Vision · ${engine.displayName}` : `Parser · ${engine.displayName}`}
+                </option>
+              ))}
+            </select>
 
-          <div className="mt-3 flex flex-wrap gap-2">
-            {selectedEngine.stages.map((stage) => (
-              <span key={stage} className="rounded-lg bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-                {stage === "ocr"
-                  ? "OCR"
-                  : stage === "layout"
-                    ? "Layout"
-                    : stage === "structure"
-                      ? "Structure"
-                      : stage === "visual-understanding"
-                        ? "Vision"
-                        : "Extraction"}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-6 border-t border-border pt-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-base font-medium text-card-foreground">Additional engines</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  선택한 엔진을 Primary 다음에 순차 실행합니다.
-                </p>
-              </div>
-              <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
-                {additionalExperimentEngines.length} selected
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              {documentEngines
-                .filter((engine) => engine.engineType !== primaryEngine)
-                .map((engine) => {
-                  const checked = additionalExperimentEngines.includes(engine.engineType);
-                  const summary = summarizeDocumentEngineConfig(
-                    engine.engineType,
-                    engineConfigs[engine.engineType]
-                  );
+            {additionalExperimentEngines.length > 0 && (
+              <div className="mt-2 space-y-2">
+                {additionalExperimentEngines.map((engineType) => {
+                  const engine = getDocumentEngine(engineType);
                   return (
-                    <label
+                    <div
                       key={engine.id}
-                      className={`flex h-control-xl cursor-pointer items-center gap-3 rounded-lg border px-3 transition-smooth ${
-                        checked
-                          ? "border-accent bg-accent/5"
-                          : "border-border hover:border-border-darkest"
-                      }`}
+                      className="flex h-parser-engine-option items-center gap-3 rounded-lg border border-border bg-upload-zone px-3"
                     >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleExperimentEngine(engine.engineType)}
-                        disabled={loading}
-                        className="h-4 w-4 rounded-sm border-border text-accent focus:ring-2 focus:ring-accent/20"
-                      />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-xs font-medium text-card-foreground">
                           {engine.displayName}
                         </span>
-                        <span className="block truncate text-xs text-muted-foreground" title={summary}>
-                          {summary}
+                        <span className="block truncate text-2xs text-muted-foreground">
+                          {engine.kind === "vision" ? "Vision model" : "Parser"} · {engine.provider}
                         </span>
                       </span>
-                    </label>
+                      <button
+                        type="button"
+                        onClick={() => removeExperimentEngine(engine.engineType)}
+                        disabled={loading}
+                        aria-label={`Remove ${engine.displayName}`}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground
+                                 transition-smooth hover:bg-muted hover:text-card-foreground focus-ring
+                                 disabled:cursor-not-allowed disabled:opacity-disabled"
+                      >
+                        <X className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                      </button>
+                    </div>
                   );
                 })}
-            </div>
+              </div>
+            )}
+          </div>
 
-            <button
-              type="button"
-              onClick={() => onOpenSettings(primaryEngine)}
-              className="mt-3 text-xs font-medium text-accent transition-smooth hover:text-accent/80"
-            >
-              Manage all engine settings
-            </button>
+          <div className="mt-6 rounded-lg bg-upload-zone px-3 py-3">
+            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+              Run order
+            </p>
+            <p className="mt-1 truncate text-xs text-card-foreground">
+              {experimentEngines
+                .map((engineType) => getDocumentEngine(engineType).displayName)
+                .join(" → ")}
+            </p>
           </div>
 
           {settingsLoading && (
@@ -458,17 +472,15 @@ function ParserLeftPanel({
         </section>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-surface px-6 py-6">
+      <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-card px-6 py-6">
         <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={onReset}
             disabled={loading}
-            className="flex items-center gap-2 text-base font-medium text-muted-foreground transition-smooth hover:text-card-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
+            className="flex items-center gap-2 text-xs font-medium text-muted-foreground transition-smooth hover:text-card-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            <RotateCcw className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
             Reset
           </button>
 
@@ -488,14 +500,13 @@ function ParserLeftPanel({
               || !selectedFileSupported
               || experimentEngines.length === 0
             }
-            className="flex items-center gap-2 text-base font-medium text-accent transition-smooth hover:text-accent/80 disabled:cursor-not-allowed disabled:text-muted-foreground"
+            className="flex h-control-md items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
+                     font-medium text-surface transition-smooth hover:opacity-hover
+                     disabled:cursor-not-allowed disabled:opacity-disabled"
           >
             {loading ? (
               <>
-                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
+                <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1} aria-hidden="true" />
                 Processing {experimentEngines.length}...
               </>
             ) : (
@@ -503,9 +514,7 @@ function ParserLeftPanel({
                 {experimentEngines.length > 1
                   ? `Run ${experimentEngines.length} Engines`
                   : "Process Document"}
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <ArrowRight className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
               </>
             )}
           </button>

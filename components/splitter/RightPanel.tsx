@@ -1,44 +1,29 @@
 "use client";
 
-import { memo, useState, useCallback } from "react";
-import { SplitResponse, ViewMode, SplitterConfig } from "@/lib/types";
+import { Check, FileText, LoaderCircle, Save } from "lucide-react";
+import { memo, useCallback, useState } from "react";
 import { useAuthFetch } from "@/lib/hooks/useAuthFetch";
-import JsonViewComponent from "./JsonView";
+import type { SplitResponse, SplitterConfig, ViewMode } from "@/lib/types";
 import CardView from "./CardView";
+import JsonViewComponent from "./JsonView";
 
 interface RightPanelProps {
   result: SplitResponse | null;
+  loading: boolean;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   text: string;
   config: SplitterConfig;
 }
 
-const emptyResult: SplitResponse = {
-  chunks: [],
-  totalChunks: 0,
-  splitterType: "RecursiveCharacterTextSplitter",
-  parameters: {
-    splitterType: "RecursiveCharacterTextSplitter",
-    chunkSize: 1000,
-    chunkOverlap: 200,
-  },
-  statistics: {
-    averageChunkSize: 0,
-    minChunkSize: 0,
-    maxChunkSize: 0,
-    processingTime: 0,
-  },
-};
-
 const RightPanel = memo(function RightPanel({
   result,
+  loading,
   viewMode,
   onViewModeChange,
   text,
   config,
 }: RightPanelProps) {
-  const displayResult = result || emptyResult;
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const authFetch = useAuthFetch();
@@ -50,8 +35,8 @@ const RightPanel = memo(function RightPanel({
     setSaved(false);
 
     try {
-      await authFetch('/api/split-results', {
-        method: 'POST',
+      await authFetch("/api/split-results", {
+        method: "POST",
         body: JSON.stringify({
           config,
           result,
@@ -60,129 +45,107 @@ const RightPanel = memo(function RightPanel({
       });
 
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      window.setTimeout(() => setSaved(false), 3000);
     } catch (error) {
-      console.error('Error saving split result:', error);
-      alert(error instanceof Error ? error.message : 'Failed to save split result');
+      console.error("Error saving split result:", error);
+      alert(error instanceof Error ? error.message : "Failed to save split result");
     } finally {
       setSaving(false);
     }
-  }, [result, config, text, authFetch]);
+  }, [authFetch, config, result, text]);
 
   return (
-    <div className="h-full flex flex-col py-6 bg-surface">
-      {/* Header with Title and View Mode Toggle */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base font-medium text-surface-foreground">Result</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          {/* View Mode Toggle */}
-          <div className="flex gap-1 bg-muted rounded-lg p-1">
+    <div className="flex h-full flex-col py-6">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+          Output
+        </h3>
+
+        {result && (
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="flex h-control-sm items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
+                     font-medium text-surface transition-smooth hover:opacity-hover
+                     disabled:cursor-not-allowed disabled:opacity-disabled"
+          >
+            {saving ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1} aria-hidden="true" />
+            ) : saved ? (
+              <Check className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+            ) : (
+              <Save className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+            )}
+            {saving ? "Saving..." : saved ? "Saved" : "Save"}
+          </button>
+        )}
+      </div>
+
+      {result && (
+        <div className="mb-3">
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
             <button
+              type="button"
               onClick={() => onViewModeChange("card")}
-              className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth ${
+              className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
                 viewMode === "card"
                   ? "bg-card text-card-foreground shadow-sm"
                   : "text-muted-foreground hover:text-surface-foreground"
               }`}
             >
-              Chunk
+              Chunks
             </button>
             <button
+              type="button"
               onClick={() => onViewModeChange("json")}
-              className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth ${
+              className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
                 viewMode === "json"
                   ? "bg-card text-card-foreground shadow-sm"
                   : "text-muted-foreground hover:text-surface-foreground"
               }`}
             >
-              Json
+              JSON
             </button>
           </div>
-
-          {/* Save Button */}
-          {result && (
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-3 py-2 text-xs bg-accent/10 text-accent hover:bg-accent/20
-                       rounded-lg transition-smooth flex items-center gap-2
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? (
-                <>
-                  <svg
-                    className="w-4 h-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Saving...
-                </>
-              ) : saved ? (
-                <>
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  Saved
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                    />
-                  </svg>
-                  Save
-                </>
-              )}
-            </button>
-          )}
         </div>
-      </div>
+      )}
 
-      {/* Content */}
-      <div className="flex-1 overflow-hidden">
-        {viewMode === "card" ? (
-          <CardView result={displayResult} />
+      <div className="min-h-0 flex-1 overflow-hidden border-t border-border-subtle pt-4">
+        {!result ? (
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            {loading ? (
+              <LoaderCircle
+                className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
+                strokeWidth={1}
+                aria-hidden="true"
+              />
+            ) : (
+              <FileText
+                className="mb-3 h-icon-md w-icon-md text-muted-foreground"
+                strokeWidth={1}
+                aria-hidden="true"
+              />
+            )}
+            <p className="text-xs font-medium text-card-foreground">
+              {loading ? "Splitting text" : "No result yet"}
+            </p>
+            <p className="mt-1 text-2xs text-muted-foreground">
+              {loading
+                ? "Chunks will appear when processing is complete."
+                : "Add source text, choose a splitter, and run it."}
+            </p>
+          </div>
+        ) : viewMode === "card" ? (
+          <CardView result={result} />
         ) : (
-          <JsonViewComponent result={displayResult} />
+          <JsonViewComponent result={result} />
         )}
       </div>
     </div>
   );
 });
 
-RightPanel.displayName = 'RightPanel';
+RightPanel.displayName = "RightPanel";
 
 export default RightPanel;

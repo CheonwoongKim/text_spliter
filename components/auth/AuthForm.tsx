@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { syncAuthSession } from "@/lib/auth";
+import { useEffect, useRef, useState } from "react";
+import {
+  getRememberedEmail,
+  saveRememberedEmail,
+  syncAuthSession,
+} from "@/lib/auth";
 import {
   getPasswordPolicyError,
   PASSWORD_MIN_LENGTH,
@@ -132,8 +136,26 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const isSignup = mode === "signup";
   const content = AUTH_CONTENT[mode];
   const fieldPrefix = `auth-${mode}`;
+  const emailInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [shouldRememberEmail, setShouldRememberEmail] = useState(false);
+
+  useEffect(() => {
+    if (isSignup) return;
+
+    const rememberedEmail = getRememberedEmail();
+    if (!rememberedEmail || !emailInputRef.current) return;
+
+    emailInputRef.current.value = rememberedEmail;
+    setShouldRememberEmail(true);
+  }, [isSignup]);
+
+  function handleRememberEmailChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const isChecked = event.target.checked;
+    setShouldRememberEmail(isChecked);
+    saveRememberedEmail(isChecked ? emailInputRef.current?.value ?? null : null);
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -144,6 +166,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
+
+    if (!isSignup) {
+      saveRememberedEmail(shouldRememberEmail ? email : null);
+    }
 
     if (isSignup) {
       const policyError = getPasswordPolicyError(password);
@@ -213,6 +239,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 Email
               </label>
               <input
+                ref={emailInputRef}
                 id={`${fieldPrefix}-email`}
                 name="email"
                 type="email"
@@ -245,6 +272,34 @@ export default function AuthForm({ mode }: AuthFormProps) {
               />
             )}
           </div>
+
+          {!isSignup && (
+            <label className="mt-4 flex w-fit cursor-pointer items-center gap-2 text-xs font-normal text-muted-foreground">
+              <span className="relative h-4 w-4 shrink-0">
+                <input
+                  type="checkbox"
+                  checked={shouldRememberEmail}
+                  onChange={handleRememberEmailChange}
+                  className="h-4 w-4 appearance-none rounded-lg border border-border bg-card
+                           checked:border-surface-foreground checked:bg-surface-foreground
+                           focus:outline-none focus-visible:border-surface-foreground"
+                />
+                {shouldRememberEmail && (
+                  <svg
+                    className="pointer-events-none absolute inset-0 m-auto h-3 w-3 text-card"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M2.5 6.25 4.75 8.5 9.5 3.75" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+              이메일 저장
+            </label>
+          )}
 
           <div className="mt-8 space-y-4">
             {feedback && (

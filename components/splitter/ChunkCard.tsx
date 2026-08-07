@@ -1,36 +1,35 @@
 "use client";
 
 import { ChunkResult } from "@/lib/types";
-import { useState, useCallback, memo } from "react";
+import { memo, useCallback } from "react";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 
 interface ChunkCardProps {
   chunk: ChunkResult;
 }
 
 function ChunkCard({ chunk }: ChunkCardProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
 
   const copyToClipboard = useCallback(() => {
-    navigator.clipboard.writeText(chunk.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [chunk.content]);
+    void copy(chunk.content).catch(() => undefined);
+  }, [chunk.content, copy]);
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-smooth">
+    <article className="rounded-lg border border-border p-4">
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-2">
-          <span className="inline-block px-2 py-1 bg-accent/10 text-accent text-xs font-medium rounded-sm">
+          <span className="inline-block px-2 py-1 bg-upload-zone text-card-foreground text-2xs font-medium rounded-sm">
             Chunk #{chunk.index + 1}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-2xs text-muted-foreground">
             {chunk.metadata.length} Characters
           </span>
         </div>
         <button
           onClick={copyToClipboard}
-          className="text-xs px-2 py-1 bg-subtle hover:bg-secondary-background rounded-sm transition-smooth"
+          className="text-2xs px-2 py-1 bg-subtle hover:bg-secondary-background rounded-sm transition-smooth"
           title="Copy"
         >
           {copied ? "✓ Copied" : "Copy"}
@@ -39,14 +38,14 @@ function ChunkCard({ chunk }: ChunkCardProps) {
 
       {/* Content */}
       <div className="mb-3">
-        <p className="text-base text-card-foreground whitespace-pre-wrap break-words font-mono leading-6">
+        <p className="text-xs text-card-foreground whitespace-pre-wrap break-words font-mono leading-6">
           {chunk.content}
         </p>
       </div>
 
       {/* Metadata */}
       <div className="border-t border-border pt-3">
-        <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="grid grid-cols-2 gap-2 text-2xs">
           <div>
             <span className="text-muted-foreground">Start:</span>{" "}
             <span className="text-surface-foreground font-mono">
@@ -73,7 +72,7 @@ function ChunkCard({ chunk }: ChunkCardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 

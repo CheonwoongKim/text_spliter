@@ -14,8 +14,8 @@ export interface ModalProps {
 const sizeStyles = {
   sm: "max-w-md",
   md: "max-w-lg",
-  lg: "max-w-2xl rounded-xl",
-  xl: "max-w-4xl rounded-xl",
+  lg: "max-w-2xl rounded-lg",
+  xl: "max-w-4xl rounded-lg",
 };
 
 export const Modal: React.FC<ModalProps> = ({
@@ -34,11 +34,11 @@ export const Modal: React.FC<ModalProps> = ({
       title={title}
       description={description}
       onClose={onClose}
-      panelClassName={`${sizeStyles[size]} max-h-[90vh] overflow-hidden rounded-xl shadow-lg`}
+      panelClassName={`${sizeStyles[size]} max-h-[90vh] overflow-hidden rounded-lg shadow-lg`}
     >
       <div className="flex-1 overflow-y-auto p-6 space-y-4">{children}</div>
       {footer && (
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-subtle">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-subtle bg-subtle">
           {footer}
         </div>
       )}

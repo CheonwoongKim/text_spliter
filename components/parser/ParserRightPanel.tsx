@@ -1,21 +1,24 @@
 "use client";
 
-import { memo, useCallback, useState, useMemo, useEffect } from "react";
+import JsonView from "@uiw/react-json-view";
+import { Check, Clipboard, FileText, LoaderCircle, Save } from "lucide-react";
+import { memo, useCallback, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import JsonView from '@uiw/react-json-view';
-import { JSON_VIEW_THEME } from "@/lib/json-view-theme";
+import ParseComparisonWorkbench from "@/components/parser/ParseComparisonWorkbench";
 import { summarizeDocumentEngineConfig } from "@/lib/document-engine-settings";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+import { JSON_VIEW_THEME } from "@/lib/json-view-theme";
 import type {
   DocumentEngineConfig,
   DocumentEngineType,
   ParseResponse,
   ParserViewMode,
 } from "@/lib/types";
-import ParseComparisonWorkbench from "@/components/parser/ParseComparisonWorkbench";
 
 interface ParserRightPanelProps {
   result: ParseResponse | null;
   runs?: ParseResponse[];
+  loading: boolean;
   selectedFile: File | null;
   selectedFileStorageKey?: string | null;
   config: DocumentEngineConfig & { parserType: DocumentEngineType };
@@ -26,76 +29,62 @@ interface ParserRightPanelProps {
 interface ViewTab {
   key: ParserViewMode;
   label: string;
-  available: boolean;
   hasData: boolean;
 }
 
 function ParserRightPanel({
   result,
   runs = [],
+  loading,
   selectedFile,
   selectedFileStorageKey,
   config,
   onSelectRun,
   onClearRuns,
 }: ParserRightPanelProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
   const [viewMode, setViewMode] = useState<ParserViewMode>("text");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [comparisonMode, setComparisonMode] = useState(false);
 
-  // All engines expose legacy formats plus normalized and immutable raw views.
-  const expectedTabs = useMemo<ViewTab[]>(() => {
-    const tabs: ViewTab[] = [
-      { key: "text", label: "Text", available: true, hasData: !!result?.text },
-      { key: "html", label: "HTML", available: true, hasData: !!result?.html },
-      { key: "markdown", label: "Markdown", available: true, hasData: !!result?.markdown },
-      { key: "json", label: "JSON", available: true, hasData: !!result?.json },
-      { key: "document", label: "Document IR", available: true, hasData: !!result?.document },
-      { key: "raw", label: "Raw", available: true, hasData: !!result?.raw },
-    ];
-
-    return tabs;
-  }, [result]);
-
-  // Auto-select first available tab when config or result changes
-  useEffect(() => {
-    if (expectedTabs.length > 0) {
-      // Try to keep current view mode if it's still available
-      const isCurrentModeAvailable = expectedTabs.some(tab => tab.key === viewMode && tab.hasData);
-      if (!isCurrentModeAvailable) {
-        const firstAvailableTab = expectedTabs.find((tab) => tab.hasData);
-        if (firstAvailableTab) setViewMode(firstAvailableTab.key);
-      }
-    }
-  }, [expectedTabs, viewMode]);
+  const expectedTabs = useMemo<ViewTab[]>(() => [
+    { key: "text", label: "Text", hasData: Boolean(result?.text) },
+    { key: "html", label: "HTML", hasData: Boolean(result?.html) },
+    { key: "markdown", label: "Markdown", hasData: Boolean(result?.markdown) },
+    { key: "json", label: "JSON", hasData: Boolean(result?.json) },
+    { key: "document", label: "Document IR", hasData: Boolean(result?.document) },
+    { key: "raw", label: "Raw", hasData: Boolean(result?.raw) },
+  ], [result]);
+  const availableTabs = expectedTabs.filter((tab) => tab.hasData);
+  const activeViewMode = availableTabs.some((tab) => tab.key === viewMode)
+    ? viewMode
+    : availableTabs[0]?.key || "text";
+  const showComparison = comparisonMode && runs.length >= 2;
 
   const handleCopy = useCallback(() => {
     let textToCopy = "";
 
-    if (viewMode === "text") {
+    if (activeViewMode === "text") {
       textToCopy = result?.text || "";
-    } else if (viewMode === "html") {
+    } else if (activeViewMode === "html") {
       textToCopy = result?.html || "";
-    } else if (viewMode === "markdown") {
+    } else if (activeViewMode === "markdown") {
       textToCopy = result?.markdown || "";
-    } else if (viewMode === "json") {
+    } else if (activeViewMode === "json") {
       textToCopy = typeof result?.json === "string"
         ? result.json
         : JSON.stringify(result?.json, null, 2);
-    } else if (viewMode === "document") {
+    } else if (activeViewMode === "document") {
       textToCopy = JSON.stringify(result?.document, null, 2);
-    } else if (viewMode === "raw") {
+    } else if (activeViewMode === "raw") {
       textToCopy = JSON.stringify(result?.raw, null, 2);
     }
 
     if (textToCopy) {
-      navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      void copy(textToCopy).catch(() => undefined);
     }
-  }, [result, viewMode]);
+  }, [activeViewMode, copy, result]);
 
   const handleSave = useCallback(async () => {
     if (!result) return;
@@ -104,73 +93,63 @@ function ParserRightPanel({
     setSaved(false);
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem("auth_token");
       if (!token) {
-        alert('Please login first');
+        alert("Please login first");
         setSaving(false);
         return;
       }
 
-      // Create FormData to send both file and result
       const formData = new FormData();
-      formData.append('parserType', result.metadata?.parserType || config.parserType);
-      formData.append('result', JSON.stringify(result));
+      formData.append("parserType", result.metadata?.parserType || config.parserType);
+      formData.append("result", JSON.stringify(result));
 
-      // If file is from storage, send the storage key instead of uploading again
       if (selectedFileStorageKey) {
-        formData.append('fileStorageKey', selectedFileStorageKey);
-      }
-      // Otherwise, upload the file if available
-      else if (selectedFile) {
-        formData.append('file', selectedFile);
+        formData.append("fileStorageKey", selectedFileStorageKey);
+      } else if (selectedFile) {
+        formData.append("file", selectedFile);
       }
 
-      const response = await fetch('/api/parse-results', {
-        method: 'POST',
+      const response = await fetch("/api/parse-results", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save parse result');
+        throw new Error(errorData.error || "Failed to save parse result");
       }
 
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      window.setTimeout(() => setSaved(false), 3000);
     } catch (error) {
-      console.error('Error saving parse result:', error);
-      alert(error instanceof Error ? error.message : 'Failed to save parse result');
+      console.error("Error saving parse result:", error);
+      alert(error instanceof Error ? error.message : "Failed to save parse result");
     } finally {
       setSaving(false);
     }
-  }, [result, config.parserType, selectedFile, selectedFileStorageKey]);
+  }, [config.parserType, result, selectedFile, selectedFileStorageKey]);
 
   return (
-    <div className="h-full flex flex-col gap-6 py-6">
+    <div className="flex h-full flex-col gap-6 py-6">
       {runs.length > 0 && (
-        <section className="shrink-0 rounded-xl border border-border bg-card p-3">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold text-card-foreground">Parse Experiment</h3>
-                <span className="px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
-                  {runs.length} run{runs.length === 1 ? "" : "s"}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                설정을 바꿔 다시 실행하면 같은 문서의 비교 후보로 누적됩니다.
-              </p>
-            </div>
+        <section className="shrink-0">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+              Experiment results · {runs.length}
+            </h3>
             <div className="flex items-center gap-1">
               <div className="flex rounded-lg bg-muted p-1">
                 <button
                   type="button"
                   onClick={() => setComparisonMode(false)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-smooth ${
-                    !comparisonMode ? "bg-card text-card-foreground shadow-sm" : "text-muted-foreground"
+                  className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                    !showComparison
+                      ? "bg-card text-card-foreground shadow-sm"
+                      : "text-muted-foreground"
                   }`}
                 >
                   Result
@@ -179,51 +158,60 @@ function ParserRightPanel({
                   type="button"
                   onClick={() => runs.length >= 2 && setComparisonMode(true)}
                   disabled={runs.length < 2}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-smooth ${
-                    comparisonMode ? "bg-card text-card-foreground shadow-sm" : "text-muted-foreground"
-                  } disabled:opacity-40 disabled:cursor-not-allowed`}
+                  className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                    showComparison
+                      ? "bg-card text-card-foreground shadow-sm"
+                      : "text-muted-foreground"
+                  } disabled:cursor-not-allowed disabled:opacity-disabled`}
                 >
                   Compare
                 </button>
               </div>
               <button
                 type="button"
-                onClick={onClearRuns}
-                className="px-3 py-2 text-xs text-muted-foreground hover:text-card-foreground"
+                onClick={() => {
+                  setComparisonMode(false);
+                  onClearRuns?.();
+                }}
+                className="px-3 py-2 text-2xs text-muted-foreground transition-smooth hover:text-card-foreground"
               >
                 Clear
               </button>
             </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+
+          <div className="scrollbar-thin flex gap-2 overflow-x-auto pb-1">
             {runs.map((run, index) => {
               const id = run.run?.id || `legacy-run-${index}`;
-              const selected = result?.run?.id === run.run?.id;
+              const selected = result === run
+                || Boolean(run.run?.id && result?.run?.id === run.run.id);
+              const role = run.run?.role === "primary"
+                ? "Primary"
+                : run.run?.role === "additional"
+                  ? "Additional"
+                  : "Run";
+              const summary = run.metadata?.parserType && run.run?.config
+                ? summarizeDocumentEngineConfig(run.metadata.parserType, run.run.config)
+                : [run.run?.model, run.run?.version].filter(Boolean).join(" · ")
+                  || `Run ${index + 1}`;
+
               return (
                 <button
                   key={id}
                   type="button"
                   onClick={() => onSelectRun?.(id)}
-                  className={`shrink-0 min-w-[170px] max-w-[230px] text-left rounded-lg border px-3 py-2 transition-smooth ${
+                  aria-pressed={selected}
+                  className={`min-w-[170px] max-w-[230px] shrink-0 rounded-lg border px-3 py-3 text-left transition-smooth ${
                     selected
-                      ? "border-accent bg-accent/5"
+                      ? "border-surface-foreground bg-upload-zone"
                       : "border-border hover:border-border-darkest"
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <p className="min-w-0 flex-1 text-xs font-medium text-card-foreground truncate">
-                      {run.run?.engineId || run.metadata?.parserType || `Run ${index + 1}`}
-                    </p>
-                    {run.run?.role === "primary" && (
-                      <span className="shrink-0 rounded-sm bg-accent/10 px-2 py-1 text-xs font-medium text-accent">
-                        Primary
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate mt-1">
-                    {run.metadata?.parserType && run.run?.config
-                      ? summarizeDocumentEngineConfig(run.metadata.parserType, run.run.config)
-                      : [run.run?.model, run.run?.version].filter(Boolean).join(" · ") || `Run ${index + 1}`}
+                  <p className="truncate text-xs font-medium text-card-foreground">
+                    {run.run?.engineId || run.metadata?.parserType || `Run ${index + 1}`}
+                  </p>
+                  <p className="mt-1 truncate text-2xs text-muted-foreground">
+                    {role} · {summary}
                   </p>
                 </button>
               );
@@ -232,359 +220,219 @@ function ParserRightPanel({
         </section>
       )}
 
-      {/* Document Information */}
-      {!comparisonMode && <div>
-        <h3 className="text-base font-medium text-surface-foreground mb-4">
-          Document Information
-        </h3>
-        {result?.metadata ? (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">File Name</p>
-              <p className="text-base text-card-foreground font-medium truncate">
+      {!showComparison && result?.metadata && (
+        <section className="shrink-0 border-b border-border-subtle pb-6">
+          <h3 className="mb-3 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+            Result summary
+          </h3>
+          <dl className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            <div className="min-w-0">
+              <dt className="text-2xs text-muted-foreground">File</dt>
+              <dd className="mt-1 truncate text-xs font-medium text-card-foreground">
                 {result.metadata.fileName}
-              </p>
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-2xs text-muted-foreground">Engine</dt>
+              <dd className="mt-1 truncate text-xs font-medium text-card-foreground">
+                {result.run?.engineId || result.metadata.parserType}
+                {result.run?.model ? ` · ${result.run.model}` : ""}
+              </dd>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-1">File Size</p>
-              <p className="text-base text-card-foreground font-medium">
-                {(result.metadata.fileSize / 1024).toFixed(2)} KB
-              </p>
+              <dt className="text-2xs text-muted-foreground">Processing</dt>
+              <dd className="mt-1 text-xs font-medium text-card-foreground">
+                {result.metadata.processingTime} ms
+              </dd>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-1">MIME Type</p>
-              <p className="text-base text-card-foreground font-medium">
-                {result.metadata.mimeType}
-              </p>
+              <dt className="text-2xs text-muted-foreground">Document</dt>
+              <dd className="mt-1 text-xs font-medium text-card-foreground">
+                {result.metadata.pageCount ? `${result.metadata.pageCount} pages · ` : ""}
+                {(result.metadata.fileSize / 1024).toFixed(1)} KB
+              </dd>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">
-                Processing Time
-              </p>
-              <p className="text-base text-card-foreground font-medium">
-                {result.metadata.processingTime}ms
-              </p>
-            </div>
-            {result.run && (
-              <>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Engine</p>
-                  <p className="text-base text-card-foreground font-medium">
-                    {result.run.engineId}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Model / Version</p>
-                  <p className="text-base text-card-foreground font-medium">
-                    {[result.run.model, result.run.version].filter(Boolean).join(" · ") || "-"}
-                  </p>
-                </div>
-                {result.run.inputMode && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Input handling</p>
-                    <p className="text-base text-card-foreground font-medium">
-                      {result.run.inputMode}
-                    </p>
-                  </div>
-                )}
-                {result.run.renderer && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Renderer</p>
-                    <p className="text-base text-card-foreground font-medium">
-                      {[result.run.renderer.name, result.run.renderer.version].filter(Boolean).join(" · ")}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">File Name</p>
-              <p className="text-base text-muted-foreground">-</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">File Size</p>
-              <p className="text-base text-muted-foreground">-</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">MIME Type</p>
-              <p className="text-base text-muted-foreground">-</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">
-                Processing Time
-              </p>
-              <p className="text-base text-muted-foreground">-</p>
-            </div>
-          </div>
-        )}
-      </div>}
+          </dl>
+        </section>
+      )}
 
-      {/* Parsed Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header with Tabs and Action Buttons */}
-        <div className="flex items-center justify-between mb-4">
-          {/* View Mode Toggle - Dynamic Tabs */}
-          {!comparisonMode && expectedTabs.length > 0 && (
-            <div className="flex gap-1 bg-muted rounded-lg p-1">
-              {expectedTabs.map((tab) => (
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+            {showComparison ? "Compare results" : "Output"}
+          </h3>
+
+          {result && !showComparison && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="flex h-control-sm items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
+                         font-medium text-surface transition-smooth hover:opacity-hover
+                         disabled:cursor-not-allowed disabled:opacity-disabled"
+              >
+                {saving ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1} aria-hidden="true" />
+                ) : saved ? (
+                  <Check className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                ) : (
+                  <Save className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                )}
+                {saving ? "Saving..." : saved ? "Saved" : "Save"}
+              </button>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="flex h-control-sm items-center gap-2 rounded-lg border border-border px-3 text-xs
+                         font-medium text-card-foreground transition-smooth hover:border-border-darkest"
+              >
+                {copied ? (
+                  <Check className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                ) : (
+                  <Clipboard className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                )}
+                {copied ? "Copied" : "Copy"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {!showComparison && availableTabs.length > 0 && (
+          <div className="mb-3 overflow-x-auto">
+            <div className="flex w-max gap-1 rounded-lg bg-muted p-1">
+              {availableTabs.map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => tab.hasData && setViewMode(tab.key)}
-                  disabled={!tab.hasData}
-                  className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth ${
-                    viewMode === tab.key
+                  type="button"
+                  onClick={() => setViewMode(tab.key)}
+                  className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                    activeViewMode === tab.key
                       ? "bg-card text-card-foreground shadow-sm"
-                      : tab.hasData
-                      ? "text-muted-foreground hover:text-surface-foreground"
-                      : "text-muted-foreground/40 cursor-not-allowed"
+                      : "text-muted-foreground hover:text-surface-foreground"
                   }`}
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Action Buttons */}
-          {result && (
-            <div className="flex items-center gap-2">
-                {/* Save Button */}
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="px-3 py-2 text-xs bg-accent/10 text-accent hover:bg-accent/20
-                           rounded-lg transition-smooth flex items-center gap-2
-                           disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {saving ? (
-                    <>
-                      <svg
-                        className="w-4 h-4 animate-spin"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Saving...
-                    </>
-                  ) : saved ? (
-                    <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Saved
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                        />
-                      </svg>
-                      {comparisonMode ? "Save Selected" : "Save"}
-                    </>
-                  )}
-                </button>
-
-                {/* Copy Button */}
-                <button
-                  onClick={handleCopy}
-                  className="px-3 py-2 text-xs bg-muted hover:bg-muted/80
-                           text-muted-foreground rounded-lg transition-smooth
-                           flex items-center gap-2"
-                >
-                  {copied ? (
-                    <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
-                      Copy
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-        </div>
-
-        {/* Content Display */}
-        <div className={`flex-1 overflow-auto rounded-lg ${comparisonMode ? "bg-transparent" : "p-6 bg-card"}`}>
+        <div className={`min-h-0 flex-1 border-t border-border-subtle pt-4 ${
+          showComparison ? "overflow-hidden" : "overflow-auto"
+        }`}>
           {!result ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-base text-muted-foreground">
-                파싱된 콘텐츠가 여기에 표시됩니다
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              {loading ? (
+                <LoaderCircle
+                  className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
+                  strokeWidth={1}
+                  aria-hidden="true"
+                />
+              ) : (
+                <FileText
+                  className="mb-3 h-icon-md w-icon-md text-muted-foreground"
+                  strokeWidth={1}
+                  aria-hidden="true"
+                />
+              )}
+              <p className="text-xs font-medium text-card-foreground">
+                {loading ? "Processing document" : "No result yet"}
+              </p>
+              <p className="mt-1 text-2xs text-muted-foreground">
+                {loading
+                  ? "The result will appear when processing is complete."
+                  : "Select a file and run a processing engine."}
               </p>
             </div>
-          ) : comparisonMode && runs.length >= 2 ? (
+          ) : showComparison ? (
             <ParseComparisonWorkbench
               runs={runs}
               selectedFile={selectedFile}
               onSelectRun={onSelectRun}
             />
+          ) : availableTabs.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <FileText
+                className="mb-3 h-icon-md w-icon-md text-muted-foreground"
+                strokeWidth={1}
+                aria-hidden="true"
+              />
+              <p className="text-xs font-medium text-card-foreground">No output returned</p>
+              <p className="mt-1 text-2xs text-muted-foreground">
+                This engine did not return a supported output format.
+              </p>
+            </div>
           ) : (
             <>
-              {viewMode === "text" && (
-                result.text ? (
-                  <pre className="text-base text-card-foreground whitespace-pre-wrap font-mono">
-                    {result.text}
-                  </pre>
-                ) : (
-                  <p className="text-base text-muted-foreground italic">
-                    Text content not available
-                  </p>
-                )
+              {activeViewMode === "text" && result.text && (
+                <pre className="whitespace-pre-wrap font-mono text-xs leading-5 text-card-foreground">
+                  {result.text}
+                </pre>
               )}
-              {viewMode === "html" && (
-                result.html ? (
-                  <pre className="text-base text-card-foreground whitespace-pre-wrap font-mono">
-                    {result.html}
-                  </pre>
-                ) : (
-                  <p className="text-base text-muted-foreground italic">
-                    HTML content not available
-                  </p>
-                )
+              {activeViewMode === "html" && result.html && (
+                <pre className="whitespace-pre-wrap font-mono text-xs leading-5 text-card-foreground">
+                  {result.html}
+                </pre>
               )}
-              {viewMode === "markdown" && (
-                result.markdown ? (
-                  <pre className="text-base text-card-foreground whitespace-pre-wrap font-mono">
-                    {result.markdown}
-                  </pre>
-                ) : (
-                  <p className="text-base text-muted-foreground italic">
-                    Markdown content not available
-                  </p>
-                )
+              {activeViewMode === "markdown" && result.markdown && (
+                <pre className="whitespace-pre-wrap font-mono text-xs leading-5 text-card-foreground">
+                  {result.markdown}
+                </pre>
               )}
-              {viewMode === "json" && (
-                result.json ? (
-                  <div className="w-full">
+              {activeViewMode === "json" && result.json && (
+                <div className="w-full">
+                  <JsonView
+                    value={typeof result.json === "string" ? JSON.parse(result.json) : result.json}
+                    style={{
+                      ...JSON_VIEW_THEME,
+                      "--w-rjv-background-color": "transparent",
+                    } as CSSProperties}
+                    collapsed={2}
+                    displayDataTypes={false}
+                    enableClipboard
+                  />
+                </div>
+              )}
+              {activeViewMode === "document" && result.document && (
+                <div className="w-full">
+                  <JsonView
+                    value={result.document}
+                    style={{
+                      ...JSON_VIEW_THEME,
+                      "--w-rjv-background-color": "transparent",
+                    } as CSSProperties}
+                    collapsed={3}
+                    displayDataTypes={false}
+                    enableClipboard
+                  />
+                </div>
+              )}
+              {activeViewMode === "raw" && result.raw && (
+                <div className="w-full">
+                  {typeof result.raw === "object" ? (
                     <JsonView
-                      value={typeof result.json === "string" ? JSON.parse(result.json) : result.json}
+                      value={result.raw}
                       style={{
                         ...JSON_VIEW_THEME,
-                        '--w-rjv-background-color': 'transparent',
-                      } as CSSProperties}
-                      collapsed={2}
-                      displayDataTypes={false}
-                      enableClipboard={true}
-                    />
-                  </div>
-                ) : (
-                  <p className="text-base text-muted-foreground italic">
-                    JSON content not available
-                  </p>
-                )
-              )}
-              {viewMode === "document" && (
-                result.document ? (
-                  <div className="w-full">
-                    <JsonView
-                      value={result.document}
-                      style={{
-                        ...JSON_VIEW_THEME,
-                        '--w-rjv-background-color': 'transparent',
+                        "--w-rjv-background-color": "transparent",
                       } as CSSProperties}
                       collapsed={3}
                       displayDataTypes={false}
-                      enableClipboard={true}
+                      enableClipboard
                     />
-                  </div>
-                ) : (
-                  <p className="text-base text-muted-foreground italic">
-                    Normalized document content not available
-                  </p>
-                )
-              )}
-              {viewMode === "raw" && (
-                result.raw ? (
-                  <div className="w-full">
-                    {typeof result.raw === "object" ? (
-                      <JsonView
-                        value={result.raw}
-                        style={{
-                          ...JSON_VIEW_THEME,
-                          '--w-rjv-background-color': 'transparent',
-                        } as CSSProperties}
-                        collapsed={3}
-                        displayDataTypes={false}
-                        enableClipboard={true}
-                      />
-                    ) : (
-                      <pre className="text-base text-card-foreground whitespace-pre-wrap font-mono">
-                        {String(result.raw)}
-                      </pre>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-base text-muted-foreground italic">
-                    Raw provider response not available
-                  </p>
-                )
+                  ) : (
+                    <pre className="whitespace-pre-wrap font-mono text-xs leading-5 text-card-foreground">
+                      {String(result.raw)}
+                    </pre>
+                  )}
+                </div>
               )}
             </>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

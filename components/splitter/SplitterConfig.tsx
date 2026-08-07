@@ -20,13 +20,13 @@ interface SplitterConfigProps {
 }
 
 // Common className constants to reduce duplication
-const INPUT_BASE_CLASS = `w-full h-12 px-3 border border-border rounded-lg
+const INPUT_BASE_CLASS = `w-full h-control-xl px-3 border border-border rounded-lg text-xs
                    focus-ring
                    bg-card text-card-foreground placeholder-light
                    transition-smooth`;
 
-const LABEL_CLASS = "block text-xs text-muted-foreground mb-1";
-const HELP_TEXT_CLASS = "text-xs text-muted-foreground mt-2";
+const LABEL_CLASS = "block text-2xs text-muted-foreground mb-1";
+const HELP_TEXT_CLASS = "text-2xs text-muted-foreground mt-2";
 
 function SplitterConfig({
   splitterType,
@@ -45,7 +45,7 @@ function SplitterConfig({
 }: SplitterConfigProps) {
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-medium text-surface-foreground">
+      <h3 className="text-xs font-medium text-surface-foreground">
         Configuration
       </h3>
 
@@ -138,7 +138,7 @@ function SplitterConfig({
             value={separator || ""}
             onChange={(e) => onSeparatorChange?.(e.target.value || undefined)}
             placeholder="\n\n,\n, , (default)"
-            className={`${INPUT_BASE_CLASS} font-mono text-base`}
+            className={`${INPUT_BASE_CLASS} font-mono text-xs`}
           />
           <p className={HELP_TEXT_CLASS}>
             Enter separators separated by commas. Leave empty to use default: [&quot;\n\n&quot;, &quot;\n&quot;, &quot; &quot;, &quot;&quot;]
@@ -216,8 +216,8 @@ function SplitterConfig({
             <option value="interquartile">Interquartile (사분위수)</option>
             <option value="gradient">Gradient (기울기)</option>
           </select>
-          <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
-            <p className="text-xs text-muted-foreground">
+          <div className="mt-2 p-3 bg-upload-zone rounded-lg border border-border">
+            <p className="text-2xs text-muted-foreground">
               {breakpointType === "percentile" && (
                 <>
                   <strong className="text-surface-foreground">백분위수 방식:</strong> 유사도가 하위 25%에 해당하는 지점에서 분할합니다.

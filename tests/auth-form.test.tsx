@@ -29,6 +29,7 @@ const uiModules = Promise.all([
 afterEach(async () => {
   const [{ cleanup }] = await uiModules;
   cleanup();
+  dom.window.localStorage.clear();
 });
 
 test("signin renders its own route copy and toggles password visibility", async () => {
@@ -50,6 +51,36 @@ test("signin renders its own route copy and toggles password visibility", async 
   );
 });
 
+test("signin restores, updates, and removes the remembered email", async () => {
+  const [{ fireEvent, render, waitFor }, { default: AuthForm }] = await uiModules;
+  const { getRememberedEmail, saveRememberedEmail } = await import("../lib/auth");
+  saveRememberedEmail("saved@example.com");
+
+  const view = render(<AuthForm mode="signin" />);
+  const emailInput = view.getByLabelText("Email") as HTMLInputElement;
+  const rememberCheckbox = view.getByRole("checkbox", {
+    name: "이메일 저장",
+  }) as HTMLInputElement;
+
+  assert.match(rememberCheckbox.className, /appearance-none/);
+  assert.match(rememberCheckbox.className, /rounded-lg/);
+  assert.match(rememberCheckbox.className, /border-border/);
+  assert.doesNotMatch(rememberCheckbox.className, /focus-ring/);
+  assert.match(rememberCheckbox.className, /focus-visible:border-surface-foreground/);
+
+  await waitFor(() => {
+    assert.equal(emailInput.value, "saved@example.com");
+    assert.equal(rememberCheckbox.checked, true);
+  });
+
+  fireEvent.change(emailInput, { target: { value: "updated@example.com" } });
+  fireEvent.click(rememberCheckbox);
+  assert.equal(getRememberedEmail(), null);
+
+  fireEvent.click(rememberCheckbox);
+  assert.equal(getRememberedEmail(), "updated@example.com");
+});
+
 test("signup renders confirmation and blocks passwords outside the policy", async () => {
   const [{ fireEvent, render, waitFor }, { default: AuthForm }] = await uiModules;
   const view = render(<AuthForm mode="signup" />);
@@ -57,6 +88,7 @@ test("signup renders confirmation and blocks passwords outside the policy", asyn
 
   assert.equal(view.getByRole("heading").textContent, "Sign Up");
   assert.equal(new URL(loginLink.href).pathname, "/login");
+  assert.equal(view.queryByRole("checkbox", { name: "이메일 저장" }), null);
 
   fireEvent.change(view.getByLabelText("Email"), {
     target: { value: "user@example.com" },

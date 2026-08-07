@@ -55,24 +55,24 @@ export default function RagasEvaluationModal({
 
   return (
     <div className="fixed inset-0 z-modal bg-overlay flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-xl shadow-lg p-6">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-lg shadow-lg p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-card-foreground">Run Ragas evaluation</h3>
-            <p className="text-xs text-muted-foreground mt-1">완료된 RAG 결과를 별도의 모델 판정 배치로 평가합니다.</p>
+            <h3 className="text-base font-semibold text-card-foreground">Run Ragas evaluation</h3>
+            <p className="text-2xs text-muted-foreground mt-1">완료된 RAG 결과를 별도의 모델 판정 배치로 평가합니다.</p>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs ${available ? "bg-success-surface text-success" : healthError ? "bg-danger-surface text-danger" : "bg-muted text-muted-foreground"}`}>
+          <span className={`px-3 py-1 rounded-full text-2xs ${available ? "bg-success-surface text-success" : healthError ? "bg-danger-surface text-danger" : "bg-muted text-muted-foreground"}`}>
             {checking ? "Checking worker" : available ? `Ragas ${health?.frameworkVersion}` : "Worker unavailable"}
           </span>
         </div>
 
         <div className="mt-4 py-3 border-y border-border">
-          <p className="text-xs font-medium text-card-foreground truncate">{run.name}</p>
-          <p className="text-xs text-muted-foreground mt-1">성공한 {run.succeeded_count}개 케이스 · 이전 RAG 응답과 검색 문맥은 변경하지 않습니다.</p>
+          <p className="text-2xs font-medium text-card-foreground truncate">{run.name}</p>
+          <p className="text-2xs text-muted-foreground mt-1">성공한 {run.succeeded_count}개 케이스 · 이전 RAG 응답과 검색 문맥은 변경하지 않습니다.</p>
         </div>
 
         <label className="block mt-4">
-          <span className="block text-xs font-medium text-muted-foreground mb-2">Evaluator model</span>
+          <span className="block text-2xs font-medium text-muted-foreground mb-2">Evaluator model</span>
           <select value={model} onChange={(event) => onModelChange(event.target.value as RagGenerationModel)} disabled={executing} className={styles.field}>
             <option value="gpt-5.6-terra" disabled={health ? !health.allowedModels.includes("gpt-5.6-terra") : false}>GPT-5.6 Terra · balanced</option>
             <option value="gpt-5.6-sol" disabled={health ? !health.allowedModels.includes("gpt-5.6-sol") : false}>GPT-5.6 Sol · strongest</option>
@@ -81,7 +81,7 @@ export default function RagasEvaluationModal({
         </label>
 
         <fieldset className="mt-4" disabled={executing}>
-          <legend className="text-xs font-medium text-muted-foreground mb-2">Metrics</legend>
+          <legend className="text-2xs font-medium text-muted-foreground mb-2">Metrics</legend>
           <div className="border-t border-border">
             {METRICS.map((metric) => {
               const supported = health?.supportedMetrics.includes(metric.key) !== false;
@@ -92,11 +92,11 @@ export default function RagasEvaluationModal({
                     checked={metrics.includes(metric.key)}
                     onChange={() => onToggleMetric(metric.key)}
                     disabled={!supported || executing}
-                    className="mt-1 rounded-sm border-border text-accent focus:ring-accent"
+                    className="mt-1 rounded-sm border-border accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground"
                   />
                   <span className="min-w-0">
-                    <span className="block text-xs font-medium text-card-foreground">{metric.label}</span>
-                    <span className="block text-xs leading-5 text-muted-foreground mt-1">{metric.description}</span>
+                    <span className="block text-2xs font-medium text-card-foreground">{metric.label}</span>
+                    <span className="block text-2xs leading-5 text-muted-foreground mt-1">{metric.description}</span>
                   </span>
                 </label>
               );
@@ -104,20 +104,20 @@ export default function RagasEvaluationModal({
           </div>
         </fieldset>
 
-        <div className="mt-4 px-4 py-3 bg-muted/50 border-l-2 border-accent text-xs leading-5 text-muted-foreground">
+        <div className="mt-4 px-4 py-3 bg-upload-zone border-l-2 border-surface-foreground text-2xs leading-5 text-muted-foreground">
           선택한 지표는 케이스마다 여러 OpenAI 호출을 만들 수 있으며 Answer relevancy는 text-embedding-3-small도 사용합니다. 기준 답변이 없는 케이스의 Context 지표는 0점 대신 unavailable로 기록됩니다.
         </div>
-        {healthError && <p className="mt-4 text-xs text-danger">{healthError}</p>}
+        {healthError && <p className="mt-4 text-2xs text-danger">{healthError}</p>}
         {executionError && (
-          <div role="alert" className="mt-4 rounded-lg border border-danger-border bg-danger-surface px-4 py-3 text-base text-danger">
+          <div role="alert" className="mt-4 rounded-lg border border-danger-border bg-danger-surface px-4 py-3 text-xs text-danger">
             {executionError}
           </div>
         )}
 
         {executing && (
           <div className="mt-4">
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-2"><span>Evaluating cases</span><span>{progress.completed}/{progress.total}</span></div>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-accent transition-all duration-slow" style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div>
+            <div className="flex items-center justify-between text-2xs text-muted-foreground mb-2"><span>Evaluating cases</span><span>{progress.completed}/{progress.total}</span></div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-surface-foreground transition-all duration-slow" style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div>
           </div>
         )}
 

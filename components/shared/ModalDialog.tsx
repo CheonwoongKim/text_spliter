@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import {
   useEffect,
   useId,
@@ -100,10 +101,10 @@ export default function ModalDialog({
         className={`bg-surface shadow-lg w-full flex flex-col border border-border ${panelClassName}`}
         onKeyDown={trapFocus}
       >
-        <div className={`border-b border-border px-6 py-4 flex items-center justify-between bg-card ${headerClassName}`}>
+        <div className={`border-b border-border-subtle px-6 py-4 flex items-center justify-between bg-card ${headerClassName}`}>
           <div>
-            <h2 id={titleId} className="text-lg font-semibold text-card-foreground">{title}</h2>
-            {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+            <h2 id={titleId} className="text-base font-semibold text-card-foreground">{title}</h2>
+            {description && <p className="text-2xs text-muted-foreground mt-1">{description}</p>}
           </div>
           <button
             ref={closeButtonRef}
@@ -112,9 +113,7 @@ export default function ModalDialog({
             aria-label={`Close ${title}`}
             className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth rounded-sm"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="h-icon-md w-icon-md" strokeWidth={1} aria-hidden="true" />
           </button>
         </div>
         {children}

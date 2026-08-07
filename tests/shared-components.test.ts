@@ -25,8 +25,8 @@ test("Button renders correct variant classes, icons, and loading state", () => {
   const primaryHtml = renderToStaticMarkup(
     React.createElement(Button, { variant: "primary", size: "md" }, "Submit")
   );
-  assert.match(primaryHtml, /bg-accent/);
-  assert.match(primaryHtml, /text-accent-foreground/);
+  assert.match(primaryHtml, /bg-surface-foreground/);
+  assert.match(primaryHtml, /text-surface/);
   assert.match(primaryHtml, /Submit/);
 
   const dangerHtml = renderToStaticMarkup(

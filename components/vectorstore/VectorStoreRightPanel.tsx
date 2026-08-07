@@ -1,5 +1,6 @@
 "use client";
 
+import { Database, LoaderCircle } from "lucide-react";
 import { memo, useState, useCallback, useEffect } from "react";
 import type { TableDataResponse } from "@/lib/types";
 import { VDB_ROWS_PER_PAGE } from "@/lib/constants";
@@ -83,27 +84,27 @@ function VectorStoreRightPanel({
   }, []);
 
   return (
-    <div className="h-full flex flex-col bg-surface border-l border-border">
+    <div className="h-full flex flex-col bg-surface border-l border-border-subtle">
       {/* Header */}
-      <div className="border-b border-border bg-card pl-6 pr-0 py-3">
+      <div className="border-b border-border-subtle bg-card pl-6 pr-0 py-3">
         <div className="flex items-center justify-between pr-6">
           <div className="flex items-center gap-4">
-            <h3 className="text-base font-medium text-card-foreground">
+            <h3 className="text-xs font-medium text-card-foreground">
               {selectedTable ? (
                 <>
                   <span className="text-muted-foreground">{selectedSchema}.</span>
                   {selectedTable}
                 </>
               ) : (
-                "테이블을 선택하세요"
+                "Select a collection"
               )}
             </h3>
             {selectedTable && (
-              <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
+              <div className="flex items-center gap-1 rounded-lg bg-upload-zone p-1">
                 <button
                   type="button"
                   onClick={() => setActiveTab("data")}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-lg text-2xs font-medium transition-colors ${
                     activeTab === "data"
                       ? "bg-card text-card-foreground shadow-sm"
                       : "text-muted-foreground hover:text-card-foreground"
@@ -114,7 +115,7 @@ function VectorStoreRightPanel({
                 <button
                   type="button"
                   onClick={() => setActiveTab("rag")}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-lg text-2xs font-medium transition-colors ${
                     activeTab === "rag"
                       ? "bg-card text-card-foreground shadow-sm"
                       : "text-muted-foreground hover:text-card-foreground"
@@ -182,13 +183,38 @@ function VectorStoreRightPanel({
         </div>
       ) : <div className="flex-1 overflow-auto">
         {!selectedTable ? (
-          <div></div>
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <Database
+              className="mb-3 h-icon-md w-icon-md text-muted-foreground"
+              strokeWidth={1}
+              aria-hidden="true"
+            />
+            <p className="text-xs font-medium text-card-foreground">No collection selected</p>
+            <p className="mt-1 text-2xs text-muted-foreground">
+              Choose a collection from the left panel.
+            </p>
+          </div>
         ) : loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <LoaderCircle
+              className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
+              strokeWidth={1}
+              aria-hidden="true"
+            />
+            <p className="text-xs font-medium text-card-foreground">Loading collection</p>
           </div>
         ) : !tableData || tableData.rows.length === 0 ? (
-          <div></div>
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <Database
+              className="mb-3 h-icon-md w-icon-md text-muted-foreground"
+              strokeWidth={1}
+              aria-hidden="true"
+            />
+            <p className="text-xs font-medium text-card-foreground">Collection is empty</p>
+            <p className="mt-1 text-2xs text-muted-foreground">
+              Upload chunks to see rows here.
+            </p>
+          </div>
         ) : (
           <div className="min-w-full">
             <table className="w-full border-collapse">
@@ -197,14 +223,14 @@ function VectorStoreRightPanel({
                   {tableData.columns.map((column, index) => (
                     <th
                       key={column.name}
-                      className={`px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide ${
+                      className={`px-4 py-3 text-left text-2xs font-medium text-muted-foreground uppercase tracking-wide ${
                         index < tableData.columns.length - 1 ? 'border-r border-border' : ''
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         {column.isPrimaryKey && (
                           <svg
-                            className="w-3 h-3 text-accent"
+                            className="w-3 h-3 text-card-foreground"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -230,18 +256,18 @@ function VectorStoreRightPanel({
                 {tableData.rows.slice(page * rowsPerPage, (page + 1) * rowsPerPage).map((row, rowIndex) => (
                   <tr
                     key={rowIndex}
-                    className="hover:bg-muted/30 transition-colors"
+                    className="hover:bg-muted transition-colors"
                   >
                     {tableData.columns.map((column, colIndex) => (
                       <td
                         key={`${rowIndex}-${column.name}`}
-                        className={`px-4 py-3 text-base text-card-foreground ${
+                        className={`px-4 py-3 text-xs text-card-foreground ${
                           colIndex < tableData.columns.length - 1 ? 'border-r border-border' : ''
                         }`}
                       >
                         <div
                           onClick={() => handleCellClick(column.name, row[column.name])}
-                          className="max-w-xs overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:text-accent transition-colors"
+                          className="max-w-xs overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:text-card-foreground transition-colors"
                           title="Click to view full content"
                         >
                           {renderCellContent(row[column.name])}
@@ -277,10 +303,10 @@ function VectorStoreRightPanel({
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <div>
-                <h3 className="text-base font-medium text-card-foreground">
+                <h3 className="text-xs font-medium text-card-foreground">
                   {modalData.columnName}
                 </h3>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-2xs text-muted-foreground mt-1">
                   {typeof modalData.value === "object" && modalData.value !== null
                     ? "JSON Object"
                     : typeof modalData.value}
@@ -289,8 +315,8 @@ function VectorStoreRightPanel({
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopy}
-                  className="px-3 py-2 text-xs font-medium rounded-lg
-                           bg-accent/10 text-accent hover:bg-accent/20
+                  className="px-3 py-2 text-2xs font-medium rounded-lg
+                           bg-upload-zone text-card-foreground hover:bg-muted
                            transition-smooth flex items-center gap-2"
                 >
                   {copied ? (
@@ -324,7 +350,7 @@ function VectorStoreRightPanel({
 
             {/* Modal Content */}
             <div className="flex-1 overflow-auto px-6 py-4">
-              <pre className="text-base text-card-foreground whitespace-pre-wrap break-words font-mono bg-surface p-4 rounded-lg border border-border">
+              <pre className="text-xs text-card-foreground whitespace-pre-wrap break-words font-mono bg-surface p-4 rounded-lg border border-border">
                 {modalData.formattedValue}
               </pre>
             </div>

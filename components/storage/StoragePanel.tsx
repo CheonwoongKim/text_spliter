@@ -479,10 +479,10 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
   return (
     <div className="h-full flex flex-col bg-surface">
       {/* Header */}
-      <div className="border-b border-border bg-card px-10 py-4">
+      <div className="border-b border-border-subtle bg-card px-4 py-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               {activeTab === 'parse'
                 ? `${total} saved parse results`
                 : `${splitTotal} saved split results`}
@@ -493,7 +493,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
             <div className="flex gap-1 bg-muted rounded-lg p-1">
               <button
                 onClick={() => setActiveTab('parse')}
-                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth ${
+                className={`px-3 py-1 text-2xs font-medium rounded-sm transition-smooth ${
                   activeTab === 'parse'
                     ? 'bg-card text-card-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-card-foreground'
@@ -503,7 +503,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
               </button>
               <button
                 onClick={() => setActiveTab('split')}
-                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth ${
+                className={`px-3 py-1 text-2xs font-medium rounded-sm transition-smooth ${
                   activeTab === 'split'
                     ? 'bg-card text-card-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-card-foreground'
@@ -519,7 +519,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                 <button
                   onClick={handleCheckMigration}
                   disabled={syncing || loading}
-                  className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth border border-border rounded-lg"
+                  className="flex items-center gap-2 px-3 py-2 text-2xs font-medium text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth border border-border rounded-lg"
                   title="Check and run database migration"
                 >
                   {syncing ? (
@@ -542,7 +542,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                 <button
                   onClick={handleSyncStorage}
                   disabled={syncing || loading}
-                  className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth border border-border rounded-lg"
+                  className="flex items-center gap-2 px-3 py-2 text-2xs font-medium text-muted-foreground hover:text-card-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-smooth border border-border rounded-lg"
                   title="Sync with Files storage"
                 >
                   {syncing ? (
@@ -595,7 +595,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
               <svg className="h-5 w-5 text-danger mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-base text-danger">
+              <span className="text-xs text-danger">
                 {activeTab === 'parse' ? error : splitError}
               </span>
             </div>
@@ -612,20 +612,20 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
       )}
 
       {/* Content */}
-      <div className="flex-1 flex flex-col px-10 py-6 overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden px-4 py-6 sm:px-6 lg:px-10">
         {activeTab === 'parse' ? (
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-auto">
               <table className="w-full">
                 <thead className="bg-muted border-b border-border sticky top-0">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-32 whitespace-nowrap">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-64 whitespace-nowrap">File Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Size</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-48 whitespace-nowrap">MIME Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Time</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-48 whitespace-nowrap">Created</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Actions</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-32 whitespace-nowrap">Type</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-64 whitespace-nowrap">File Name</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Size</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-48 whitespace-nowrap">MIME Type</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Time</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-48 whitespace-nowrap">Created</th>
+                    <th className="px-4 py-3 text-center text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -633,7 +633,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                     <tr>
                       <td colSpan={7} className="h-96">
                         <div className="flex items-center justify-center h-full">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-surface-foreground"></div>
                         </div>
                       </td>
                     </tr>
@@ -644,38 +644,38 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                           <svg className="h-6 w-6 text-muted-foreground mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                           </svg>
-                          <p className="text-base text-muted-foreground">No saved parse results yet</p>
+                          <p className="text-xs text-muted-foreground">No saved parse results yet</p>
                         </div>
                       </td>
                     </tr>
                   ) : (
                     results.map((result) => (
-                      <tr key={result.id} className="hover:bg-muted/30 transition-colors">
+                      <tr key={result.id} className="hover:bg-muted transition-colors">
                         <td className="px-4 py-3 w-32 whitespace-nowrap">
-                          <span className="inline-block px-2 py-1 text-xs font-medium rounded-sm bg-accent/10 text-accent whitespace-nowrap">
+                          <span className="inline-block px-2 py-1 text-2xs font-medium rounded-sm bg-upload-zone text-card-foreground whitespace-nowrap">
                             {result.parser_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-base text-card-foreground font-medium w-64 truncate whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-card-foreground font-medium w-64 truncate whitespace-nowrap">
                           {result.file_name}
                         </td>
-                        <td className="px-4 py-3 text-base text-muted-foreground w-28 whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-muted-foreground w-28 whitespace-nowrap">
                           {formatFileSize(result.file_size)}
                         </td>
-                        <td className="px-4 py-3 text-base text-muted-foreground w-48 truncate whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-muted-foreground w-48 truncate whitespace-nowrap">
                           {result.mime_type}
                         </td>
-                        <td className="px-4 py-3 text-base text-muted-foreground w-28 whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-muted-foreground w-28 whitespace-nowrap">
                           {result.processing_time ? `${result.processing_time}ms` : '-'}
                         </td>
-                        <td className="px-4 py-3 text-base text-muted-foreground w-48 whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-muted-foreground w-48 whitespace-nowrap">
                           {formatDate(result.created_at)}
                         </td>
                         <td className="px-4 py-3 w-28 whitespace-nowrap">
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleView(result.id)}
-                              className="p-2 text-muted-foreground hover:text-accent transition-smooth"
+                              className="p-2 text-muted-foreground hover:text-card-foreground transition-smooth"
                               title="View"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -715,14 +715,14 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
               <table className="w-full">
                 <thead className="bg-muted border-b border-border sticky top-0">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-40 whitespace-nowrap">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-64 whitespace-nowrap">Preview</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-24 whitespace-nowrap">Chunks</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-24 whitespace-nowrap">Size</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Overlap</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Time</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide w-48 whitespace-nowrap">Created</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Actions</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-40 whitespace-nowrap">Type</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-64 whitespace-nowrap">Preview</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-24 whitespace-nowrap">Chunks</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-24 whitespace-nowrap">Size</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Overlap</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Time</th>
+                    <th className="px-4 py-3 text-left text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-48 whitespace-nowrap">Created</th>
+                    <th className="px-4 py-3 text-center text-2xs font-semibold text-muted-foreground uppercase tracking-wide w-28 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -730,7 +730,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                     <tr>
                       <td colSpan={8} className="h-96">
                         <div className="flex items-center justify-center h-full">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-surface-foreground"></div>
                         </div>
                       </td>
                     </tr>
@@ -741,41 +741,41 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                           <svg className="h-6 w-6 text-muted-foreground mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" />
                           </svg>
-                          <p className="text-base text-muted-foreground">No saved split results yet</p>
+                          <p className="text-xs text-muted-foreground">No saved split results yet</p>
                         </div>
                       </td>
                     </tr>
                   ) : (
                     splitResults.map((result) => (
-                      <tr key={result.id} className="hover:bg-muted/30 transition-colors">
+                      <tr key={result.id} className="hover:bg-muted transition-colors">
                         <td className="px-4 py-3 w-40 whitespace-nowrap">
-                          <span className="inline-block px-2 py-1 text-xs font-medium rounded-sm bg-accent/10 text-accent whitespace-nowrap">
+                          <span className="inline-block px-2 py-1 text-2xs font-medium rounded-sm bg-upload-zone text-card-foreground whitespace-nowrap">
                             {result.splitter_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-base text-card-foreground w-64 truncate whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-card-foreground w-64 truncate whitespace-nowrap">
                           {result.original_text_preview}
                         </td>
-                        <td className="px-4 py-3 text-base text-muted-foreground w-24 whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-muted-foreground w-24 whitespace-nowrap">
                           {result.chunk_count}
                         </td>
-                        <td className="px-4 py-3 text-base text-muted-foreground w-24 whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-muted-foreground w-24 whitespace-nowrap">
                           {result.chunk_size || '-'}
                         </td>
-                        <td className="px-4 py-3 text-base text-muted-foreground w-28 whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-muted-foreground w-28 whitespace-nowrap">
                           {result.chunk_overlap || '-'}
                         </td>
-                        <td className="px-4 py-3 text-base text-muted-foreground w-28 whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-muted-foreground w-28 whitespace-nowrap">
                           {result.processing_time ? `${result.processing_time}ms` : '-'}
                         </td>
-                        <td className="px-4 py-3 text-base text-muted-foreground w-48 whitespace-nowrap">
+                        <td className="px-4 py-3 text-xs text-muted-foreground w-48 whitespace-nowrap">
                           {formatDate(result.created_at)}
                         </td>
                         <td className="px-4 py-3 w-28 whitespace-nowrap">
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleViewSplit(result.id)}
-                              className="p-2 text-muted-foreground hover:text-accent transition-smooth"
+                              className="p-2 text-muted-foreground hover:text-card-foreground transition-smooth"
                               title="View"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -785,7 +785,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                             </button>
                             <button
                               onClick={() => handleUploadToVdb(result.id)}
-                              className="p-2 text-muted-foreground hover:text-accent transition-smooth"
+                              className="p-2 text-muted-foreground hover:text-card-foreground transition-smooth"
                               title="Upload to Vector DB"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -854,7 +854,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
         >
             <div className="p-6 bg-card space-y-4">
               {vdbMessage && (
-                <div className={`p-3 rounded-lg text-base ${
+                <div className={`p-3 rounded-lg text-xs ${
                   vdbMessage.type === 'success'
                     ? 'bg-success-surface text-success border border-success-border'
                     : 'bg-danger-surface text-danger border border-danger-border'
@@ -864,16 +864,16 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
               )}
 
               <div>
-                <label className="block text-xs font-medium text-card-foreground mb-2">
+                <label className="block text-2xs font-medium text-card-foreground mb-2">
                   Vector Collection <span className="text-danger">*</span>
                 </label>
                 {vdbTablesLoading ? (
                   <div className="flex items-center justify-center h-10 border border-border rounded-lg bg-surface">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-surface-foreground"></div>
                   </div>
                 ) : vdbTables.length === 0 ? (
                   <div className="p-3 bg-warning-surface border border-warning-border rounded-lg">
-                    <p className="text-xs text-warning">
+                    <p className="text-2xs text-warning">
                       No collections found. Create a collection in the VDB page first.
                     </p>
                   </div>
@@ -884,8 +884,8 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                       onChange={(e) => setVdbTableName(e.target.value)}
                       disabled={vdbUploading}
                       className="w-full h-10 px-3 border border-border rounded-lg
-                               focus:outline-none focus:ring-2 focus:ring-accent
-                               bg-surface text-card-foreground text-base
+                               focus-ring
+                               bg-surface text-card-foreground text-xs
                                disabled:opacity-50"
                     >
                       <option value="">Select a collection...</option>
@@ -895,7 +895,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-2xs text-muted-foreground mt-1">
                       Select the owner-scoped collection where chunks will be uploaded
                     </p>
                   </>
@@ -903,7 +903,7 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-card-foreground mb-2">
+                <label className="block text-2xs font-medium text-card-foreground mb-2">
                   Batch Size
                 </label>
                 <input
@@ -914,20 +914,20 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
                   max="100"
                   disabled={vdbUploading}
                   className="w-full h-10 px-3 border border-border rounded-lg
-                           focus:outline-none focus:ring-2 focus:ring-accent
-                           bg-surface text-card-foreground text-base
+                           focus-ring
+                           bg-surface text-card-foreground text-xs
                            disabled:opacity-50"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-2xs text-muted-foreground mt-1">
                   Number of chunks to process at once (1-100). Lower values reduce rate limit errors.
                 </p>
               </div>
 
-              <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground">
+              <div className="bg-upload-zone rounded-lg p-3">
+                <p className="text-2xs text-muted-foreground">
                   <strong className="text-card-foreground">Note:</strong> This generates OpenAI embeddings and stores them in the managed Supabase Vector Store. Make sure:
                 </p>
-                <ul className="text-xs text-muted-foreground mt-2 space-y-1 list-disc list-inside">
+                <ul className="text-2xs text-muted-foreground mt-2 space-y-1 list-disc list-inside">
                   <li>OpenAI API key is configured in Connect page</li>
                   <li>The target collection has been created in the VDB page</li>
                 </ul>
@@ -937,14 +937,14 @@ const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StorageP
               <button
                 onClick={() => setShowVdbModal(false)}
                 disabled={vdbUploading}
-                className="px-4 py-2 text-base font-medium text-muted-foreground hover:text-card-foreground disabled:opacity-50"
+                className="px-4 py-2 text-xs font-medium text-muted-foreground hover:text-card-foreground disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleVdbUploadSubmit}
                 disabled={vdbUploading || !vdbTableName.trim()}
-                className="px-4 py-2 text-base font-medium text-accent hover:text-accent/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-xs font-medium text-card-foreground hover:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {vdbUploading ? 'Uploading...' : 'Upload to VDB'}
               </button>

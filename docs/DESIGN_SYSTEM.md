@@ -18,7 +18,7 @@ BGK는 디자인을 보여주기 위한 서비스가 아니라 문서를 처리�
 
 ### 4. Neutral by default
 
-기본 UI는 중립색으로 구성합니다. 색상은 주요 액션과 실제 상태를 구분할 때만 사용합니다.
+기본 UI와 주요 액션은 검정과 중립색으로 구성합니다. 색상은 성공, 경고, 오류처럼 실제 상태를 구분할 때만 사용합니다.
 
 ### 5. One theme for the MVP
 
@@ -43,16 +43,17 @@ styles/design-tokens.css → tailwind.config.ts → app/globals.css / components
 
 UI에는 Spoqa Han Sans Neo 하나만 사용합니다. WOFF2 파일은 프로젝트에서 자체 호스팅하고 `next/font/local`의 fallback metric 보정을 적용해 font swap 레이아웃 이동을 줄입니다. 모든 굵기를 선로딩하지 않고 각 화면에서 실제 사용하는 굵기만 브라우저가 요청합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
 
-핵심 UI의 최소 font size는 `13px`, 최대 font size는 `24px`입니다. `11px`은 좁은 대시보드 메뉴와 인증 입력필드 label에만 사용하는 예외 토큰입니다.
+업무 화면의 기본 본문과 입력값은 `13px`, section heading은 `15px`, page heading은 `17px`을 사용합니다. `11px`은 eyebrow, label, metadata, table heading, compact tab·helper text, Top bar breadcrumb에 사용하고, `10px`은 GNB 메뉴명에만 사용하는 예외 토큰입니다. `20px`과 `24px`은 인증 화면처럼 독립된 진입 화면의 제목에만 허용합니다.
 
 | Utility | Size / line-height | Role |
 | --- | --- | --- |
-| `text-2xs` | 11 / 16px | compact navigation and authentication label only |
-| `text-xs` | 13 / 20px | label, metadata, table heading |
-| `text-base` | 15 / 24px | body, input, button, table cell |
-| `text-lg` | 17 / 26px | section heading |
-| `text-xl` | 20 / 30px | page heading |
-| `text-2xl` | 24 / 36px | product name, standalone title |
+| `text-nav` | 10 / 16px | GNB menu label only |
+| `text-2xs` | 11 / 16px | eyebrow, label, metadata, compact tab/helper, table heading, breadcrumb |
+| `text-xs` | 13 / 20px | workspace body, input, button, table cell |
+| `text-base` | 15 / 24px | workspace section heading, modal heading |
+| `text-lg` | 17 / 26px | workspace page heading |
+| `text-xl` | 20 / 30px | standalone entry heading only |
+| `text-2xl` | 24 / 36px | product name, authentication title only |
 
 허용 font weight는 `400`, `500`, `600`, `700`입니다. 일반 본문은 `400`, 컨트롤은 `500`, 제목은 `600`, 제품명만 `700`을 사용합니다.
 
@@ -62,7 +63,7 @@ UI에는 Spoqa Han Sans Neo 하나만 사용합니다. WOFF2 파일은 프로젝
 
 Label은 필드의 의미를 명확하게 설명합니다. Placeholder는 label이나 입력 지시를 반복하지 않고, 사용자가 입력 형식을 바로 이해할 수 있는 실제 예시만 제공합니다.
 
-일반 입력필드 label은 `text-xs`(13px), 로그인·회원가입 입력필드 label은 `text-2xs`(11px)를 사용하며 weight는 모두 `400`입니다. 인증 입력값과 Placeholder는 `text-xs`(13px)를 사용합니다. Placeholder는 `fg-placeholder` 토큰으로 본문과 명확히 구분하고, 입력값보다 시각적으로 강조하지 않습니다.
+모든 입력필드 label은 `text-2xs`(11px), 입력값과 Placeholder는 `text-xs`(13px)를 사용합니다. Label weight는 기본 `400`, compact control에서만 `500`을 허용합니다. Placeholder는 `fg-placeholder` 토큰으로 본문과 명확히 구분하고, 입력값보다 시각적으로 강조하지 않습니다.
 
 로그인과 회원가입은 각각 `/login`, `/signup` 경로를 사용합니다. 회원가입 비밀번호는 8자 이상이며 영문 대문자·소문자, 숫자, 특수문자를 모두 포함해야 하고 비밀번호 확인 값과 일치해야 합니다. 이 규칙은 클라이언트 검증과 로컬 `supabase/config.toml`에 동일하게 적용합니다. 운영 Supabase 프로젝트도 Auth 설정의 password strength를 같은 값으로 유지해야 합니다.
 
@@ -98,12 +99,16 @@ Spacing은 다음 9개 값만 사용합니다. `0`은 값 없음의 의미로 �
 
 | Utility | Value | Role |
 | --- | --- | --- |
+| `h-icon-md`, `w-icon-md` | 20px | primary navigation icon |
 | `h-control-sm` | 32px | compact control |
 | `h-control-md` | 36px | icon button, compact select |
 | `h-control-lg` | 40px | default control |
 | `h-control-xl` | 48px | primary input and button |
-| `h-topbar` | 64px | top bar including border |
-| `w-sidebar` | 80px | app navigation |
+| `h-parser-engine-option` | 56px | Parser additional engine option |
+| `h-parser-file-zone` | 200px | Parser file upload and selection region |
+| `h-splitter-source` | 320px | Splitter source text workspace |
+| `h-topbar` | 56px | top bar including border |
+| `w-sidebar` | 72px | app navigation |
 | `max-w-auth` | 360px | authentication form |
 
 ## Radius
@@ -127,14 +132,15 @@ UI에서 사용할 수 있는 색상 역할은 아래가 전부입니다.
 - `surface`: 전체 작업면
 - `card`: 떠 있는 표면과 실제 상호작용 영역
 - `muted`: 보조 표면과 비활성 영역
+- `upload-zone`: 파일 드래그앤드롭 영역 전용 `#f8f9fa` 표면
 - `surface-foreground`, `card-foreground`: 기본 텍스트
 - `muted-foreground`: 보조 텍스트
 - `border`, `border-darkest`: 구획
 
 ### Accent
 
-- `accent`, `accent-foreground`: 주요 행동, 선택, 포커스
-- 진행 중이나 정보 상태는 새로운 파란색을 추가하지 않고 `accent`를 사용합니다.
+- `accent`, `accent-foreground`: 데이터 시각화처럼 중립색만으로 구분할 수 없는 제한적 상황에만 사용
+- 주요 행동, 선택, 포커스는 `surface-foreground`와 중립 표면을 사용합니다.
 
 ### Status
 
@@ -165,11 +171,11 @@ UI에서 사용할 수 있는 색상 역할은 아래가 전부입니다.
 
 ```tsx
 // Correct
-<button className="h-control-lg rounded-lg bg-accent px-4 text-base font-medium text-accent-foreground">
+<button className="h-control-md rounded-lg bg-surface-foreground px-3 text-xs font-medium text-surface">
   Save
 </button>
 
-<p className="rounded-lg border border-danger-border bg-danger-surface p-3 text-base text-danger">
+<p className="rounded-lg border border-danger-border bg-danger-surface p-3 text-xs text-danger">
   Upload failed
 </p>
 

@@ -167,13 +167,5 @@ export type DocumentEngineType = typeof DOCUMENT_ENGINE_TYPES[number];
 /**
  * Splitter Types
  */
-export const SPLITTER_TYPES = [
-  'RecursiveCharacterTextSplitter',
-  'CharacterTextSplitter',
-  'TokenTextSplitter',
-  'MarkdownTextSplitter',
-  'LatexTextSplitter',
-  'PythonCodeTextSplitter',
-  'RecursiveJsonSplitter',
-] as const;
-export type SplitterType = typeof SPLITTER_TYPES[number];
+export { SPLITTER_TYPES } from "./types";
+export type { SplitterType } from "./types";

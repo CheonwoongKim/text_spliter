@@ -131,8 +131,8 @@ export default function GoldenCaseEditor({
     return (
       <div className="h-full flex items-center justify-center px-10 text-center">
         <div>
-          <p className="text-base font-medium text-card-foreground">케이스를 선택하세요</p>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs font-medium text-card-foreground">케이스를 선택하세요</p>
+          <p className="text-2xs text-muted-foreground mt-2">
             질문, 기준 답변과 기대 근거를 한 화면에서 편집할 수 있습니다.
           </p>
         </div>
@@ -172,27 +172,27 @@ export default function GoldenCaseEditor({
     }
   };
 
-  const fieldClass = "w-full px-3 py-3 border border-border rounded-lg bg-surface text-base text-card-foreground focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60";
+  const fieldClass = "w-full px-3 py-3 border border-border rounded-lg bg-surface text-xs text-card-foreground focus-ring disabled:opacity-60";
 
   return (
     <div className="h-full overflow-y-auto">
       <div className="max-w-4xl mx-auto px-8 py-8">
         <div className="flex items-start justify-between gap-6 pb-4 border-b border-border">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
               {isNew ? "New golden case" : evaluationCase?.case_key}
             </p>
-            <h3 className="text-lg font-semibold text-card-foreground mt-1">
+            <h3 className="text-base font-semibold text-card-foreground mt-1">
               {isNew ? "평가 케이스 작성" : "평가 케이스 편집"}
             </h3>
           </div>
           {!editable && (
-            <span className="px-3 py-1 rounded-full bg-muted text-xs text-muted-foreground">Frozen version</span>
+            <span className="px-3 py-1 rounded-full bg-muted text-2xs text-muted-foreground">Frozen version</span>
           )}
         </div>
 
         {localError && (
-          <div className="mt-4 px-4 py-3 border border-danger-border bg-danger-surface rounded-lg text-base text-danger">
+          <div className="mt-4 px-4 py-3 border border-danger-border bg-danger-surface rounded-lg text-xs text-danger">
             {localError}
           </div>
         )}
@@ -200,15 +200,15 @@ export default function GoldenCaseEditor({
         <div className="py-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <label className="block md:col-span-1">
-              <span className="block text-xs font-medium text-muted-foreground mb-2">Case key</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">Case key</span>
               <input value={caseKey} onChange={(event) => setCaseKey(event.target.value)} disabled={!editable || saving} placeholder="auto-generated" className={fieldClass} />
             </label>
             <label className="block">
-              <span className="block text-xs font-medium text-muted-foreground mb-2">Language</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">Language</span>
               <input value={language} onChange={(event) => setLanguage(event.target.value)} disabled={!editable || saving} placeholder="ko" className={fieldClass} />
             </label>
             <label className="block">
-              <span className="block text-xs font-medium text-muted-foreground mb-2">Difficulty</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">Difficulty</span>
               <select value={difficulty} onChange={(event) => setDifficulty(event.target.value as typeof difficulty)} disabled={!editable || saving} className={fieldClass}>
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
@@ -218,57 +218,57 @@ export default function GoldenCaseEditor({
           </div>
 
           <label className="block">
-            <span className="block text-xs font-medium text-muted-foreground mb-2">Question *</span>
+            <span className="block text-2xs font-medium text-muted-foreground mb-2">Question *</span>
             <textarea value={question} onChange={(event) => setQuestion(event.target.value)} disabled={!editable || saving} rows={4} className={fieldClass} placeholder="문서만으로 답할 수 있는 질문을 입력하세요." />
           </label>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <label className="block">
-              <span className="block text-xs font-medium text-muted-foreground mb-2">Reference answer</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">Reference answer</span>
               <textarea value={referenceAnswer} onChange={(event) => setReferenceAnswer(event.target.value)} disabled={!editable || saving} rows={7} className={fieldClass} placeholder="검토자가 기대하는 기준 답변" />
             </label>
             <label className="block">
-              <span className="block text-xs font-medium text-muted-foreground mb-2">Reference facts</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">Reference facts</span>
               <textarea value={referenceFacts} onChange={(event) => setReferenceFacts(event.target.value)} disabled={!editable || saving} rows={7} className={fieldClass} placeholder={"답변에 반드시 포함되어야 하는 사실을\n한 줄에 하나씩 입력하세요."} />
             </label>
           </div>
 
           <label className="block">
-            <span className="block text-xs font-medium text-muted-foreground mb-2">Expected evidence</span>
+            <span className="block text-2xs font-medium text-muted-foreground mb-2">Expected evidence</span>
             <textarea value={expectedEvidence} onChange={(event) => setExpectedEvidence(event.target.value)} disabled={!editable || saving} rows={5} className={`${fieldClass} font-mono`} placeholder="document_hash | page | block_id | chunk_key | note" />
-            <span className="block text-xs text-muted-foreground mt-2">
+            <span className="block text-2xs text-muted-foreground mt-2">
               한 줄에 하나씩 입력합니다. 모르는 값은 비워 두고 `|` 구분자는 유지하세요.
             </span>
           </label>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <label className="block">
-              <span className="block text-xs font-medium text-muted-foreground mb-2">Tags</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">Tags</span>
               <input value={tags} onChange={(event) => setTags(event.target.value)} disabled={!editable || saving} className={fieldClass} placeholder="table, korean, finance" />
             </label>
             <label className="flex items-center gap-3 pt-6 cursor-pointer">
-              <input type="checkbox" checked={answerable} onChange={(event) => setAnswerable(event.target.checked)} disabled={!editable || saving} className="w-4 h-4 rounded-sm border-border text-accent focus:ring-accent" />
+              <input type="checkbox" checked={answerable} onChange={(event) => setAnswerable(event.target.checked)} disabled={!editable || saving} className="w-4 h-4 rounded-sm border-border accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground" />
               <span>
-                <span className="block text-base font-medium text-card-foreground">Answerable</span>
-                <span className="block text-xs text-muted-foreground">문서 근거만으로 답할 수 있는 질문</span>
+                <span className="block text-xs font-medium text-card-foreground">Answerable</span>
+                <span className="block text-2xs text-muted-foreground">문서 근거만으로 답할 수 있는 질문</span>
               </span>
             </label>
           </div>
 
           <div className="pt-2 border-t border-border">
-            <h4 className="text-base font-medium text-card-foreground mt-4 mb-4">Manual review rubric</h4>
+            <h4 className="text-xs font-medium text-card-foreground mt-4 mb-4">Manual review rubric</h4>
             <div className="space-y-4">
               <label className="block">
-                <span className="block text-xs font-medium text-muted-foreground mb-2">Decision criteria</span>
+                <span className="block text-2xs font-medium text-muted-foreground mb-2">Decision criteria</span>
                 <textarea value={criteria} onChange={(event) => setCriteria(event.target.value)} disabled={!editable || saving} rows={3} className={fieldClass} placeholder="통과/실패를 결정할 때 적용할 기준" />
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
-                  <span className="block text-xs font-medium text-muted-foreground mb-2">Required terms</span>
+                  <span className="block text-2xs font-medium text-muted-foreground mb-2">Required terms</span>
                   <input value={requiredTerms} onChange={(event) => setRequiredTerms(event.target.value)} disabled={!editable || saving} className={fieldClass} placeholder="comma, separated" />
                 </label>
                 <label className="block">
-                  <span className="block text-xs font-medium text-muted-foreground mb-2">Forbidden claims</span>
+                  <span className="block text-2xs font-medium text-muted-foreground mb-2">Forbidden claims</span>
                   <input value={forbiddenClaims} onChange={(event) => setForbiddenClaims(event.target.value)} disabled={!editable || saving} className={fieldClass} placeholder="허용하면 안 되는 주장" />
                 </label>
               </div>
@@ -276,7 +276,7 @@ export default function GoldenCaseEditor({
           </div>
 
           <label className="block">
-            <span className="block text-xs font-medium text-muted-foreground mb-2">Reviewer notes</span>
+            <span className="block text-2xs font-medium text-muted-foreground mb-2">Reviewer notes</span>
             <textarea value={notes} onChange={(event) => setNotes(event.target.value)} disabled={!editable || saving} rows={3} className={fieldClass} placeholder="케이스 작성 배경이나 주의사항" />
           </label>
         </div>

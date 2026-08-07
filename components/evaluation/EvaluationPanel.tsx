@@ -73,7 +73,7 @@ async function evaluationRequest<T>(body?: Record<string, unknown>): Promise<T> 
 }
 
 function statusClass(status: string): string {
-  if (status === "draft") return "bg-accent/10 text-accent";
+  if (status === "draft") return "bg-upload-zone text-card-foreground";
   if (status === "frozen") return "bg-warning-surface text-warning";
   return "bg-muted text-muted-foreground";
 }
@@ -493,24 +493,24 @@ export default function EvaluationPanel() {
   };
 
   if (loading && !workspace.datasets.length) {
-    return <div className="h-full flex items-center justify-center"><div className="animate-spin w-8 h-8 rounded-full border-2 border-muted border-t-accent" /></div>;
+    return <div className="h-full flex items-center justify-center"><div className="animate-spin w-8 h-8 rounded-full border-2 border-muted border-t-surface-foreground" /></div>;
   }
 
   return (
     <div className="h-full flex flex-col bg-surface">
-      <header className="border-b border-border bg-card/60 px-8 py-4">
+      <header className="border-b border-border-subtle bg-card px-4 py-4 sm:px-6 lg:px-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
           {activeTab === "documents" ? (
             <div className="min-w-0">
-              <h2 className="text-base font-semibold text-card-foreground">Document evaluation</h2>
-              <p className="text-xs text-muted-foreground mt-1">원본과 기준 Document IR을 사용해 파서 정확도를 비교합니다.</p>
+              <h2 className="text-xs font-semibold text-card-foreground">Document evaluation</h2>
+              <p className="text-2xs text-muted-foreground mt-1">원본과 기준 Document IR을 사용해 파서 정확도를 비교합니다.</p>
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-3 min-w-0">
               <select
                 value={selectedDatasetId || ""}
                 onChange={(event) => setSelectedDatasetId(event.target.value || null)}
-                className="h-10 min-w-56 max-w-80 px-3 border border-border rounded-lg bg-surface text-base font-medium text-card-foreground"
+                className="h-10 min-w-56 max-w-80 px-3 border border-border rounded-lg bg-surface text-xs font-medium text-card-foreground"
               >
                 {!workspace.datasets.length && <option value="">No datasets</option>}
                 {workspace.datasets.map((dataset) => <option key={dataset.id} value={dataset.id}>{dataset.name}</option>)}
@@ -519,14 +519,14 @@ export default function EvaluationPanel() {
                 <select
                   value={selectedVersionId || ""}
                   onChange={(event) => setSelectedVersionId(event.target.value)}
-                  className="h-10 px-3 border border-border rounded-lg bg-surface text-base text-card-foreground"
+                  className="h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"
                 >
                   {datasetVersions.map((version) => (
                     <option key={version.id} value={version.id}>v{version.version_number} · {version.status}</option>
                   ))}
                 </select>
               )}
-              {selectedVersion && <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusClass(selectedVersion.status)}`}>{selectedVersion.status}</span>}
+              {selectedVersion && <span className={`px-3 py-1 rounded-full text-2xs font-medium ${statusClass(selectedVersion.status)}`}>{selectedVersion.status}</span>}
             </div>
           )}
           {activeTab !== "documents" && (
@@ -543,9 +543,9 @@ export default function EvaluationPanel() {
         </div>
         <div className="flex items-center justify-between gap-4 mt-4 -mb-4">
           <nav className="flex items-center gap-4">
-            <button type="button" onClick={() => setActiveTab("golden")} className={`pb-3 text-base font-medium border-b-2 ${activeTab === "golden" ? "border-accent text-card-foreground" : "border-transparent text-muted-foreground"}`}>Golden set</button>
-            <button type="button" onClick={() => setActiveTab("runs")} className={`pb-3 text-base font-medium border-b-2 ${activeTab === "runs" ? "border-accent text-card-foreground" : "border-transparent text-muted-foreground"}`}>Runs <span className="ml-1 text-xs">{datasetRuns.length}</span></button>
-            <button type="button" onClick={() => setActiveTab("documents")} className={`pb-3 text-base font-medium border-b-2 ${activeTab === "documents" ? "border-accent text-card-foreground" : "border-transparent text-muted-foreground"}`}>Documents</button>
+            <button type="button" onClick={() => setActiveTab("golden")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "golden" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>Golden set</button>
+            <button type="button" onClick={() => setActiveTab("runs")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "runs" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>Runs <span className="ml-1 text-2xs">{datasetRuns.length}</span></button>
+            <button type="button" onClick={() => setActiveTab("documents")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "documents" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>Documents</button>
           </nav>
           {activeTab === "golden" && selectedVersion && (
             <div className="flex items-center gap-2 pb-2">
@@ -561,8 +561,8 @@ export default function EvaluationPanel() {
       </header>
 
       {error && (
-        <div className="px-8 py-3 border-b border-danger-border bg-danger-surface flex items-center justify-between gap-4 text-base text-danger">
-          <span>{error}</span><button type="button" onClick={() => setError(null)} className="text-xs transition-smooth hover:text-danger/80">Dismiss</button>
+        <div className="flex items-center justify-between gap-4 border-b border-danger-border bg-danger-surface px-4 py-3 text-xs text-danger sm:px-6 lg:px-10">
+          <span>{error}</span><button type="button" onClick={() => setError(null)} className="text-2xs transition-smooth hover:text-danger/80">Dismiss</button>
         </div>
       )}
 
@@ -572,8 +572,8 @@ export default function EvaluationPanel() {
         ) : !selectedDataset ? (
           <div className="h-full flex items-center justify-center text-center px-8">
             <div>
-              <p className="text-base font-semibold text-card-foreground">첫 골든셋을 만드세요</p>
-              <p className="text-base text-muted-foreground mt-2 max-w-md">질문, 기준 답변, 기대 근거를 버전으로 관리하고 같은 파이프라인에서 반복 평가할 수 있습니다.</p>
+              <p className="text-xs font-semibold text-card-foreground">첫 골든셋을 만드세요</p>
+              <p className="text-xs text-muted-foreground mt-2 max-w-md">질문, 기준 답변, 기대 근거를 버전으로 관리하고 같은 파이프라인에서 반복 평가할 수 있습니다.</p>
               <button type="button" onClick={() => openDatasetModal()} className={`mt-4 ${styles.primaryButton}`}>Create dataset</button>
             </div>
           </div>
@@ -592,24 +592,24 @@ export default function EvaluationPanel() {
           />
         ) : (
           <div className="h-full grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)]">
-            <aside className="h-full overflow-y-auto border-r border-border bg-card/20">
-              <div className="sticky top-0 z-navigation bg-card px-4 py-4 border-b border-border">
+            <aside className="h-full overflow-y-auto border-r border-border-subtle">
+              <div className="sticky top-0 z-navigation bg-card px-4 py-4 border-b border-border-subtle">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-medium text-card-foreground">Cases</p>
-                    <p className="text-xs text-muted-foreground mt-1">{versionCases.length} total · {selectedCaseIds.size} selected</p>
+                    <p className="text-2xs font-medium text-card-foreground">Cases</p>
+                    <p className="text-2xs text-muted-foreground mt-1">{versionCases.length} total · {selectedCaseIds.size} selected</p>
                   </div>
                   {selectedVersion?.status === "draft" && (
-                    <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className={`${styles.softIconButton} text-lg`} title="Add case">+</button>
+                    <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className={`${styles.softIconButton} text-base`} title="Add case">+</button>
                   )}
                 </div>
                 {!!versionCases.length && (
-                  <label className="flex items-center gap-2 mt-3 text-xs text-muted-foreground cursor-pointer">
+                  <label className="flex items-center gap-2 mt-3 text-2xs text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedCaseIds.size === versionCases.length}
                       onChange={(event) => setSelectedCaseIds(event.target.checked ? new Set(versionCases.map((item) => item.id)) : new Set())}
-                      className="rounded-sm border-border text-accent focus:ring-accent"
+                      className="rounded-sm border-border accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground"
                     />
                     Select all for run
                   </label>
@@ -617,33 +617,33 @@ export default function EvaluationPanel() {
               </div>
               <div>
                 {versionCases.map((evaluationCase, index) => (
-                  <div key={evaluationCase.id} className={`flex items-start border-b border-border ${selectedCaseId === evaluationCase.id ? "bg-accent/10" : "hover:bg-muted/30"}`}>
+                  <div key={evaluationCase.id} className={`flex items-start border-b border-border ${selectedCaseId === evaluationCase.id ? "bg-upload-zone" : "hover:bg-muted"}`}>
                     <label className="pl-4 pt-4 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={selectedCaseIds.has(evaluationCase.id)}
                         onChange={() => toggleCaseSelection(evaluationCase.id)}
                         aria-label={evaluationCaseSelectionLabel(evaluationCase)}
-                        className="rounded-sm border-border text-accent focus:ring-accent"
+                        className="rounded-sm border-border accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground"
                       />
                     </label>
                     <button type="button" onClick={() => setSelectedCaseId(evaluationCase.id)} className="flex-1 min-w-0 text-left px-3 py-4">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs uppercase tracking-wide text-muted-foreground">{evaluationCase.case_key || `Case ${index + 1}`}</span>
-                        <span className="text-xs text-muted-foreground">{evaluationCase.difficulty}</span>
+                        <span className="text-2xs uppercase tracking-wide text-muted-foreground">{evaluationCase.case_key || `Case ${index + 1}`}</span>
+                        <span className="text-2xs text-muted-foreground">{evaluationCase.difficulty}</span>
                       </div>
-                      <p className="text-base leading-5 text-card-foreground mt-2 line-clamp-3">{evaluationCase.question}</p>
+                      <p className="text-xs leading-5 text-card-foreground mt-2 line-clamp-3">{evaluationCase.question}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {!evaluationCase.answerable && <span className="px-2 py-1 bg-warning-surface text-warning rounded-sm text-xs">unanswerable</span>}
-                        {evaluationCase.tags.slice(0, 3).map((tag) => <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground rounded-sm text-xs">{tag}</span>)}
+                        {!evaluationCase.answerable && <span className="px-2 py-1 bg-warning-surface text-warning rounded-sm text-2xs">unanswerable</span>}
+                        {evaluationCase.tags.slice(0, 3).map((tag) => <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground rounded-sm text-2xs">{tag}</span>)}
                       </div>
                     </button>
                   </div>
                 ))}
                 {!versionCases.length && (
                   <div className="px-4 py-10 text-center">
-                    <p className="text-xs text-muted-foreground">이 버전에 케이스가 없습니다.</p>
-                    {selectedVersion?.status === "draft" && <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className="mt-3 text-xs font-medium text-accent hover:text-accent/80 transition-smooth">Add first case</button>}
+                    <p className="text-2xs text-muted-foreground">이 버전에 케이스가 없습니다.</p>
+                    {selectedVersion?.status === "draft" && <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className="mt-3 text-2xs font-medium text-card-foreground hover:text-muted-foreground transition-smooth">Add first case</button>}
                   </div>
                 )}
               </div>
@@ -664,12 +664,12 @@ export default function EvaluationPanel() {
 
       {datasetModalOpen && (
         <div className="fixed inset-0 z-modal bg-overlay flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-card border border-border rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-card-foreground">{editingDataset ? "Edit dataset" : "New evaluation dataset"}</h3>
-            <p className="text-xs text-muted-foreground mt-1">골든 케이스를 같은 목적과 버전으로 묶습니다.</p>
+          <div className="w-full max-w-lg bg-card border border-border rounded-lg shadow-lg p-6">
+            <h3 className="text-base font-semibold text-card-foreground">{editingDataset ? "Edit dataset" : "New evaluation dataset"}</h3>
+            <p className="text-2xs text-muted-foreground mt-1">골든 케이스를 같은 목적과 버전으로 묶습니다.</p>
             <div className="space-y-4 mt-6">
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Name *</span><input autoFocus value={datasetName} onChange={(event) => setDatasetName(event.target.value)} className={styles.field} placeholder="Korean financial reports" /></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Description</span><textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} className={styles.textArea} placeholder="평가 목적과 포함 문서 범위" /></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Name *</span><input autoFocus value={datasetName} onChange={(event) => setDatasetName(event.target.value)} className={styles.field} placeholder="Korean financial reports" /></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Description</span><textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} className={styles.textArea} placeholder="평가 목적과 포함 문서 범위" /></label>
             </div>
             <div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setDatasetModalOpen(false)} disabled={saving} className={styles.textButton}>Cancel</button><button type="button" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()} className={styles.primaryButton}>{saving ? "Saving..." : "Save dataset"}</button></div>
           </div>
@@ -678,23 +678,23 @@ export default function EvaluationPanel() {
 
       {runModalOpen && (
         <div className="fixed inset-0 z-modal bg-overlay flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-xl shadow-lg p-6">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-lg shadow-lg p-6">
             <div className="flex items-start justify-between gap-4">
-              <div><h3 className="text-lg font-semibold text-card-foreground">Run evaluation</h3><p className="text-xs text-muted-foreground mt-1">선택한 {selectedCaseIds.size}개 케이스에 동일한 파이프라인을 적용합니다.</p></div>
-              <span className="px-3 py-1 rounded-full bg-warning-surface text-warning text-xs">Version will freeze</span>
+              <div><h3 className="text-base font-semibold text-card-foreground">Run evaluation</h3><p className="text-2xs text-muted-foreground mt-1">선택한 {selectedCaseIds.size}개 케이스에 동일한 파이프라인을 적용합니다.</p></div>
+              <span className="px-3 py-1 rounded-full bg-warning-surface text-warning text-2xs">Version will freeze</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Run name</span><input value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing} className={styles.field} /></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Schema</span><select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-base text-card-foreground">{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</select></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Vector collection</span><select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-base text-card-foreground"><option value="">Select collection</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</select></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Embedding</span><select value={embeddingModel} onChange={(event) => setEmbeddingModel(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-base text-card-foreground"><option value={DEFAULT_EMBEDDING_MODEL}>3-small · managed 1536d</option></select></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Answer model</span><select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-base text-card-foreground"><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></select></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Reasoning</span><select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-base text-card-foreground"><option value="none">None</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
-              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Top K</span><input type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing} className={styles.field} /></label>
+              <label className="block md:col-span-2"><span className="block text-2xs font-medium text-muted-foreground mb-2">Run name</span><input value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing} className={styles.field} /></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Schema</span><select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground">{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</select></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Vector collection</span><select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"><option value="">Select collection</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</select></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Embedding</span><select value={embeddingModel} onChange={(event) => setEmbeddingModel(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"><option value={DEFAULT_EMBEDDING_MODEL}>3-small · managed 1536d</option></select></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Answer model</span><select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></select></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Reasoning</span><select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"><option value="none">None</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Top K</span><input type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing} className={styles.field} /></label>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">
               <label className="block">
-                <span className="block text-xs font-medium text-muted-foreground mb-2">Baseline run</span>
+                <span className="block text-2xs font-medium text-muted-foreground mb-2">Baseline run</span>
                 <select value={baselineRunId} onChange={(event) => setBaselineRunId(event.target.value)} disabled={executing} className={styles.field}>
                   <option value="">No baseline</option>
                   {datasetRuns.filter((run) => run.status === "completed").map((run) => (
@@ -703,14 +703,14 @@ export default function EvaluationPanel() {
                 </select>
               </label>
               <label className="block">
-                <span className="block text-xs font-medium text-muted-foreground mb-2">Allowed metric drop (%)</span>
+                <span className="block text-2xs font-medium text-muted-foreground mb-2">Allowed metric drop (%)</span>
                 <input type="number" min={0} max={100} step={1} value={regressionTolerance} onChange={(event) => setRegressionTolerance(Number(event.target.value))} disabled={executing || !baselineRunId} className={styles.field} />
               </label>
-              <p className="md:col-span-2 text-xs leading-5 text-muted-foreground">기준 실행을 선택하면 자동 검색·인용 지표가 허용 범위보다 낮아질 때 회귀로 기록합니다.</p>
+              <p className="md:col-span-2 text-2xs leading-5 text-muted-foreground">기준 실행을 선택하면 자동 검색·인용 지표가 허용 범위보다 낮아질 때 회귀로 기록합니다.</p>
             </div>
-            <div className="mt-4 px-4 py-3 bg-muted/50 border-l-2 border-accent text-xs leading-5 text-muted-foreground">각 케이스는 OpenAI embedding 1회와 Responses API 1회를 호출합니다. 검색 함수와 사용자 격리는 Managed Supabase Vector Store에서 자동으로 적용됩니다.</div>
+            <div className="mt-4 px-4 py-3 bg-upload-zone border-l-2 border-surface-foreground text-2xs leading-5 text-muted-foreground">각 케이스는 OpenAI embedding 1회와 Responses API 1회를 호출합니다. 검색 함수와 사용자 격리는 Managed Supabase Vector Store에서 자동으로 적용됩니다.</div>
             {executing && (
-              <div className="mt-4"><div className="flex items-center justify-between text-xs text-muted-foreground mb-2"><span>Executing cases</span><span>{executionProgress.completed}/{executionProgress.total}</span></div><div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-accent transition-all duration-slow" style={{ width: `${executionProgress.total ? (executionProgress.completed / executionProgress.total) * 100 : 0}%` }} /></div></div>
+              <div className="mt-4"><div className="flex items-center justify-between text-2xs text-muted-foreground mb-2"><span>Executing cases</span><span>{executionProgress.completed}/{executionProgress.total}</span></div><div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-surface-foreground transition-all duration-slow" style={{ width: `${executionProgress.total ? (executionProgress.completed / executionProgress.total) * 100 : 0}%` }} /></div></div>
             )}
             <div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setRunModalOpen(false)} disabled={executing} className={styles.textButton}>Cancel</button><button type="button" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20 || regressionTolerance < 0 || regressionTolerance > 100} className={styles.primaryButton}>{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</button></div>
           </div>

@@ -3,6 +3,7 @@
 import { SplitResponse } from "@/lib/types";
 import { useState } from "react";
 import JsonView from "@uiw/react-json-view";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { JSON_VIEW_THEME } from "@/lib/json-view-theme";
 
 interface JsonViewComponentProps {
@@ -10,13 +11,11 @@ interface JsonViewComponentProps {
 }
 
 export default function JsonViewComponent({ result }: JsonViewComponentProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
   const [collapsed, setCollapsed] = useState(false);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(JSON.stringify(result, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    void copy(JSON.stringify(result, null, 2)).catch(() => undefined);
   };
 
   const toggleCollapse = () => {
@@ -26,7 +25,7 @@ export default function JsonViewComponent({ result }: JsonViewComponentProps) {
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-base font-medium text-surface-foreground">
+        <h3 className="text-xs font-medium text-surface-foreground">
           JSON Output
         </h3>
         <div className="flex gap-2">
@@ -67,13 +66,13 @@ export default function JsonViewComponent({ result }: JsonViewComponentProps) {
           </button>
           <button
             onClick={copyToClipboard}
-            className="px-3 py-1 text-xs hover:bg-muted text-surface-foreground rounded-lg transition-smooth"
+            className="px-3 py-1 text-2xs hover:bg-muted text-surface-foreground rounded-lg transition-smooth"
           >
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto bg-card border border-border rounded-lg p-4 scrollbar-thin">
+      <div className="scrollbar-thin flex-1 overflow-y-auto">
         <JsonView
           value={result}
           collapsed={collapsed}

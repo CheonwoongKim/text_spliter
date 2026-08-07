@@ -6,6 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 export const AUTH_TOKEN_KEY = "auth_token";
+const REMEMBERED_EMAIL_KEY = "remembered_login_email";
 
 /**
  * Get the authentication token from localStorage
@@ -30,6 +31,31 @@ export function clearAuthTokens(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem("refresh_token");
+}
+
+export function getRememberedEmail(): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    return window.localStorage.getItem(REMEMBERED_EMAIL_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveRememberedEmail(email: string | null): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    const normalizedEmail = email?.trim();
+    if (normalizedEmail) {
+      window.localStorage.setItem(REMEMBERED_EMAIL_KEY, normalizedEmail);
+    } else {
+      window.localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    }
+  } catch {
+    // Storage access can be blocked by browser privacy settings. Login must still work.
+  }
 }
 
 /**

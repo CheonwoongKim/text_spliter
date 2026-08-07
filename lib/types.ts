@@ -10,14 +10,16 @@ export interface JsonObject {
 export type JsonArray = JsonValue[];
 
 // Splitter types
-export type SplitterType =
-  | "CharacterTextSplitter"
-  | "RecursiveCharacterTextSplitter"
-  | "TokenTextSplitter"
-  | "MarkdownTextSplitter"
-  | "LatexTextSplitter"
-  | "CodeSplitter"
-  | "SemanticChunker";
+export const SPLITTER_TYPES = [
+  "RecursiveCharacterTextSplitter",
+  "CharacterTextSplitter",
+  "TokenTextSplitter",
+  "MarkdownTextSplitter",
+  "LatexTextSplitter",
+  "CodeSplitter",
+  "SemanticChunker",
+] as const;
+export type SplitterType = (typeof SPLITTER_TYPES)[number];
 
 // Encoding names for TokenTextSplitter
 export type EncodingName = "cl100k_base" | "p50k_base" | "r50k_base";
@@ -58,7 +60,7 @@ export interface SourceMetadata {
     w: number;
     h: number;
   };
-  originalJson?: any; // Full original page JSON for reference
+  originalJson?: unknown; // Full original page JSON for reference
 }
 
 // Chunk metadata

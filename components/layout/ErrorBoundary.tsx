@@ -69,20 +69,20 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              <h2 className="text-lg font-semibold text-card-foreground">
+              <h2 className="text-base font-semibold text-card-foreground">
                 Something went wrong
               </h2>
             </div>
 
-            <p className="text-base text-muted-foreground mb-4">
+            <p className="text-xs text-muted-foreground mb-4">
               An error occurred while rendering this component. Please try again or contact support if the problem persists.
             </p>
 
             <details className="mb-4">
-              <summary className="text-base font-medium text-card-foreground cursor-pointer hover:text-accent">
+              <summary className="text-xs font-medium text-card-foreground cursor-pointer hover:text-muted-foreground">
                 Error details
               </summary>
-              <pre className="mt-2 text-xs bg-muted p-3 rounded-sm overflow-auto max-h-32 text-muted-foreground font-mono">
+              <pre className="mt-2 text-2xs bg-muted p-3 rounded-sm overflow-auto max-h-32 text-muted-foreground font-mono">
                 {this.state.error.message}
                 {'\n\n'}
                 {this.state.error.stack}
@@ -91,7 +91,8 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
             <button
               onClick={this.resetError}
-              className="w-full px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-smooth font-medium"
+              className="h-control-md w-full rounded-lg bg-surface-foreground px-4 text-xs font-medium
+                       text-surface transition-smooth hover:opacity-hover"
             >
               Try again
             </button>

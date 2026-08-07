@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight, LoaderCircle, RotateCcw } from "lucide-react";
 import { memo } from "react";
 import { SplitterType, SplitterConfig as SplitterConfigType, SourceMetadata } from "@/lib/types";
 import TextInput from "./TextInput";
@@ -31,10 +32,10 @@ const LeftPanel = memo(function LeftPanel({
   onReset,
 }: LeftPanelProps) {
   return (
-    <div className="h-full flex flex-col relative">
-      <div className="flex-1 overflow-y-auto py-6 pb-16">
+    <div className="relative flex h-full flex-col">
+      <div className="flex-1 overflow-y-auto py-6 pb-16 lg:pr-10">
         {/* Text Input */}
-        <div className="mb-10 h-[400px]">
+        <div className="mb-10 h-splitter-source">
           <TextInput
             value={text}
             onChange={onTextChange}
@@ -70,86 +71,41 @@ const LeftPanel = memo(function LeftPanel({
             onSeparatorChange={(value) => onConfigChange({ separator: value })}
             onEncodingNameChange={(value) => onConfigChange({ encodingName: value })}
             onLanguageChange={(value) => onConfigChange({ language: value })}
-            onBreakpointTypeChange={(value) => onConfigChange({ breakpointType: value as any })}
+            onBreakpointTypeChange={(value) => onConfigChange({ breakpointType: value })}
           />
         </div>
       </div>
 
-      {/* Buttons - Floating */}
-      <div className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border px-6 py-6">
+      <div className="absolute bottom-0 left-0 right-0 border-t border-border-subtle bg-surface px-6 py-6">
         <div className="flex items-center justify-between">
-          {/* Reset Button */}
           <button
+            type="button"
             onClick={onReset}
             disabled={loading}
-            className="text-muted-foreground hover:text-surface-foreground disabled:opacity-disabled
-                     disabled:cursor-not-allowed font-medium text-base
-                     transition-smooth flex items-center gap-2"
+            className="flex items-center gap-2 text-xs font-medium text-muted-foreground transition-smooth
+                     hover:text-surface-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
+            <RotateCcw className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
             Reset
           </button>
 
-          {/* Split Button */}
           <button
+            type="button"
             onClick={onSplit}
             disabled={loading}
-            className="text-accent hover:text-accent/80 disabled:text-muted-foreground
-                     disabled:cursor-not-allowed font-medium text-base
-                     transition-smooth flex items-center gap-2"
+            className="flex h-control-md items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
+                     font-medium text-surface transition-smooth hover:opacity-hover
+                     disabled:cursor-not-allowed disabled:opacity-disabled"
           >
           {loading ? (
             <>
-              <svg
-                className="animate-spin h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
+              <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1} aria-hidden="true" />
               Processing...
             </>
           ) : (
             <>
               Split Text
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              <ArrowRight className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
             </>
           )}
           </button>

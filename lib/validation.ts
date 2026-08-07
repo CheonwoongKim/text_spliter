@@ -83,12 +83,12 @@ export function validateDocumentEngineType(engineType: unknown): (typeof DOCUMEN
 /**
  * Validate splitter type
  */
-export function validateSplitterType(splitterType: unknown): string {
-  if (!splitterType || typeof splitterType !== 'string' || !SPLITTER_TYPES.includes(splitterType as any)) {
+export function validateSplitterType(splitterType: unknown): (typeof SPLITTER_TYPES)[number] {
+  if (!splitterType || typeof splitterType !== 'string' || !(SPLITTER_TYPES as readonly string[]).includes(splitterType)) {
     throw new ValidationError(`Invalid splitter type. Must be one of: ${SPLITTER_TYPES.join(', ')}`);
   }
 
-  return splitterType;
+  return splitterType as (typeof SPLITTER_TYPES)[number];
 }
 
 /**

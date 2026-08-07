@@ -14,7 +14,7 @@ const variantStyles: Record<BadgeVariant, string> = {
   success: "bg-success-surface text-success border border-success-border",
   warning: "bg-warning-surface text-warning border border-warning-border",
   danger: "bg-danger-surface text-danger border border-danger-border",
-  accent: "bg-accent/10 text-accent border border-accent/20",
+  accent: "bg-upload-zone text-card-foreground border border-border",
   outline: "border border-border text-card-foreground",
 };
 
@@ -23,13 +23,13 @@ const dotColors: Record<BadgeVariant, string> = {
   success: "bg-success",
   warning: "bg-warning",
   danger: "bg-danger",
-  accent: "bg-accent",
+  accent: "bg-card-foreground",
   outline: "bg-card-foreground",
 };
 
 const sizeStyles: Record<BadgeSize, string> = {
-  sm: "px-2 py-1 text-xs",
-  md: "px-3 py-1 text-xs font-medium",
+  sm: "px-2 py-1 text-2xs",
+  md: "px-3 py-1 text-2xs font-medium",
 };
 
 export const Badge: React.FC<BadgeProps> = ({

@@ -23,9 +23,11 @@ const config: Config = {
         foreground: "var(--ds-color-fg-default)",
       },
       subtle: "var(--ds-color-bg-muted)",
+      "upload-zone": "var(--ds-color-bg-upload-zone)",
       "secondary-background": "var(--ds-color-bg-secondary)",
       border: {
         DEFAULT: "var(--ds-color-border-default)",
+        subtle: "var(--ds-color-bg-secondary)",
         darkest: "var(--ds-color-border-strong)",
       },
       accent: {
@@ -36,6 +38,7 @@ const config: Config = {
         DEFAULT: "var(--ds-color-bg-muted)",
         foreground: "var(--ds-color-fg-muted)",
       },
+      subdued: "var(--ds-color-fg-placeholder)",
       card: {
         DEFAULT: "var(--ds-color-bg-raised)",
         foreground: "var(--ds-color-fg-strong)",
@@ -67,6 +70,7 @@ const config: Config = {
       mono: ["var(--ds-font-family-mono)"],
     },
     fontSize: {
+      nav: ["var(--ds-navigation-font-size)", { lineHeight: "var(--ds-line-height-2xs)" }],
       "2xs": ["var(--ds-font-size-2xs)", { lineHeight: "var(--ds-line-height-2xs)" }],
       xs: ["var(--ds-font-size-xs)", { lineHeight: "var(--ds-line-height-xs)" }],
       base: ["var(--ds-font-size-base)", { lineHeight: "var(--ds-line-height-base)" }],
@@ -134,10 +138,14 @@ const config: Config = {
         "10": "var(--ds-space-10)",
         "12": "var(--ds-space-12)",
         "16": "var(--ds-space-16)",
+        "icon-md": "var(--ds-icon-md)",
         "control-sm": "var(--ds-control-sm)",
         "control-md": "var(--ds-control-md)",
         "control-lg": "var(--ds-control-lg)",
         "control-xl": "var(--ds-control-xl)",
+        "parser-engine-option": "var(--ds-parser-engine-option-height)",
+        "parser-file-zone": "var(--ds-parser-file-zone-height)",
+        "splitter-source": "var(--ds-splitter-source-height)",
         topbar: "var(--ds-layout-topbar-height)",
         sidebar: "var(--ds-layout-sidebar-width)",
       },

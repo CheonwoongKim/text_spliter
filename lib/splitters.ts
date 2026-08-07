@@ -4,6 +4,7 @@ import {
   MarkdownTextSplitter,
   LatexTextSplitter,
 } from "@langchain/textsplitters";
+import type { SupportedTextSplitterLanguage } from "@langchain/textsplitters";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { getEncoding } from "@langchain/core/utils/tiktoken";
 import type {
@@ -11,7 +12,29 @@ import type {
   ChunkResult,
   SplitResponse,
   SourceMetadata,
+  ProgrammingLanguage,
 } from "./types";
+
+const LANGCHAIN_LANGUAGE_BY_APP_LANGUAGE: Record<
+  ProgrammingLanguage,
+  SupportedTextSplitterLanguage
+> = {
+  python: "python",
+  js: "js",
+  ts: "js",
+  java: "java",
+  cpp: "cpp",
+  go: "go",
+  rust: "rust",
+  php: "php",
+  ruby: "ruby",
+  swift: "swift",
+  kotlin: "java",
+  csharp: "java",
+  html: "html",
+  markdown: "markdown",
+  latex: "latex",
+};
 
 /**
  * Calculate cosine similarity between two vectors
@@ -162,7 +185,11 @@ export async function splitText(
   try {
     switch (config.splitterType) {
       case "CharacterTextSplitter":
-        const charSplitterConfig: any = {
+        const charSplitterConfig: {
+          chunkSize: number;
+          chunkOverlap: number;
+          separator?: string;
+        } = {
           chunkSize: config.chunkSize,
           chunkOverlap: config.chunkOverlap,
         };
@@ -224,7 +251,7 @@ export async function splitText(
 
       case "CodeSplitter":
         const language = config.language || "python";
-        splitter = RecursiveCharacterTextSplitter.fromLanguage(language as any, {
+        splitter = RecursiveCharacterTextSplitter.fromLanguage(LANGCHAIN_LANGUAGE_BY_APP_LANGUAGE[language], {
           chunkSize: config.chunkSize,
           chunkOverlap: config.chunkOverlap,
         });

@@ -19,8 +19,8 @@
 
   /* Labels and small text */
   label {
-    font-size: var(--ds-font-size-xs);
-    line-height: var(--ds-line-height-xs);
+    font-size: var(--ds-font-size-2xs);
+    line-height: var(--ds-line-height-2xs);
   }
 
   /* Input fields text */
@@ -54,6 +54,13 @@
 }
 
 @layer utilities {
+  .workspace-app input,
+  .workspace-app select,
+  .workspace-app textarea {
+    font-size: var(--ds-font-size-xs);
+    line-height: var(--ds-line-height-xs);
+  }
+
   .font-mono {
     letter-spacing: var(--ds-letter-spacing-mono);
   }
@@ -118,7 +125,7 @@
   .card-interactive:has(input:checked),
   .card-interactive:has(input:focus-visible),
   .card-interactive:has(button:focus-visible) {
-    border-color: var(--ds-color-accent);
+    border-color: var(--ds-color-fg-default);
   }
 }
 

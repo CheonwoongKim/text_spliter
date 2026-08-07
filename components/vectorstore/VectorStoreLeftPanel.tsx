@@ -162,16 +162,16 @@ function VectorStoreLeftPanel({
   return (
     <div className="h-full flex flex-col relative">
       {/* Header */}
-      <div className="border-b border-border bg-card px-6 py-3">
+      <div className="border-b border-border-subtle bg-card px-6 py-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-medium text-card-foreground">
+          <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
             Collections
           </h3>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowCreateModal(true)}
               disabled={loading}
-              className="p-2 text-muted-foreground hover:text-accent
+              className="p-2 text-muted-foreground hover:text-card-foreground
                        disabled:opacity-disabled disabled:cursor-not-allowed
                        transition-smooth"
               title="Create Collection"
@@ -221,15 +221,15 @@ function VectorStoreLeftPanel({
 
         {/* Schema Dropdown */}
         <div className="mb-4 mt-2">
-          <label className="block text-xs font-medium text-muted-foreground mb-2">
+          <label className="block text-2xs font-medium text-muted-foreground mb-2">
             Schema
           </label>
           <select
             value={selectedSchemaName}
             onChange={(e) => handleSchemaChange(e.target.value)}
             disabled={loading || schemas.length === 0}
-            className="w-full h-control-md px-3 text-base border border-border rounded-lg
-                     focus:outline-none focus:ring-2 focus:ring-accent
+            className="w-full h-control-md px-3 text-xs border border-border rounded-lg
+                     focus-ring
                      bg-surface text-card-foreground disabled:opacity-50"
           >
             {schemas.map((schema) => (
@@ -247,8 +247,8 @@ function VectorStoreLeftPanel({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search collections..."
-            className="w-full h-control-md pl-10 pr-3 text-base border border-border rounded-lg
-                     focus:outline-none focus:ring-2 focus:ring-accent
+            className="w-full h-control-md pl-10 pr-3 text-xs border border-border rounded-lg
+                     focus-ring
                      bg-surface text-card-foreground placeholder-light"
           />
           <svg
@@ -269,7 +269,7 @@ function VectorStoreLeftPanel({
         {/* Tables List */}
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-surface-foreground"></div>
           </div>
         ) : schemas.length === 0 ? (
           <div></div>
@@ -284,8 +284,8 @@ function VectorStoreLeftPanel({
                          transition-all duration-normal group cursor-pointer ${
                            config.selectedSchema === selectedSchemaName &&
                            config.selectedTable === table.name
-                             ? "bg-accent/10 border border-accent/20 shadow-sm"
-                             : "hover:bg-muted/50 hover:shadow-sm border border-transparent"
+                             ? "bg-upload-zone border border-border shadow-sm"
+                             : "hover:bg-muted border border-transparent"
                          }`}
               >
                 <button
@@ -296,7 +296,7 @@ function VectorStoreLeftPanel({
                     className={`w-4 h-4 mt-1 flex-shrink-0 ${
                       config.selectedSchema === selectedSchemaName &&
                       config.selectedTable === table.name
-                        ? "text-accent"
+                        ? "text-card-foreground"
                         : "text-muted-foreground"
                     }`}
                     fill="none"
@@ -311,15 +311,15 @@ function VectorStoreLeftPanel({
                     />
                   </svg>
                   <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    <span className={`text-base font-medium truncate ${
+                    <span className={`text-xs font-medium truncate ${
                       config.selectedSchema === selectedSchemaName &&
                       config.selectedTable === table.name
-                        ? "text-accent"
+                        ? "text-card-foreground"
                         : "text-card-foreground"
                     }`}>
                       {table.name}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-2xs text-muted-foreground">
                       {table.rowCount.toLocaleString()} rows
                     </span>
                   </div>
@@ -346,13 +346,13 @@ function VectorStoreLeftPanel({
       {showCreateModal && (
         <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-card-foreground mb-4">
+            <h3 className="text-base font-medium text-card-foreground mb-4">
               Create Vector Collection
             </h3>
 
             {message && (
               <div
-                className={`mb-4 p-3 rounded-lg text-base ${
+                className={`mb-4 p-3 rounded-lg text-xs ${
                   message.type === 'success'
                     ? 'bg-success-surface text-success border border-success-border'
                     : 'bg-danger-surface text-danger border border-danger-border'
@@ -364,7 +364,7 @@ function VectorStoreLeftPanel({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-card-foreground mb-2">
+                <label className="block text-2xs font-medium text-card-foreground mb-2">
                   Collection Name *
                 </label>
                 <input
@@ -373,17 +373,17 @@ function VectorStoreLeftPanel({
                   onChange={(e) => setNewTableName(e.target.value)}
                   placeholder="e.g., my_documents"
                   className="w-full px-3 py-2 border border-border rounded-lg
-                           focus:outline-none focus:ring-2 focus:ring-accent
+                           focus-ring
                            bg-surface text-card-foreground"
                   disabled={creating}
                 />
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-2xs text-muted-foreground">
                   Must start with a letter and contain only letters, numbers, and underscores.
                 </p>
               </div>
 
-              <div className="bg-muted/30 p-3 rounded-lg">
-                <p className="text-xs text-muted-foreground">
+              <div className="bg-upload-zone p-3 rounded-lg">
+                <p className="text-2xs text-muted-foreground">
                   앱 Supabase에 사용자 전용 컬렉션으로 생성됩니다. 임베딩은 text-embedding-3-small
                   ({MANAGED_VECTOR_DIMENSIONS} dimensions)을 사용합니다.
                 </p>
@@ -398,7 +398,7 @@ function VectorStoreLeftPanel({
                   setMessage(null);
                 }}
                 disabled={creating}
-                className="px-4 py-2 text-base text-muted-foreground hover:text-card-foreground
+                className="px-4 py-2 text-xs text-muted-foreground hover:text-card-foreground
                          disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
               >
                 Cancel
@@ -406,12 +406,12 @@ function VectorStoreLeftPanel({
               <button
                 onClick={handleCreateTable}
                 disabled={creating || !newTableName.trim()}
-                className="px-4 py-2 text-base bg-accent text-accent-foreground rounded-lg
-                         hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed
+                className="px-4 py-2 text-xs bg-surface-foreground text-surface rounded-lg
+                         hover:opacity-hover disabled:opacity-50 disabled:cursor-not-allowed
                          transition-smooth flex items-center gap-2"
               >
                 {creating && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-foreground"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-surface"></div>
                 )}
                 {creating ? 'Creating...' : 'Create Collection'}
               </button>
@@ -424,13 +424,13 @@ function VectorStoreLeftPanel({
       {showDeleteModal && tableToDelete && (
         <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-card-foreground mb-4">
+            <h3 className="text-base font-medium text-card-foreground mb-4">
               Delete Collection
             </h3>
 
             {message && (
               <div
-                className={`mb-4 p-3 rounded-lg text-base ${
+                className={`mb-4 p-3 rounded-lg text-xs ${
                   message.type === 'success'
                     ? 'bg-success-surface text-success border border-success-border'
                     : 'bg-danger-surface text-danger border border-danger-border'
@@ -442,10 +442,10 @@ function VectorStoreLeftPanel({
 
             <div className="space-y-4">
               <div className="bg-danger-surface border border-danger-border rounded-lg p-4">
-                <p className="text-base text-card-foreground">
+                <p className="text-xs text-card-foreground">
                   Are you sure you want to delete the collection <strong>{tableToDelete}</strong>?
                 </p>
-                <p className="text-base text-danger mt-2">
+                <p className="text-xs text-danger mt-2">
                   This action cannot be undone. All vector data in this collection will be permanently deleted.
                 </p>
               </div>
@@ -459,7 +459,7 @@ function VectorStoreLeftPanel({
                   setMessage(null);
                 }}
                 disabled={deleting}
-                className="px-4 py-2 text-base text-muted-foreground hover:text-card-foreground
+                className="px-4 py-2 text-xs text-muted-foreground hover:text-card-foreground
                          disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
               >
                 Cancel
@@ -467,7 +467,7 @@ function VectorStoreLeftPanel({
               <button
                 onClick={handleDeleteTableConfirm}
                 disabled={deleting}
-                className="px-4 py-2 text-base bg-danger-action text-danger-action-foreground rounded-lg
+                className="px-4 py-2 text-xs bg-danger-action text-danger-action-foreground rounded-lg
                          hover:bg-danger-action/80 disabled:opacity-50 disabled:cursor-not-allowed
                          transition-smooth flex items-center gap-2"
               >

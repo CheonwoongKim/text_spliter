@@ -17,13 +17,14 @@ function tokenNames(prefix: string) {
     .map((match) => match[1]);
 }
 
-test("typography has five core sizes and one compact-label 11px size", () => {
+test("typography has five core sizes and dedicated auth and navigation sizes", () => {
   assert.deepEqual(tokenNames("ds-font-size"), ["2xs", "xs", "base", "lg", "xl", "2xl"]);
   assert.match(tokens, /--ds-font-size-2xs: 0\.6875rem/);
   assert.match(tokens, /--ds-font-size-xs: 0\.8125rem/);
   assert.match(tokens, /--ds-font-size-base: 0\.9375rem/);
   assert.match(tokens, /--ds-font-size-lg: 1\.0625rem/);
   assert.match(tokens, /--ds-font-size-2xl: 1\.5rem/);
+  assert.match(tokens, /--ds-navigation-font-size: 0\.625rem/);
   assert.doesNotMatch(tokens, /--ds-font-size-(?:micro|caption|sm|3xl)/);
 });
 
@@ -32,7 +33,13 @@ test("Korean-first typography uses compact tracking and readable line height", (
   assert.match(tokens, /--ds-line-height-base: 1\.5rem/);
   assert.match(tokens, /--ds-letter-spacing-normal: -0\.01em/);
   assert.match(tokens, /--ds-letter-spacing-mono: 0/);
+  assert.match(tokens, /--ds-icon-md: 1\.25rem/);
+  assert.match(tokens, /--ds-layout-topbar-height: 3\.5rem/);
+  assert.match(tokens, /--ds-layout-sidebar-width: 4\.5rem/);
   assert.match(tokens, /--ds-layout-auth-width: 22\.5rem/);
+  assert.match(tokens, /--ds-parser-file-zone-height: 12\.5rem/);
+  assert.match(tokens, /--ds-parser-engine-option-height: 3\.5rem/);
+  assert.match(tokens, /--ds-splitter-source-height: 20rem/);
 });
 
 test("Spoqa Han Sans is self-hosted with metric fallback and no blocking weight preloads", () => {
@@ -45,7 +52,9 @@ test("Spoqa Han Sans is self-hosted with metric fallback and no blocking weight 
 });
 
 test("authentication inputs change focus border without transition animation", () => {
-  const inputs = [...authForm.matchAll(/<input[\s\S]*?\/>/g)].map((match) => match[0]);
+  const inputs = [...authForm.matchAll(/<input[\s\S]*?\/>/g)]
+    .map((match) => match[0])
+    .filter((input) => !/type="checkbox"/.test(input));
 
   assert.equal(inputs.length, 2);
   assert.match(authForm, /const FIELD_CLASS =[\s\S]*focus-ring/);
@@ -88,6 +97,7 @@ test("spacing and radius expose only the approved scales", () => {
 test("the single light palette exposes only neutral, accent, and meaningful status colors", () => {
   for (const token of [
     "--ds-color-bg-canvas",
+    "--ds-color-bg-upload-zone",
     "--ds-color-fg-default",
     "--ds-color-accent",
     "--ds-color-success",
@@ -103,6 +113,7 @@ test("the single light palette exposes only neutral, accent, and meaningful stat
 test("Tailwind replaces permissive default color and typography palettes", () => {
   assert.match(tailwind, /theme:\s*\{\s*colors:/);
   assert.match(tailwind, /fontSize:\s*\{/);
+  assert.match(tailwind, /subdued: "var\(--ds-color-fg-placeholder\)"/);
   assert.match(tailwind, /danger:\s*\{/);
   assert.doesNotMatch(tailwind, /--ds-font-size-(?:micro|caption|sm|3xl)/);
 });

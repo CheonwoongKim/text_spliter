@@ -45,12 +45,12 @@ interface SettingFieldProps {
 function SettingField({ label, description, children }: SettingFieldProps) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-card-foreground mb-2">
+      <span className="block text-2xs font-medium text-card-foreground mb-2">
         {label}
       </span>
       {children}
       {description && (
-        <span className="block text-xs text-muted-foreground mt-2">
+        <span className="block text-2xs text-muted-foreground mt-2">
           {description}
         </span>
       )}
@@ -99,24 +99,24 @@ export default function ParserEngineSettingsPanel({
             role="alert"
             className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-danger-border bg-danger-surface px-4 py-3"
           >
-            <p className="text-xs text-danger">{error}</p>
+            <p className="text-2xs text-danger">{error}</p>
             <button
               type="button"
               onClick={onReload}
-              className="shrink-0 text-xs font-medium text-danger hover:text-danger/80 transition-smooth"
+              className="shrink-0 text-2xs font-medium text-danger hover:text-danger/80 transition-smooth"
             >
               Retry
             </button>
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-10">
-          <aside className="lg:col-span-3">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-10 lg:gap-0">
+          <aside className="lg:col-span-3 lg:border-r lg:border-border-subtle lg:pr-8">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-card-foreground">
+              <h2 className="text-base font-semibold text-card-foreground">
                 Document engines
               </h2>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-2xs text-muted-foreground mt-2">
                 실행 전에 엔진별 기본 프로필을 등록합니다.
               </p>
             </div>
@@ -135,22 +135,22 @@ export default function ParserEngineSettingsPanel({
                     }}
                     className={`w-full rounded-lg border px-3 py-3 text-left transition-smooth ${
                       active
-                        ? "border-accent bg-accent/5"
+                        ? "border-surface-foreground bg-upload-zone"
                         : "border-border bg-card hover:border-border-darkest"
                     }`}
                     aria-current={active ? "true" : undefined}
                   >
                     <span className="flex items-center justify-between gap-3">
-                      <span className="min-w-0 text-base font-medium text-card-foreground truncate">
+                      <span className="min-w-0 text-xs font-medium text-card-foreground truncate">
                         {candidate.displayName}
                       </span>
                       {dirty && (
-                        <span className="shrink-0 text-xs font-medium text-warning">
+                        <span className="shrink-0 text-2xs font-medium text-warning">
                           Unsaved
                         </span>
                       )}
                     </span>
-                    <span className="mt-1 block truncate text-xs text-muted-foreground">
+                    <span className="mt-1 block truncate text-2xs text-muted-foreground">
                       {summarizeDocumentEngineConfig(
                         candidate.engineType,
                         savedConfigs[candidate.engineType]
@@ -164,29 +164,29 @@ export default function ParserEngineSettingsPanel({
             <button
               type="button"
               onClick={onOpenConnections}
-              className="mt-4 text-xs font-medium text-accent hover:text-accent/80 transition-smooth"
+              className="mt-4 text-2xs font-medium text-card-foreground hover:text-muted-foreground transition-smooth"
             >
               Manage API credentials
             </button>
           </aside>
 
-          <section className="min-w-0 lg:col-span-7">
-            <div className="rounded-xl border border-border bg-card">
-              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border px-6 py-6">
+          <section className="min-w-0 lg:col-span-7 lg:pl-8">
+            <div>
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border-subtle pb-6">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-xl font-semibold text-card-foreground">
+                    <h2 className="text-lg font-semibold text-card-foreground">
                       {engine.displayName}
                     </h2>
-                    <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
+                    <span className="rounded-full bg-muted px-2 py-1 text-2xs text-muted-foreground">
                       {engine.deployment === "self-hosted" ? "Self-hosted" : "Managed"}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
+                  <p className="mt-2 text-2xs text-muted-foreground">
                     {summarizeDocumentEngineConfig(selectedEngine, normalizedConfig)} · {isPersisted ? "Saved profile" : "Built-in default"}
                   </p>
                   {isDirty && (
-                    <p className="mt-2 text-xs text-warning">
+                    <p className="mt-2 text-2xs text-warning">
                       저장하기 전까지 파서 실행에는 이전 프로필이 사용됩니다.
                     </p>
                   )}
@@ -200,7 +200,7 @@ export default function ParserEngineSettingsPanel({
                     || Boolean(savingEngine)
                     || (!isDirty && isPersisted)
                   }
-                  className="h-control-md rounded-lg bg-accent px-4 text-xs font-medium text-accent-foreground transition-smooth disabled:cursor-not-allowed disabled:opacity-disabled"
+                  className="h-control-md rounded-lg bg-surface-foreground px-4 text-2xs font-medium text-surface transition-smooth disabled:cursor-not-allowed disabled:opacity-disabled"
                 >
                   {isSaving
                     ? "Saving..."
@@ -214,10 +214,10 @@ export default function ParserEngineSettingsPanel({
 
               <fieldset
                 disabled={loading || Boolean(savingEngine)}
-                className="space-y-6 px-6 py-6"
+                className="space-y-6 py-6"
               >
                 {loading && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-2xs text-muted-foreground">
                     Loading document engine settings...
                   </p>
                 )}
@@ -320,7 +320,7 @@ export default function ParserEngineSettingsPanel({
                 {selectedEngine === "Google" && (
                   <>
                     <div className="rounded-lg border border-border bg-muted px-4 py-3">
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-2xs text-muted-foreground">
                         Google Document AI의 인증 정보는 Connections에서 관리하며, 결과는 JSON으로 수집됩니다.
                       </p>
                     </div>
@@ -392,9 +392,9 @@ export default function ParserEngineSettingsPanel({
                         type="checkbox"
                         checked={config.extractImages || false}
                         onChange={(event) => update({ extractImages: event.target.checked })}
-                        className="h-4 w-4 rounded-sm border-border text-accent focus:ring-2 focus:ring-accent/20"
+                        className="h-4 w-4 rounded-sm border-border accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground"
                       />
-                      <span className="text-base text-card-foreground">Embed images</span>
+                      <span className="text-xs text-card-foreground">Embed images</span>
                     </label>
                     <SettingField label="OCR mode">
                       <select
@@ -426,7 +426,7 @@ export default function ParserEngineSettingsPanel({
                 {engine.kind === "vision" && (
                   <>
                     <div className="rounded-lg border border-border bg-muted px-4 py-3">
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-2xs text-muted-foreground">
                         PDF는 가능한 경우 원본으로 전달합니다. DOC/DOCX/HWP/HWPX는 Connections에 등록한 네이티브 렌더러에서 페이지 이미지로 캡처합니다.
                       </p>
                     </div>

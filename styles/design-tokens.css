@@ -3,7 +3,7 @@
  *
  * A deliberately small system for a function-first product:
  * - one UI typeface and one data typeface
- * - five core font sizes and one compact-label size
+ * - five core font sizes and dedicated compact UI sizes
  * - a selective 4px spacing scale
  * - neutral surfaces, one accent, and three status colors
  */
@@ -15,6 +15,7 @@
   --ds-color-bg-canvas: #fafafa;
   --ds-color-bg-raised: #ffffff;
   --ds-color-bg-muted: #f5f5f5;
+  --ds-color-bg-upload-zone: #f8f9fa;
   --ds-color-bg-secondary: #e5e5e5;
   --ds-color-fg-default: #171717;
   --ds-color-fg-strong: #262626;
@@ -49,6 +50,7 @@
   --ds-font-size-lg: 1.0625rem;
   --ds-font-size-xl: 1.25rem;
   --ds-font-size-2xl: 1.5rem;
+  --ds-navigation-font-size: 0.625rem;
   --ds-line-height-2xs: 1rem;
   --ds-line-height-xs: 1.25rem;
   --ds-line-height-base: 1.5rem;
@@ -102,11 +104,15 @@
   --ds-z-toast: 40;
 
   /* Reusable component dimensions */
+  --ds-icon-md: 1.25rem;
   --ds-control-sm: 2rem;
   --ds-control-md: 2.25rem;
   --ds-control-lg: 2.5rem;
   --ds-control-xl: 3rem;
-  --ds-layout-topbar-height: 4rem;
-  --ds-layout-sidebar-width: 5rem;
+  --ds-layout-topbar-height: 3.5rem;
+  --ds-layout-sidebar-width: 4.5rem;
   --ds-layout-auth-width: 22.5rem;
+  --ds-parser-file-zone-height: 12.5rem;
+  --ds-parser-engine-option-height: 3.5rem;
+  --ds-splitter-source-height: 20rem;
 }

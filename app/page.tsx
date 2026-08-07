@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import ErrorBoundary from "@/components/layout/ErrorBoundary";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
+import MyPagePanel from "@/components/account/MyPagePanel";
 import LeftPanel from "@/components/splitter/LeftPanel";
 import RightPanel from "@/components/splitter/RightPanel";
 import ParserLeftPanel from "@/components/parser/ParserLeftPanel";
@@ -19,9 +20,9 @@ import { getAuthToken } from "@/lib/auth";
 import { useDocumentEngineSettings } from "@/lib/hooks/useDocumentEngineSettings";
 import { isVisionEngine } from "@/lib/document-engines";
 import {
-  APP_MENU_META,
   APP_MENU_STORAGE_KEY,
   DEFAULT_APP_MENU,
+  getAppMenuBreadcrumbs,
   normalizeAppMenu,
   type AppMenu,
 } from "@/lib/navigation";
@@ -440,7 +441,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="h-screen flex bg-surface">
+    <div className="workspace-app h-screen flex bg-card text-xs">
       {/* Sidebar */}
       <Sidebar
         activeMenu={activeMenu === "parse-detail" ? "storage" : activeMenu}
@@ -451,7 +452,13 @@ export default function Home() {
       <div className="min-w-0 flex-1 flex flex-col">
         {/* Header */}
         <Header
-          title={activeMenu === "parse-detail" ? "Parse Result Detail" : APP_MENU_META[activeMenu].title}
+          breadcrumbs={
+            activeMenu === "parse-detail"
+              ? ["Workflow", "Runs", "Parse Result Detail"]
+              : getAppMenuBreadcrumbs(activeMenu)
+          }
+          activeMenu={activeMenu === "parse-detail" ? "storage" : activeMenu}
+          onMenuChange={handleMenuChange}
         />
 
       {/* Error Banner */}
@@ -472,7 +479,7 @@ export default function Home() {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-base text-danger">
+              <span className="text-xs text-danger">
                 {activeMenu === "parser" ? parserError : error}
               </span>
             </div>
@@ -500,10 +507,12 @@ export default function Home() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden bg-surface">
+      <main className="flex-1 overflow-hidden">
         <ErrorBoundary>
           <div className="h-full">
-            {activeMenu === "settings" ? (
+            {activeMenu === "mypage" ? (
+              <MyPagePanel />
+            ) : activeMenu === "settings" ? (
               <SettingsPanel
                 activeSection={settingsSection}
                 onSectionChange={setSettingsSection}
@@ -527,7 +536,7 @@ export default function Home() {
             ) : activeMenu === "evaluation" ? (
               <EvaluationPanel />
             ) : activeMenu === "parse-detail" && selectedParseResultId ? (
-              <div className="h-full px-10 py-6">
+              <div className="h-full px-4 py-6 sm:px-6 lg:px-10">
                 <ParseResultDetailPanel
                   resultId={selectedParseResultId}
                   onBack={handleBackToStorage}
@@ -558,9 +567,9 @@ export default function Home() {
               </div>
             </div>
           ) : activeMenu === "parser" ? (
-            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-6 lg:gap-10 px-4 sm:px-6 lg:px-10">
+            <div className="h-full grid grid-cols-1 gap-6 px-4 sm:px-6 lg:grid-cols-10 lg:gap-0 lg:px-10">
               {/* Parser Left Panel */}
-              <div className="h-full overflow-hidden lg:col-span-3">
+              <div className="h-full overflow-hidden lg:col-span-3 lg:border-r lg:border-border-subtle">
                 <ParserLeftPanel
                   primaryEngine={primaryParserEngine}
                   engineConfigs={parserSettings.savedConfigs}
@@ -579,10 +588,11 @@ export default function Home() {
               </div>
 
               {/* Parser Right Panel */}
-              <div className="h-full overflow-hidden lg:col-span-7">
+              <div className="h-full overflow-hidden lg:col-span-7 lg:pl-10">
                 <ParserRightPanel
                   result={parseResult}
                   runs={parseRuns}
+                  loading={parserLoading}
                   selectedFile={selectedFile}
                   selectedFileStorageKey={selectedFileStorageKey}
                   config={{
@@ -595,9 +605,9 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="h-full grid grid-cols-1 lg:grid-cols-10 gap-6 lg:gap-10 px-4 sm:px-6 lg:px-10">
+            <div className="h-full grid grid-cols-1 gap-6 px-4 sm:px-6 lg:grid-cols-10 lg:gap-0 lg:px-10">
               {/* Left Panel */}
-              <div className="h-full overflow-hidden lg:col-span-3">
+              <div className="h-full overflow-hidden lg:col-span-3 lg:border-r lg:border-border-subtle">
                 <LeftPanel
                   text={text}
                   config={config}
@@ -612,9 +622,10 @@ export default function Home() {
               </div>
 
               {/* Right Panel */}
-              <div className="h-full overflow-hidden lg:col-span-7">
+              <div className="h-full overflow-hidden lg:col-span-7 lg:pl-10">
                 <RightPanel
                   result={result}
+                  loading={loading}
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                   text={text}
