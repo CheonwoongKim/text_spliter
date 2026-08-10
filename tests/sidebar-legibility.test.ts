@@ -64,3 +64,34 @@ test("selection is signalled by weight as well as colour", () => {
     "colour alone must not be the only cue for the active menu",
   );
 });
+
+/**
+ * Lucide draws against a 24 unit viewBox, so a stroke renders at
+ * `strokeWidth * size / 24` device-independent pixels. Below one pixel the
+ * stroke is antialiased toward the background and the icon reads lighter than
+ * the label next to it, which is exactly the complaint this rail had.
+ */
+const LUCIDE_VIEWBOX = 24;
+
+function renderedStrokePx(strokeWidth: number, iconPx: number): number {
+  return (strokeWidth * iconPx) / LUCIDE_VIEWBOX;
+}
+
+test("navigation icons draw at a full pixel or more", () => {
+  const iconRem = tokens.match(/--ds-icon-md:\s*([\d.]+)rem/);
+  assert.ok(iconRem, "the navigation icon size must be a rem token");
+  const iconPx = Number(iconRem[1]) * 16;
+
+  const strokes = sidebar.match(/strokeWidth=\{isActive \? ([\d.]+) : ([\d.]+)\}/);
+  assert.ok(strokes, "navigation icons must set both a rest and a selected stroke");
+
+  const [selected, rest] = [Number(strokes[1]), Number(strokes[2])];
+  assert.ok(
+    renderedStrokePx(rest, iconPx) >= 1,
+    `a rest stroke of ${rest} renders at ${renderedStrokePx(rest, iconPx).toFixed(2)}px, under one pixel`,
+  );
+  assert.ok(
+    selected > rest,
+    "the selected icon must thicken with its label rather than staying put",
+  );
+});

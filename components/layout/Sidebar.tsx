@@ -49,7 +49,12 @@ interface MenuButtonProps {
  * contrast a label needs to be read at all.
  *
  * Selection is carried by weight as well as colour, so it survives for a reader
- * who cannot separate these two greys.
+ * who cannot separate these two greys. Icon and label thicken together.
+ *
+ * Lucide strokes are expressed against a 24 unit viewBox, so a 20px icon
+ * renders them at 0.83 of their nominal width. A stroke of 1 lands under a
+ * device pixel and is antialiased toward the background, which lightens the
+ * icon relative to the label beside it; 1.5 keeps the stroke at full strength.
  */
 function MenuButton({ menu, activeMenu, onMenuChange }: MenuButtonProps) {
   const meta = APP_MENU_META[menu];
@@ -71,7 +76,7 @@ function MenuButton({ menu, activeMenu, onMenuChange }: MenuButtonProps) {
     >
       <MenuIcon
         className="mb-1 h-icon-md w-icon-md"
-        strokeWidth={1}
+        strokeWidth={isActive ? 2 : 1.5}
         aria-hidden="true"
       />
       <span className={`text-nav ${isActive ? "font-bold" : "font-medium"}`}>
