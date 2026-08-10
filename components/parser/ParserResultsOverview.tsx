@@ -75,12 +75,7 @@ function ParserResultsOverview({
           </p>
         </div>
         {runs.length >= 2 && (
-          <button
-            type="button"
-            onClick={() => onOpenFocus(focusAreas[0]?.id)}
-            className="flex h-control-sm items-center gap-2 rounded-lg bg-surface-foreground px-3 text-2xs
-                     font-medium text-surface transition-smooth hover:opacity-hover"
-          >
+          <Button variant="primary" size="sm" onClick={() => onOpenFocus(focusAreas[0]?.id)}>
             {focusAreas.length > 0 ? (
               <AlertTriangle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             ) : (
@@ -89,7 +84,7 @@ function ParserResultsOverview({
             {focusAreas.length > 0
               ? `Review ${focusAreas.length} area${focusAreas.length === 1 ? "" : "s"}`
               : "Inspect document areas"}
-          </button>
+          </Button>
         )}
       </div>
 

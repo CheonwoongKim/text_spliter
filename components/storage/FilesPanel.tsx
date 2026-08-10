@@ -384,13 +384,7 @@ const FilesPanel = memo(function FilesPanel() {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-3 justify-end">
-            <button
-              onClick={fetchFiles}
-              disabled={loading}
-              className="flex h-control-md items-center gap-2 px-3 text-xs text-muted-foreground
-                       transition-smooth hover:text-card-foreground
-                       disabled:cursor-not-allowed disabled:opacity-disabled"
-            >
+            <Button variant="ghost" size="md" onClick={fetchFiles} disabled={loading}>
               {loading ? (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle
@@ -418,7 +412,7 @@ const FilesPanel = memo(function FilesPanel() {
                 </svg>
               )}
               <span>Refresh</span>
-            </button>
+            </Button>
             <Button variant="primary" size="md" onClick={handleFileSelect} disabled={uploading}>
               {uploading ? (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -656,18 +650,11 @@ const FilesPanel = memo(function FilesPanel() {
 
                   {/* More Button */}
                   <div className="relative flex-shrink-0">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleMenu(file.id);
-                      }}
-                      className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-smooth"
-                      title="More options"
-                    >
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleMenu(file.id); }} title="More options">
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                       </svg>
-                    </button>
+                    </Button>
 
                     {/* Dropdown Menu */}
                     {openMenuId === file.id && (

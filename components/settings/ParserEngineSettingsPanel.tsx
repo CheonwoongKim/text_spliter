@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/shared/Button";
 import { getDocumentEngine, listDocumentEngines } from "@/lib/document-engines";
 import {
   normalizeDocumentEngineConfig,
@@ -192,16 +193,7 @@ export default function ParserEngineSettingsPanel({
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={
-                    loading
-                    || Boolean(savingEngine)
-                    || (!isDirty && isPersisted)
-                  }
-                  className="h-control-md rounded-lg bg-surface-foreground px-4 text-2xs font-medium text-surface transition-smooth disabled:cursor-not-allowed disabled:opacity-disabled"
-                >
+                <Button variant="primary" size="md" onClick={handleSave} disabled={ loading || Boolean(savingEngine) || (!isDirty && isPersisted) }>
                   {isSaving
                     ? "Saving..."
                     : savedEngine === selectedEngine
@@ -209,7 +201,7 @@ export default function ParserEngineSettingsPanel({
                       : isPersisted
                         ? "Save changes"
                         : "Register profile"}
-                </button>
+                </Button>
               </div>
 
               <fieldset

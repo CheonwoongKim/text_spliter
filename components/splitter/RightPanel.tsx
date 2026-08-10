@@ -161,14 +161,7 @@ const RightPanel = memo(function RightPanel({
 
         {result && workspaceMode === "detail" && (
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving || sending}
-              className="flex h-control-sm items-center gap-2 rounded-lg border border-border px-3 text-xs
-                       font-medium text-card-foreground transition-smooth hover:border-border-darkest
-                       disabled:cursor-not-allowed disabled:opacity-disabled"
-            >
+            <Button variant="outline" size="sm" onClick={handleSave} disabled={saving || sending}>
               {saving ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
               ) : saved ? (
@@ -177,7 +170,7 @@ const RightPanel = memo(function RightPanel({
                 <Save className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               )}
               {saving ? "Saving..." : saved ? "Saved" : "Save"}
-            </button>
+            </Button>
 
             {onSendToVectorStore && (
               <Button variant="primary" size="sm" onClick={handleSendToVectorStore} disabled={saving || sending} title="Save these chunks and open the vector store upload">

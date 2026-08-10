@@ -1,6 +1,7 @@
 "use client";
 
 import { SplitResponse } from "@/lib/types";
+import { Button } from "@/components/shared/Button";
 import { useState } from "react";
 import JsonView from "@uiw/react-json-view";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
@@ -29,11 +30,7 @@ export default function JsonViewComponent({ result }: JsonViewComponentProps) {
           JSON Output
         </h3>
         <div className="flex gap-2">
-          <button
-            onClick={toggleCollapse}
-            className="p-2 hover:bg-muted text-surface-foreground rounded-lg transition-smooth"
-            title={collapsed ? "Expand All" : "Collapse All"}
-          >
+          <Button variant="ghost" size="icon" onClick={toggleCollapse} title={collapsed ? "Expand All" : "Collapse All"}>
             {collapsed ? (
               <svg
                 className="w-4 h-4"
@@ -63,7 +60,7 @@ export default function JsonViewComponent({ result }: JsonViewComponentProps) {
                 />
               </svg>
             )}
-          </button>
+          </Button>
           <button
             onClick={copyToClipboard}
             className="px-3 py-1 text-2xs hover:bg-muted text-surface-foreground rounded-lg transition-smooth"

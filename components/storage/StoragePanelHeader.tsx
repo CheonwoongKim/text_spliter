@@ -1,4 +1,5 @@
 import { Database, LoaderCircle, RefreshCw, RotateCw, TriangleAlert, X } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 
 import type { StorageTab } from "@/components/storage/storage-types";
 
@@ -111,20 +112,13 @@ export default function StoragePanelHeader({
               </>
             )}
 
-            <button
-              type="button"
-              onClick={activeTab === "parse" ? onRefreshParse : onRefreshSplit}
-              disabled={activeLoading}
-              className="p-2 text-muted-foreground transition-smooth hover:text-card-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
-              title="Refresh"
-              aria-label="Refresh stored results"
-            >
+            <Button variant="ghost" size="icon" onClick={activeTab === "parse" ? onRefreshParse : onRefreshSplit} disabled={activeLoading} title="Refresh" aria-label="Refresh stored results">
               {activeLoading ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
               ) : (
                 <RefreshCw className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

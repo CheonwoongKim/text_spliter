@@ -1,6 +1,7 @@
 "use client";
 
 import { LoaderCircle, LogOut } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import { useEffect, useState } from "react";
 import { signOut } from "@/lib/auth";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
@@ -70,15 +71,10 @@ export default function MyPagePanel() {
           </div>
 
           <div className="mt-6 border-t border-border-subtle pt-6">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex h-control-md items-center gap-2 rounded-lg border border-border px-3 text-xs
-                       font-medium text-card-foreground transition-smooth hover:border-border-darkest focus-ring"
-            >
+            <Button variant="outline" size="md" onClick={handleLogout}>
               <LogOut className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               Log out
-            </button>
+            </Button>
           </div>
         </section>
       </div>

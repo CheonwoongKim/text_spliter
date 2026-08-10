@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Check, ChevronRight, FileText, MapPin } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import { useEffect, useMemo, useState } from "react";
 import {
   buildParserFocusAreas,
@@ -355,14 +356,9 @@ export default function ParserFocusWorkbench({
                   </p>
                 </div>
                 {onOpenFullCompare && (
-                  <button
-                    type="button"
-                    onClick={onOpenFullCompare}
-                    className="h-control-sm rounded-lg border border-border px-3 text-2xs font-medium text-card-foreground
-                             transition-smooth hover:border-border-darkest"
-                  >
+                  <Button variant="outline" size="sm" onClick={onOpenFullCompare}>
                     Open full comparison
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>

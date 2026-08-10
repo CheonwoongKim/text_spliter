@@ -346,16 +346,9 @@ function ParserLeftPanel({
             <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
               Document processing engine
             </h3>
-            <button
-              type="button"
-              onClick={() => onOpenSettings(primaryEngine)}
-              aria-label="Engine settings"
-              title="Engine settings"
-              className="flex h-control-sm w-control-sm shrink-0 items-center justify-center rounded-lg
-                       text-card-foreground transition-smooth hover:bg-muted focus-ring"
-            >
+            <Button variant="ghost" size="sm" onClick={() => onOpenSettings(primaryEngine)} aria-label="Engine settings" title="Engine settings">
               <Settings className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            </button>
+            </Button>
           </div>
 
           <div>

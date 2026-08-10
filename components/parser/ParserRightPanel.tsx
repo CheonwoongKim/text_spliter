@@ -584,19 +584,14 @@ function ParserRightPanel({
                   )}
                   {saving ? "Saving..." : saved ? "Saved" : "Save"}
                 </Button>
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="flex h-control-sm items-center gap-2 rounded-lg border border-border px-3 text-xs
-                           font-medium text-card-foreground transition-smooth hover:border-border-darkest"
-                >
+                <Button variant="outline" size="sm" onClick={handleCopy}>
                   {copied ? (
                     <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   ) : (
                     <Clipboard className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   )}
                   {copied ? "Copied" : "Copy"}
-                </button>
+                </Button>
               </div>
             )}
           </div>

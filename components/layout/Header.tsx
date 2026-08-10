@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronRight, Settings, UserRound, type LucideIcon } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import {
   APP_MENU_META,
   TOP_BAR_MENU_IDS,
@@ -56,22 +57,13 @@ export default function Header({ breadcrumbs, activeMenu, onMenuChange }: Header
             const isActive = activeMenu === menu;
 
             return (
-              <button
-                key={menu}
-                type="button"
-                onClick={() => onMenuChange(menu)}
-                className="flex h-control-md w-control-md items-center justify-center rounded-lg
-                         text-card-foreground transition-smooth focus-visible:outline-none"
-                aria-label={meta.title}
-                aria-current={isActive ? "page" : undefined}
-                title={meta.title}
-              >
+              <Button variant="ghost" size="md" key={menu} onClick={() => onMenuChange(menu)} aria-label={meta.title} aria-current={isActive ? "page" : undefined} title={meta.title}>
                 <MenuIcon
                   className="h-icon-md w-icon-md"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
-              </button>
+              </Button>
             );
           })}
         </nav>
