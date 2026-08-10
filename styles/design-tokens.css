@@ -42,7 +42,7 @@
   --ds-color-danger-action-foreground: #ffffff;
 
   /* Typography: 13px core minimum; 11px compact-label exception */
-  --ds-font-family-sans: var(--font-spoqa-han-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ds-font-family-sans: var(--font-ibm-plex-sans-kr), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --ds-font-family-mono: var(--font-geist-mono), Menlo, Monaco, "Courier New", monospace;
   --ds-font-size-2xs: 0.6875rem;
   --ds-font-size-xs: 0.8125rem;

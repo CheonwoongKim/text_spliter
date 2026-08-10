@@ -42,13 +42,35 @@ test("Korean-first typography uses compact tracking and readable line height", (
   assert.match(tokens, /--ds-splitter-source-height: 20rem/);
 });
 
-test("Spoqa Han Sans is self-hosted with metric fallback and no blocking weight preloads", () => {
-  assert.match(tokens, /var\(--font-spoqa-han-sans\)/);
-  assert.match(rootLayout, /localFont\(/);
+test("IBM Plex Sans KR is self-hosted with metric fallback and no blocking weight preloads", () => {
+  assert.match(tokens, /var\(--font-ibm-plex-sans-kr\)/);
+  assert.match(rootLayout, /IBM_Plex_Sans_KR\(/);
   assert.match(rootLayout, /preload: false/);
-  assert.match(rootLayout, /adjustFontFallback: "Arial"/);
+  assert.match(rootLayout, /fallback: \["Arial", "sans-serif"\]/);
+  // The font is bundled at build time, so nothing may reach a font CDN at runtime.
   assert.doesNotMatch(globalStyles, /cdn\.jsdelivr\.net|@font-face/);
   assert.doesNotMatch(rootLayout, /preconnect/);
+  assert.doesNotMatch(rootLayout, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
+});
+
+test("the UI face carries every weight the design system exposes", () => {
+  const declared = [...rootLayout.matchAll(/weight: \[([^\]]+)\]/g)][0]?.[1] || "";
+  const tailwindWeights = [...tailwind.matchAll(/^\s+(?:normal|medium|semibold|bold): "(\d{3})"/gm)]
+    .map((match) => match[1]);
+
+  assert.ok(tailwindWeights.length > 0, "the design system must declare weights");
+  for (const weight of tailwindWeights) {
+    assert.ok(
+      declared.includes(`"${weight}"`),
+      `weight ${weight} is offered by Tailwind but not loaded, so it would be synthesized`,
+    );
+  }
+});
+
+test("the previous face is fully removed rather than left half-swapped", () => {
+  for (const source of [tokens, tailwind, globalStyles, rootLayout]) {
+    assert.doesNotMatch(source, /spoqa/i);
+  }
 });
 
 test("authentication inputs change focus border without transition animation", () => {

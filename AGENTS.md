@@ -83,7 +83,7 @@ Use Node.js 20.9 or newer. The Ragas worker supports Python 3.11 through 3.13.
 - The MVP has one light theme. Do not add dark-theme branches or raw Tailwind palette colors.
 - Use semantic colors, typography, spacing, radius, motion, and layout dimensions from `styles/design-tokens.css` through `tailwind.config.ts`.
 - The approved spacing scale is 4, 8, 12, 16, 24, 32, 40, 48, and 64px. Core UI type sizes are 13, 15, 17, 20, and 24px; 11px is limited to compact labels, helpers, breadcrumbs, and similar secondary UI, while 10px is reserved for GNB labels.
-- Use Spoqa Han Sans for UI copy and the configured mono font only for data/code. Korean copy uses the design system's tighter tracking and readable line height.
+- Use IBM Plex Sans KR for UI copy and the configured mono font only for data/code. Korean copy uses the design system's tighter tracking and readable line height.
 - Interactive controls use Lucide icons with the established sizing and stroke conventions. Preserve visible keyboard focus and accessible names.
 - React list keys must be unique and stable. Do not derive a key only from display content that may repeat within the same list.
 

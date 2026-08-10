@@ -41,7 +41,7 @@ styles/design-tokens.css → tailwind.config.ts → app/globals.css / components
 
 ## Typography
 
-UI에는 Spoqa Han Sans Neo 하나만 사용합니다. WOFF2 파일은 프로젝트에서 자체 호스팅하고 `next/font/local`의 fallback metric 보정을 적용해 font swap 레이아웃 이동을 줄입니다. 모든 굵기를 선로딩하지 않고 각 화면에서 실제 사용하는 굵기만 브라우저가 요청합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
+UI에는 IBM Plex Sans KR 하나만 사용합니다. `next/font/google`이 빌드 시점에 폰트를 받아 프로젝트에서 자체 호스팅하므로 런타임에 폰트 CDN으로 나가는 요청이 없으며, fallback metric 보정으로 font swap 레이아웃 이동을 줄입니다. 한글은 별도 subset 이름이 아니라 unicode-range 조각으로 분할되어 제공되므로, 브라우저는 각 화면이 실제로 렌더링하는 글리프 조각과 굵기만 요청합니다. 400/500/600/700 네 굵기를 모두 로드해 semibold를 합성 없이 표시합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
 
 업무 화면의 기본 본문과 입력값은 `13px`, section heading은 `15px`, page heading은 `17px`을 사용합니다. `11px`은 eyebrow, label, metadata, table heading, compact tab·helper text, Top bar breadcrumb에 사용하고, `10px`은 GNB 메뉴명에만 사용하는 예외 토큰입니다. `20px`과 `24px`은 인증 화면처럼 독립된 진입 화면의 제목에만 허용합니다.
 

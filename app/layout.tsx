@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
-import localFont from "next/font/local";
+import { IBM_Plex_Sans_KR } from "next/font/google";
 import AuthGuard from "@/components/layout/AuthGuard";
 import "./globals.css";
 
-const spoqaHanSans = localFont({
-  src: [
-    { path: "./fonts/SpoqaHanSansNeo-Regular.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/SpoqaHanSansNeo-Medium.woff2", weight: "500", style: "normal" },
-    { path: "./fonts/SpoqaHanSansNeo-Bold.woff2", weight: "700", style: "normal" },
-  ],
-  variable: "--font-spoqa-han-sans",
+// Downloaded at build time and served from this origin, so no request leaves
+// the browser for a font at runtime. Weights match the design system scale,
+// including 600, which the previous face had to synthesize.
+//
+// `subsets` only accepts the latin families: Hangul is not a named subset but is
+// split into unicode-range slices that ship regardless, so Korean copy renders
+// in this face and a browser only fetches the slices a page actually uses.
+const ibmPlexSansKr = IBM_Plex_Sans_KR({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ibm-plex-sans-kr",
   display: "swap",
   preload: false,
   fallback: ["Arial", "sans-serif"],
-  adjustFontFallback: "Arial",
 });
 
 export const metadata: Metadata = {
@@ -28,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${GeistMono.variable} ${spoqaHanSans.variable}`}>
+    <html lang="ko" className={`${GeistMono.variable} ${ibmPlexSansKr.variable}`}>
       <body className="antialiased font-sans">
         <AuthGuard>{children}</AuthGuard>
       </body>
