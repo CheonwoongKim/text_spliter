@@ -3,7 +3,11 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import type { VectorStoreConfig, DatabaseSchema } from "@/lib/types";
 import { getAuthToken } from "@/lib/auth";
-import { MANAGED_VECTOR_DIMENSIONS, MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
+import {
+  SUPPORTED_EMBEDDING_MODELS,
+  type SupportedEmbeddingModelKey,
+} from "@/lib/constants";
+import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 
 interface VectorStoreLeftPanelProps {
   config: VectorStoreConfig;
@@ -25,6 +29,12 @@ function VectorStoreLeftPanel({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [newTableName, setNewTableName] = useState("");
+  const [newEmbeddingKey, setNewEmbeddingKey] = useState<SupportedEmbeddingModelKey>(
+    SUPPORTED_EMBEDDING_MODELS[0].key
+  );
+  const newEmbedding = SUPPORTED_EMBEDDING_MODELS.find(
+    (model) => model.key === newEmbeddingKey
+  ) || SUPPORTED_EMBEDDING_MODELS[0];
   const [tableToDelete, setTableToDelete] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -64,7 +74,8 @@ function VectorStoreLeftPanel({
         },
         body: JSON.stringify({
           tableName: newTableName.trim(),
-          vectorDimension: MANAGED_VECTOR_DIMENSIONS,
+          vectorDimension: newEmbedding.dimensions,
+          embeddingModel: newEmbedding.id,
         }),
       });
 
@@ -92,7 +103,7 @@ function VectorStoreLeftPanel({
     } finally {
       setCreating(false);
     }
-  }, [newTableName, onRefresh]);
+  }, [newEmbedding, newTableName, onRefresh]);
 
   const handleDeleteTableClick = useCallback((tableName: string) => {
     setTableToDelete(tableName);
@@ -382,10 +393,39 @@ function VectorStoreLeftPanel({
                 </p>
               </div>
 
+              <div>
+                <label
+                  htmlFor="new-collection-embedding-model"
+                  className="block text-2xs font-medium text-card-foreground mb-2"
+                >
+                  Embedding Model
+                </label>
+                <select
+                  id="new-collection-embedding-model"
+                  value={newEmbeddingKey}
+                  onChange={(event) =>
+                    setNewEmbeddingKey(event.target.value as SupportedEmbeddingModelKey)}
+                  disabled={creating}
+                  className="w-full px-3 py-2 border border-border rounded-lg
+                           focus-ring bg-surface text-card-foreground"
+                >
+                  {SUPPORTED_EMBEDDING_MODELS.map((model) => (
+                    <option key={model.key} value={model.key}>
+                      {model.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-2xs text-muted-foreground">
+                  {newEmbedding.description}
+                </p>
+              </div>
+
               <div className="bg-upload-zone p-3 rounded-lg">
                 <p className="text-2xs text-muted-foreground">
-                  앱 Supabase에 사용자 전용 컬렉션으로 생성됩니다. 임베딩은 text-embedding-3-small
-                  ({MANAGED_VECTOR_DIMENSIONS} dimensions)을 사용합니다.
+                  앱 Supabase에 사용자 전용 컬렉션으로 생성됩니다. 임베딩 모델과 차원은 생성 후 변경할 수 없으며,
+                  검색은 항상 이 설정을 사용합니다 ({newEmbedding.dimensions} dimensions,
+                  {newEmbedding.searchMode === "exact" ? " 정확 검색" : " HNSW 인덱스 검색"}).
+                  설정을 비교하려면 설정별로 컬렉션을 따로 만드세요.
                 </p>
               </div>
             </div>

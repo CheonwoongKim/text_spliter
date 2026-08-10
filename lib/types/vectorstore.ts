@@ -10,6 +10,9 @@ export interface TableInfo {
   schema: string;
   rowCount: number;
   columns: ColumnInfo[];
+  /** Model this collection was built with. Retrieval must reuse it. */
+  embeddingModel?: string;
+  vectorDimension?: number;
 }
 
 export interface ColumnInfo {

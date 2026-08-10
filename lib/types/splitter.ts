@@ -6,6 +6,7 @@ export const SPLITTER_TYPES = [
   "LatexTextSplitter",
   "CodeSplitter",
   "SemanticChunker",
+  "DocumentStructureSplitter",
 ] as const;
 
 export type SplitterType = (typeof SPLITTER_TYPES)[number];
@@ -34,7 +35,12 @@ export interface SourceMetadata {
   parseRunId?: string;
   documentHash?: string;
   engineId?: string;
+  /** Page holding the largest share of the chunk. */
   pageNumber?: number;
+  /** Every page the chunk overlaps, in ascending order. */
+  pageNumbers?: number[];
+  /** Document IR blocks the chunk overlaps, in reading order. */
+  blockIds?: string[];
   bBox?: {
     x: number;
     y: number;
@@ -296,6 +302,27 @@ export const SPLITTER_INFO: Record<SplitterType, SplitterDescription> = {
         type: "string",
         default: "percentile",
         required: false,
+      },
+    ],
+  },
+  DocumentStructureSplitter: {
+    name: "Document Structure Splitter",
+    description:
+      "파싱된 Document IR의 블록 경계를 따라 분할합니다. 표는 쪼개지 않고, 헤딩 문맥을 상속하며, "
+      + "페이지를 넘지 않습니다. 각 청크에 정확한 페이지·블록 provenance가 기록되어 검색 평가에 바로 쓰입니다. "
+      + "Parser 결과를 Splitter로 보낸 경우에만 사용할 수 있습니다.",
+    useCases: [
+      "표·수식·그림이 포함된 문서를 손상 없이 청킹하고 싶을 때",
+      "검색 결과를 페이지·블록 단위 기대 근거로 채점하고 싶을 때",
+      "파서 품질이 검색 품질에 미치는 영향을 측정하고 싶을 때",
+    ],
+    parameters: [
+      {
+        name: "chunkSize",
+        description: "블록을 누적할 최대 문자 수. 표처럼 나눌 수 없는 블록은 이 값을 넘어도 하나로 유지됩니다.",
+        type: "number",
+        default: 1000,
+        required: true,
       },
     ],
   },

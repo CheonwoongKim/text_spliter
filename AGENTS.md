@@ -60,6 +60,11 @@ Use Node.js 20.9 or newer. The Ragas worker supports Python 3.11 through 3.13.
 ### RAG and evaluation
 
 - Managed vector data is owner-scoped and uses the application Supabase pgvector schema. Retrieval must never cross users or collections.
+- A collection records the embedding model it was built with, and both upload and retrieval derive the model from the collection rather than from the request. Mixing models does not fail; it returns cosine distances that are meaningless, so the mismatch is rejected instead.
+- An embedding option is a (model, dimensions) pair, because the same model at a different width produces vectors that are not comparable. Each supported width has its own pgvector column and is routed by `match_vector_documents_v2`; adding a width requires a new column and a new branch in that function.
+- pgvector caps an HNSW index at 2000 dimensions. A wider width is searched exactly rather than approximately, so a measurement is never confounded by approximate-recall loss. State that cost in the UI instead of hiding it.
+- Chunks record the pages and blocks they cover. Retrieval metrics match expected evidence against that provenance, so a chunk with an unverifiable position reports no provenance rather than a guessed one.
+- Cost is estimated per run from stored usage and a versioned rate table. An unknown model or missing usage reports an unknown cost, never zero.
 - Grounded answers distinguish retrieved document evidence from model output and preserve citations and execution traces in `rag_runs`.
 - Frozen evaluation dataset versions, ground-truth versions, run snapshots, and execution traces are immutable.
 - Deterministic retrieval metrics, document-IR metrics, Ragas model-judge metrics, and human review are separate measurement layers. Do not collapse them into a single unexplained score.
@@ -71,6 +76,7 @@ Use Node.js 20.9 or newer. The Ragas worker supports Python 3.11 through 3.13.
 - Keep the page explicit that the product has not enabled a memory provider. Adding persistence, model calls, provider SDKs, background extraction, or a memory API requires a separately approved feature and architecture change.
 - Provider capabilities and deployment modes can change. Verify them against official project documentation before updating the guide, and retain the official-document links.
 - Keep document knowledge and conversational/user memory conceptually separate. Memory must not be presented as cited document evidence or silently override source-grounded facts.
+- `rag_runs.session_id` and `turn_index` group runs into a conversation so multi-turn retrieval can be measured. Prior turns resolve references in a follow-up question only: they are never citable evidence and never override the documents. Recording conversation state is not a memory provider; persistence, extraction, or an external memory service remains a separately approved change.
 
 ### Design system
 

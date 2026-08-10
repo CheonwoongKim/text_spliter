@@ -6,6 +6,7 @@ import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 
 interface CollectionSummaryRow {
   name: string;
+  embedding_model: string;
   vector_dimension: number;
   row_count: number | string;
 }
@@ -24,6 +25,8 @@ export async function GET(request: NextRequest) {
       name: collection.name,
       schema: MANAGED_VECTOR_SCHEMA,
       rowCount: Number(collection.row_count) || 0,
+      embeddingModel: collection.embedding_model,
+      vectorDimension: collection.vector_dimension,
       columns: [
         { name: "id", type: "bigint", nullable: false, isPrimaryKey: true },
         { name: "content", type: "text", nullable: false },

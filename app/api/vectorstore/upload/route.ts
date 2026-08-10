@@ -6,9 +6,10 @@ import { assertSupabaseResult, getAppSupabase } from '@/lib/supabase-server';
 import {
   DEFAULT_EMBEDDING_DIMENSIONS,
   DEFAULT_EMBEDDING_MODEL,
+  isSupportedEmbeddingModel,
 } from '@/lib/constants';
 import { createEmbeddings } from '@/lib/openai-server';
-import { normalizeVectorChunk } from '@/lib/vectorstore';
+import { embeddingColumnForDimensions, normalizeVectorChunk } from '@/lib/vectorstore';
 import {
   getOwnedVectorCollection,
   vectorStoreErrorResponse,
@@ -107,9 +108,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Chunks must be embedded with the model and width the collection was
+    // created with; a mixed collection returns cosine distances that are
+    // quietly meaningless.
+    const supported = isSupportedEmbeddingModel(
+      collection.embedding_model,
+      collection.vector_dimension,
+    );
+    const collectionEmbeddingModel = supported
+      ? collection.embedding_model
+      : DEFAULT_EMBEDDING_MODEL;
+    const collectionDimensions = supported
+      ? collection.vector_dimension
+      : DEFAULT_EMBEDDING_DIMENSIONS;
+    const embeddingColumn = embeddingColumnForDimensions(collectionDimensions);
+
     const embeddingUsage = { prompt_tokens: 0, total_tokens: 0 };
     let chunksUploaded = 0;
-    let resolvedEmbeddingModel = DEFAULT_EMBEDDING_MODEL;
+    // Records what the provider actually echoed back, which is what retrieval
+    // later compares against.
+    let resolvedEmbeddingModel: string = collectionEmbeddingModel;
 
     console.log(`Generating embeddings for ${normalizedChunks.length} chunks...`);
 
@@ -120,8 +138,8 @@ export async function POST(request: NextRequest) {
       const result = await createEmbeddings({
         apiKey: openaiKey,
         inputs: contents,
-        model: DEFAULT_EMBEDDING_MODEL,
-        dimensions: DEFAULT_EMBEDDING_DIMENSIONS,
+        model: collectionEmbeddingModel,
+        dimensions: collectionDimensions,
       });
       if (result.embeddings.length !== batch.length) {
         throw new Error('The embedding provider returned an incomplete batch.');
@@ -138,10 +156,24 @@ export async function POST(request: NextRequest) {
           !Array.isArray(chunkMetadata.source)
           ? chunkMetadata.source as Record<string, unknown>
           : {};
-        const sourceMetadata = splitResult.source_metadata || embeddedSource;
+        // The per-chunk source carries page/block provenance, so it must win
+        // over the run-level snapshot rather than be replaced by it.
+        const sourceMetadata: Record<string, unknown> = {
+          ...(splitResult.source_metadata || {}),
+          ...embeddedSource,
+        };
         const sourceFileName = typeof sourceMetadata.fileName === 'string'
           ? sourceMetadata.fileName
           : null;
+        const chunkPageNumber = Number.isInteger(sourceMetadata.pageNumber)
+          ? sourceMetadata.pageNumber as number
+          : null;
+        const chunkBlockIds = Array.isArray(sourceMetadata.blockIds)
+          ? sourceMetadata.blockIds.filter((id): id is string => typeof id === 'string')
+          : [];
+        const chunkPageNumbers = Array.isArray(sourceMetadata.pageNumbers)
+          ? sourceMetadata.pageNumbers.filter((page): page is number => Number.isInteger(page))
+          : [];
         const documentType = sourceFileName?.includes('.')
           ? sourceFileName.split('.').pop()?.toLowerCase() || null
           : null;
@@ -154,7 +186,9 @@ export async function POST(request: NextRequest) {
           chunk_key: `${splitResultId}:${chunkIndex}`,
           content,
           content_hash: createHash('sha256').update(content).digest('hex'),
-          embedding: result.embeddings[batchIndex],
+          // Exactly one width-specific column is populated, chosen by the
+          // collection's dimension.
+          [embeddingColumn]: result.embeddings[batchIndex],
           metadata: {
             ...chunkMetadata,
             source: `split_result_${splitResultId}`,
@@ -164,6 +198,10 @@ export async function POST(request: NextRequest) {
             document_hash: splitResult.document_hash || sourceMetadata.documentHash || null,
             parser_type: sourceMetadata.parserType || null,
             engine_id: sourceMetadata.engineId || null,
+            page_number: chunkPageNumber,
+            page_numbers: chunkPageNumbers,
+            block_id: chunkBlockIds[0] || null,
+            block_ids: chunkBlockIds,
             document_type: documentType,
             splitter_type: splitResult.splitter_type,
             chunk_size: splitResult.chunk_size,
@@ -173,7 +211,7 @@ export async function POST(request: NextRequest) {
             content_hash: createHash('sha256').update(content).digest('hex'),
             embedding_provider: 'openai',
             embedding_model: result.model,
-            embedding_dimensions: DEFAULT_EMBEDDING_DIMENSIONS,
+            embedding_dimensions: collectionDimensions,
             embedded_at: new Date().toISOString(),
           },
         };
@@ -195,9 +233,9 @@ export async function POST(request: NextRequest) {
       tableName: collection.name,
       embedding: {
         provider: 'openai',
-        model: DEFAULT_EMBEDDING_MODEL,
+        model: collectionEmbeddingModel,
         resolvedModel: resolvedEmbeddingModel,
-        dimensions: DEFAULT_EMBEDDING_DIMENSIONS,
+        dimensions: collectionDimensions,
         usage: embeddingUsage,
       },
     });

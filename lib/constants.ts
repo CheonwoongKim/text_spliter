@@ -13,6 +13,76 @@ export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 // Reproducible RAG defaults
 export const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
 export const DEFAULT_EMBEDDING_DIMENSIONS = 1536;
+
+/**
+ * Embedding configurations a managed collection can be built with.
+ *
+ * The unit of choice is a (model, dimensions) pair, because the same model at a
+ * different width produces vectors that are not comparable. A collection stores
+ * both, and retrieval reuses them exactly: mixing does not fail, it silently
+ * returns meaningless cosine distances.
+ *
+ * `searchMode` records how the dimension is queried. pgvector caps an HNSW index
+ * at 2000 dimensions, so 3072 uses exact cosine search — slower on large
+ * collections, but with no approximate-recall loss to confound a measurement.
+ */
+export type EmbeddingSearchMode = 'hnsw' | 'exact';
+
+export const SUPPORTED_EMBEDDING_MODELS = [
+  {
+    key: 'text-embedding-3-small@1536',
+    id: 'text-embedding-3-small',
+    dimensions: 1536,
+    searchMode: 'hnsw',
+    label: '3-small · 1536d',
+    description: 'Lower cost. Solid baseline for most documents.',
+  },
+  {
+    key: 'text-embedding-3-large@1536',
+    id: 'text-embedding-3-large',
+    dimensions: 1536,
+    searchMode: 'hnsw',
+    label: '3-large · 1536d',
+    description: 'Higher quality than 3-small, reduced to 1536 dimensions. Indexed search.',
+  },
+  {
+    key: 'text-embedding-3-large@3072',
+    id: 'text-embedding-3-large',
+    dimensions: 3072,
+    searchMode: 'exact',
+    label: '3-large · 3072d',
+    description: 'Full width, highest quality. Exact search, so slower on large collections.',
+  },
+] as const;
+
+export type SupportedEmbeddingModelKey = (typeof SUPPORTED_EMBEDDING_MODELS)[number]['key'];
+export type SupportedEmbeddingModel = (typeof SUPPORTED_EMBEDDING_MODELS)[number]['id'];
+export type SupportedEmbeddingDimensions = (typeof SUPPORTED_EMBEDDING_MODELS)[number]['dimensions'];
+
+export const SUPPORTED_EMBEDDING_MODEL_IDS: readonly string[] =
+  [...new Set(SUPPORTED_EMBEDDING_MODELS.map((model) => model.id))];
+
+export const SUPPORTED_EMBEDDING_DIMENSIONS: readonly number[] =
+  [...new Set(SUPPORTED_EMBEDDING_MODELS.map((model) => model.dimensions))];
+
+export function embeddingModelKey(model: string, dimensions: number): string {
+  return `${model}@${dimensions}`;
+}
+
+export function findEmbeddingModel(model: unknown, dimensions: unknown) {
+  return SUPPORTED_EMBEDDING_MODELS.find(
+    (entry) => entry.id === model && entry.dimensions === dimensions,
+  );
+}
+
+/** A model alone is not enough: it must be supported at the given width. */
+export function isSupportedEmbeddingModel(model: unknown, dimensions: unknown): boolean {
+  return Boolean(findEmbeddingModel(model, dimensions));
+}
+
+export function describeEmbeddingModel(model: string, dimensions: number): string {
+  return findEmbeddingModel(model, dimensions)?.label || embeddingModelKey(model, dimensions);
+}
 export const DEFAULT_GENERATION_MODEL = 'gpt-5.6-terra';
 export const RAG_PROMPT_VERSION = 'grounded-answer-v1';
 export const RAG_TOP_K_MIN = 1;

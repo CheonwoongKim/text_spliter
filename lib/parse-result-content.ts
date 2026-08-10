@@ -72,7 +72,7 @@ function extractLlamaContent(value: unknown): string {
     || extractNestedPages(record, "text", "text");
 }
 
-function extractNormalizedContent(value: unknown): string {
+export function extractNormalizedContent(value: unknown): string {
   const record = asRecord(value);
   if (!record) return "";
 

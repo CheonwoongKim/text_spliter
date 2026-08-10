@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import ErrorBoundary from "@/components/layout/ErrorBoundary";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
@@ -19,7 +19,9 @@ import EvaluationPanel from "@/components/evaluation/EvaluationPanel";
 import MemoryGuidePanel from "@/components/guides/MemoryGuidePanel";
 import { getAuthToken } from "@/lib/auth";
 import { useDocumentEngineSettings } from "@/lib/hooks/useDocumentEngineSettings";
+import { useWorkbenchHandoff } from "@/lib/hooks/useWorkbenchHandoff";
 import { isVisionEngine } from "@/lib/document-engines";
+import { useSplitterExperiment } from "@/lib/hooks/useSplitterExperiment";
 import {
   APP_MENU_STORAGE_KEY,
   DEFAULT_APP_MENU,
@@ -29,11 +31,6 @@ import {
 } from "@/lib/navigation";
 import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 import type {
-  SplitterConfig,
-  SplitterType,
-  ViewMode,
-  SplitResponse,
-  SplitRequest,
   DocumentEngineConfig,
   DocumentEngineType,
   ParserExperimentPlan,
@@ -41,7 +38,6 @@ import type {
   VectorStoreConfig,
   DatabaseSchema,
   TableDataResponse,
-  SourceMetadata,
 } from "@/lib/types";
 
 export default function Home() {
@@ -69,29 +65,25 @@ export default function Home() {
     }
   }, []);
 
+  const {
+    splitterHandoff,
+    vectorStoreHandoff,
+    sendParseRunToSplitter,
+    sendSplitResultToVectorStore,
+    clearVectorStoreHandoff,
+  } = useWorkbenchHandoff(handleMenuChange);
+
   const handleOpenParserSettings = useCallback((engineType: DocumentEngineType) => {
     setSettingsParserEngine(engineType);
     setSettingsSection("document-engines");
     handleMenuChange("settings");
   }, [handleMenuChange]);
 
-  // Splitter state
-  const [text, setText] = useState("");
-  const [sourceMetadata, setSourceMetadata] = useState<SourceMetadata | null>(null);
-  const [config, setConfig] = useState<SplitterConfig>({
-    splitterType: "RecursiveCharacterTextSplitter",
-    chunkSize: 1000,
-    chunkOverlap: 200,
-    // separator: undefined by default, let LangChain use its default
-    separators: ["\n\n", "\n", " ", ""],
-    encodingName: "cl100k_base",
-    language: "python",
-    breakpointType: "percentile",
-  });
-  const [result, setResult] = useState<SplitResponse | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("card");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const splitter = useSplitterExperiment();
+  const {
+    replaceSource: replaceSplitterSource,
+    setError: setSplitterError,
+  } = splitter;
 
   // Parser state
   const [primaryParserEngine, setPrimaryParserEngine] = useState<DocumentEngineType>("Upstage");
@@ -108,65 +100,7 @@ export default function Home() {
   const [schemas, setSchemas] = useState<DatabaseSchema[]>([]);
   const [tableData, setTableData] = useState<TableDataResponse | null>(null);
   const [vectorLoading, setVectorLoading] = useState(false);
-
-  // Handlers
-  const handleSplitterTypeChange = useCallback((type: SplitterType) => {
-    setConfig((prev) => ({
-      ...prev,
-      splitterType: type,
-    }));
-  }, []);
-
-  const handleConfigChange = useCallback(
-    (updates: Partial<SplitterConfig>) => {
-      setConfig((prev) => ({
-        ...prev,
-        ...updates,
-      }));
-    },
-    []
-  );
-
-  const handleSplit = useCallback(async () => {
-    if (!text.trim()) {
-      alert("Please enter text to split.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const requestBody: SplitRequest = {
-        text,
-        config,
-        sourceMetadata: sourceMetadata || undefined,
-      };
-
-      const response = await fetch("/api/split", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to split text");
-      }
-
-      const data: SplitResponse = await response.json();
-      setResult(data);
-    } catch (err) {
-      console.error("Error splitting text:", err);
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [text, config, sourceMetadata]);
+  const [vectorError, setVectorError] = useState<string | null>(null);
 
   // Parser handlers
   const handleFileSelect = useCallback((file: File | null, storageKey?: string | null) => {
@@ -182,12 +116,6 @@ export default function Home() {
     setParseResult(null);
     setParseRuns([]);
     setParserError(null);
-  }, []);
-
-  const handleSplitterReset = useCallback(() => {
-    setText("");
-    setResult(null);
-    setError(null);
   }, []);
 
   const handleParse = useCallback(async (plan: ParserExperimentPlan) => {
@@ -323,6 +251,47 @@ export default function Home() {
     }
   }, [selectedFile]);
 
+  // A parser run handed to the splitter replaces the source text and its
+  // provenance, and invalidates any chunks produced from the previous source.
+  useEffect(() => {
+    if (!splitterHandoff) return;
+
+    // Runs compare strategies over one source, so a new source starts over.
+    replaceSplitterSource(splitterHandoff.text, splitterHandoff.sourceMetadata);
+  }, [replaceSplitterSource, splitterHandoff]);
+
+  const splitterSourceHandoff = useMemo(
+    () => splitterHandoff
+      ? { token: splitterHandoff.token, label: splitterHandoff.engineLabel }
+      : null,
+    [splitterHandoff],
+  );
+
+  const vectorUploadHandoff = useMemo(
+    () => vectorStoreHandoff
+      ? { token: vectorStoreHandoff.token, splitResultId: vectorStoreHandoff.splitResultId }
+      : null,
+    [vectorStoreHandoff],
+  );
+
+  const selectedCollection = useMemo(() => {
+    const { selectedSchema, selectedTable } = vectorStoreConfig;
+    if (!selectedTable) return undefined;
+
+    return schemas
+      .find((schema) => schema.name === (selectedSchema || MANAGED_VECTOR_SCHEMA))
+      ?.tables.find((table) => table.name === selectedTable);
+  }, [schemas, vectorStoreConfig]);
+
+  const handleUseRunInSplitter = useCallback((runIndex: number) => {
+    const run = parseRuns[runIndex];
+    if (!run) return;
+
+    if (!sendParseRunToSplitter(run, runIndex)) {
+      setParserError("This engine returned no text that can be chunked.");
+    }
+  }, [parseRuns, sendParseRunToSplitter]);
+
   const handleSelectParseRun = useCallback((runId: string) => {
     const selectedRun = parseRuns.find((run, index) => (
       run.run?.id || `legacy-run-${index}`
@@ -372,7 +341,7 @@ export default function Home() {
       setVectorLoading(false);
     } catch (err) {
       console.error("Error fetching schemas:", err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch schemas');
+      setVectorError(err instanceof Error ? err.message : 'Failed to fetch schemas');
       setVectorLoading(false);
     }
   }, []);
@@ -408,7 +377,7 @@ export default function Home() {
       setVectorLoading(false);
     } catch (err) {
       console.error("Error loading table data:", err);
-      setError(err instanceof Error ? err.message : 'Failed to load table data');
+      setVectorError(err instanceof Error ? err.message : 'Failed to load table data');
       setVectorLoading(false);
     }
   }, [vectorStoreConfig.selectedTable, vectorStoreConfig.selectedSchema]);
@@ -434,6 +403,22 @@ export default function Home() {
   }, [activeMenu, schemas.length, handleRefreshSchemas]);
 
   // Handler to navigate to parse result detail page
+  // Each workspace reports its own failures; a vector store error must not
+  // surface on the splitter screen.
+  const activeError = activeMenu === "parser"
+    ? parserError
+    : activeMenu === "vectorstore"
+      ? vectorError
+      : activeMenu === "splitter"
+        ? splitter.error
+        : null;
+
+  const dismissActiveError = useCallback(() => {
+    if (activeMenu === "parser") setParserError(null);
+    else if (activeMenu === "vectorstore") setVectorError(null);
+    else if (activeMenu === "splitter") setSplitterError(null);
+  }, [activeMenu, setSplitterError]);
+
   const handleNavigateToParseDetail = useCallback((id: number) => {
     setSelectedParseResultId(id);
     setActiveMenu("parse-detail");
@@ -467,7 +452,7 @@ export default function Home() {
         />
 
       {/* Error Banner */}
-      {(activeMenu === "parser" ? parserError : error) && (
+      {activeError && (
         <div className="bg-danger-surface border-b border-danger-border px-4 sm:px-6 lg:px-10 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -485,11 +470,11 @@ export default function Home() {
                 />
               </svg>
               <span className="text-xs text-danger">
-                {activeMenu === "parser" ? parserError : error}
+                {activeError}
               </span>
             </div>
             <button
-              onClick={() => activeMenu === "parser" ? setParserError(null) : setError(null)}
+              onClick={dismissActiveError}
               className="text-danger hover:text-danger/80"
               aria-label="Close error message"
             >
@@ -535,7 +520,11 @@ export default function Home() {
                 onReloadParserSettings={parserSettings.reload}
               />
             ) : activeMenu === "storage" ? (
-              <StoragePanel onNavigateToDetail={handleNavigateToParseDetail} />
+              <StoragePanel
+                onNavigateToDetail={handleNavigateToParseDetail}
+                vectorUploadHandoff={vectorUploadHandoff}
+                onVectorUploadHandoffConsumed={clearVectorStoreHandoff}
+              />
             ) : activeMenu === "files" ? (
               <FilesPanel />
             ) : activeMenu === "memory" ? (
@@ -567,6 +556,8 @@ export default function Home() {
                 <VectorStoreRightPanel
                   selectedSchema={vectorStoreConfig.selectedSchema}
                   selectedTable={vectorStoreConfig.selectedTable}
+                  selectedTableEmbeddingModel={selectedCollection?.embeddingModel}
+                  selectedTableVectorDimension={selectedCollection?.vectorDimension}
                   tableData={tableData}
                   loading={vectorLoading}
                   onRefresh={handleRefreshTableData}
@@ -608,6 +599,7 @@ export default function Home() {
                   } satisfies DocumentEngineConfig & { parserType: DocumentEngineType }}
                   onSelectRun={handleSelectParseRun}
                   onClearRuns={handleClearParseRuns}
+                  onUseInSplitter={handleUseRunInSplitter}
                 />
               </div>
             </div>
@@ -616,27 +608,34 @@ export default function Home() {
               {/* Left Panel */}
               <div className="h-full overflow-hidden lg:col-span-3 lg:border-r lg:border-border-subtle">
                 <LeftPanel
-                  text={text}
-                  config={config}
-                  loading={loading}
-                  onTextChange={setText}
-                  onSourceMetadataChange={setSourceMetadata}
-                  onSplitterTypeChange={handleSplitterTypeChange}
-                  onConfigChange={handleConfigChange}
-                  onSplit={handleSplit}
-                  onReset={handleSplitterReset}
+                  text={splitter.text}
+                  config={splitter.config}
+                  loading={splitter.loading}
+                  onTextChange={splitter.setText}
+                  onSourceMetadataChange={splitter.setSourceMetadata}
+                  onSplitterTypeChange={splitter.changeSplitterType}
+                  onConfigChange={splitter.changeConfig}
+                  onSplit={splitter.split}
+                  onReset={splitter.reset}
+                  handoff={splitterSourceHandoff}
+                  structureSplitAvailable={splitter.structureSplitAvailable}
                 />
               </div>
 
               {/* Right Panel */}
               <div className="h-full overflow-hidden lg:col-span-7 lg:pl-10">
                 <RightPanel
-                  result={result}
-                  loading={loading}
-                  viewMode={viewMode}
-                  onViewModeChange={setViewMode}
-                  text={text}
-                  config={config}
+                  result={splitter.result}
+                  loading={splitter.loading}
+                  viewMode={splitter.viewMode}
+                  onViewModeChange={splitter.setViewMode}
+                  text={splitter.text}
+                  config={splitter.config}
+                  onSendToVectorStore={sendSplitResultToVectorStore}
+                  runs={splitter.runs}
+                  selectedRunId={splitter.selectedRunId}
+                  onSelectRun={splitter.selectRun}
+                  onClearRuns={splitter.clearRuns}
                 />
               </div>
             </div>

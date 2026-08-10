@@ -26,6 +26,7 @@ interface ParserRightPanelProps {
   config: DocumentEngineConfig & { parserType: DocumentEngineType };
   onSelectRun?: (runId: string) => void;
   onClearRuns?: () => void;
+  onUseInSplitter?: (runIndex: number) => void;
 }
 
 interface ViewTab {
@@ -286,6 +287,7 @@ function ParserRightPanel({
   config,
   onSelectRun,
   onClearRuns,
+  onUseInSplitter,
 }: ParserRightPanelProps) {
   const { copied, copy } = useCopyToClipboard();
   const [viewMode, setViewMode] = useState<ParserViewMode>("text");
@@ -638,6 +640,7 @@ function ParserRightPanel({
               onOpenRun={handleOpenRun}
               onCompare={() => setWorkspaceMode("compare")}
               onOpenFocus={handleOpenFocus}
+              onUseInSplitter={isPreview ? undefined : onUseInSplitter}
             />
           ) : showFocus ? (
             <ParserFocusWorkbench

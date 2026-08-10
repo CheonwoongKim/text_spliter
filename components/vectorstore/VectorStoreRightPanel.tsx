@@ -11,6 +11,8 @@ import RagTestPanel from "@/components/vectorstore/RagTestPanel";
 interface VectorStoreRightPanelProps {
   selectedSchema: string | undefined;
   selectedTable: string | undefined;
+  selectedTableEmbeddingModel?: string;
+  selectedTableVectorDimension?: number;
   tableData: TableDataResponse | null;
   loading: boolean;
   onRefresh: () => void;
@@ -25,6 +27,8 @@ interface CellModalData {
 function VectorStoreRightPanel({
   selectedSchema,
   selectedTable,
+  selectedTableEmbeddingModel,
+  selectedTableVectorDimension,
   tableData,
   loading,
   onRefresh,
@@ -179,6 +183,8 @@ function VectorStoreRightPanel({
           <RagTestPanel
             selectedSchema={selectedSchema}
             selectedTable={selectedTable}
+            collectionEmbeddingModel={selectedTableEmbeddingModel}
+            collectionVectorDimension={selectedTableVectorDimension}
           />
         </div>
       ) : <div className="flex-1 overflow-auto">

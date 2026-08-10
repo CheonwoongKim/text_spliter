@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getAuthToken } from "@/lib/auth";
-import { DEFAULT_EMBEDDING_MODEL } from "@/lib/constants";
+import {
+  DEFAULT_EMBEDDING_DIMENSIONS,
+  DEFAULT_EMBEDDING_MODEL,
+  describeEmbeddingModel,
+  findEmbeddingModel,
+} from "@/lib/constants";
+import { estimateRunCost, formatUsd } from "@/lib/cost-estimate";
+import { MAX_CONTEXT_TURNS, type ConversationTurn } from "@/lib/rag-conversation";
 import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 import type {
   RagGenerationModel,
@@ -14,6 +21,9 @@ import type {
 interface RagTestPanelProps {
   selectedSchema?: string;
   selectedTable?: string;
+  /** Model the selected collection was built with; retrieval reuses it. */
+  collectionEmbeddingModel?: string;
+  collectionVectorDimension?: number;
 }
 
 interface ApiErrorBody {
@@ -42,20 +52,53 @@ function usageValue(usage: Record<string, unknown> | undefined, key: string): nu
 export default function RagTestPanel({
   selectedSchema,
   selectedTable,
+  collectionEmbeddingModel,
+  collectionVectorDimension,
 }: RagTestPanelProps) {
   const [question, setQuestion] = useState("");
   const [topK, setTopK] = useState(5);
-  const [embeddingModel, setEmbeddingModel] = useState(DEFAULT_EMBEDDING_MODEL);
+  // Not a choice: querying with anything other than the model the collection
+  // was indexed with yields similarity scores that mean nothing.
+  const embeddingModel = collectionEmbeddingModel || DEFAULT_EMBEDDING_MODEL;
+  const embeddingDimensions = collectionVectorDimension || DEFAULT_EMBEDDING_DIMENSIONS;
+  const embeddingProfile = findEmbeddingModel(embeddingModel, embeddingDimensions);
   const [generationModel, setGenerationModel] = useState<RagGenerationModel>("gpt-5.6-terra");
   const [reasoningEffort, setReasoningEffort] = useState<RagReasoningEffort>("low");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<RagRunResult | null>(null);
   const [error, setError] = useState<ApiErrorBody | null>(null);
+  const [conversation, setConversation] = useState<ConversationTurn[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
+  // Recomputed rather than read from the response so an older stored run still
+  // shows a cost when the server did not record one.
+  const runCost = useMemo(
+    () => result
+      ? estimateRunCost({
+        embeddingModel: result.retrieval.resolvedEmbeddingModel || result.retrieval.embeddingModel,
+        generationModel: result.generation.model,
+        embeddingUsage: result.usage.embedding,
+        generationUsage: result.usage.generation,
+      })
+      : null,
+    [result],
+  );
+
+  // A conversation belongs to one collection, so switching collections ends it.
   useEffect(() => {
     setResult(null);
     setError(null);
+    setConversation([]);
+    setSessionId(null);
   }, [selectedSchema, selectedTable]);
+
+  const endConversation = useCallback(() => {
+    setConversation([]);
+    setSessionId(null);
+    setResult(null);
+    setError(null);
+    setQuestion("");
+  }, []);
 
   const citedRanks = useMemo(
     () => new Set(result?.citations.map((citation) => citation.rank) || []),
@@ -71,6 +114,11 @@ export default function RagTestPanel({
       return;
     }
 
+    const askedQuestion = question.trim();
+    // One session id spans the conversation so its turns can be replayed and
+    // scored together.
+    const activeSessionId = sessionId || crypto.randomUUID();
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -82,18 +130,27 @@ export default function RagTestPanel({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          question: question.trim(),
+          question: askedQuestion,
           schema: selectedSchema || MANAGED_VECTOR_SCHEMA,
           tableName: selectedTable,
           topK,
           embeddingModel,
           generationModel,
           reasoningEffort,
+          sessionId: activeSessionId,
+          turnIndex: conversation.length,
+          conversation,
         }),
       });
       const data = (await response.json()) as RagRunResult & ApiErrorBody;
       if (!response.ok) throw data;
       setResult(data);
+      setSessionId(activeSessionId);
+      setConversation((turns) => [
+        ...turns.slice(-(MAX_CONTEXT_TURNS - 1)),
+        { question: askedQuestion, answer: data.answer },
+      ]);
+      setQuestion("");
     } catch (caught) {
       const body = caught as ApiErrorBody;
       setError({
@@ -135,17 +192,18 @@ export default function RagTestPanel({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
-            <label className="block">
+            <div className="block">
               <span className="block text-2xs font-medium text-muted-foreground mb-2">Embedding</span>
-              <select
-                value={embeddingModel}
-                onChange={(event) => setEmbeddingModel(event.target.value)}
-                disabled={loading}
-                className="w-full h-10 px-3 rounded-lg border border-border bg-surface text-xs text-card-foreground"
+              <div
+                className="flex h-10 items-center rounded-lg border border-border bg-muted px-3 text-xs
+                         text-card-foreground"
+                title={embeddingProfile?.searchMode === "exact"
+                  ? "Fixed by the collection. This width uses exact search, which is slower on large collections."
+                  : "Fixed by the collection so query and chunk embeddings stay comparable"}
               >
-                <option value={DEFAULT_EMBEDDING_MODEL}>3-small · managed 1536d</option>
-              </select>
-            </label>
+                {describeEmbeddingModel(embeddingModel, embeddingDimensions)}
+              </div>
+            </div>
             <label className="block">
               <span className="block text-2xs font-medium text-muted-foreground mb-2">Answer model</span>
               <select
@@ -187,12 +245,45 @@ export default function RagTestPanel({
             </label>
           </div>
 
+          {conversation.length > 0 && (
+            <div className="mb-4 rounded-lg border border-border bg-upload-zone p-3">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="text-2xs font-medium text-card-foreground">
+                  대화 {conversation.length}턴 · 후속 질문의 지시대명사를 해소합니다
+                </p>
+                <button
+                  type="button"
+                  onClick={endConversation}
+                  disabled={loading}
+                  className="text-2xs text-muted-foreground transition-smooth hover:text-card-foreground
+                           disabled:cursor-not-allowed disabled:opacity-disabled"
+                >
+                  New conversation
+                </button>
+              </div>
+              <ol className="space-y-1">
+                {conversation.map((turn, index) => (
+                  <li key={`${index}-${turn.question.slice(0, 24)}`} className="truncate text-2xs text-muted-foreground">
+                    {index + 1}. {turn.question}
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-2 text-2xs text-muted-foreground">
+                이전 턴은 문서 근거가 아니며 인용되지 않습니다.
+              </p>
+            </div>
+          )}
+
           <label className="block">
-            <span className="block text-2xs font-medium text-muted-foreground mb-2">Question</span>
+            <span className="block text-2xs font-medium text-muted-foreground mb-2">
+              {conversation.length > 0 ? "Follow-up question" : "Question"}
+            </span>
             <textarea
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
-              placeholder="이 문서에서 확인하고 싶은 내용을 질문하세요."
+              placeholder={conversation.length > 0
+                ? "이어서 질문하세요. 예: 그중 두 번째 항목은 왜 그런가요?"
+                : "이 문서에서 확인하고 싶은 내용을 질문하세요."}
               rows={4}
               disabled={loading}
               className="w-full px-3 py-3 rounded-lg border border-border bg-surface text-xs text-card-foreground resize-y focus-ring"
@@ -234,6 +325,14 @@ export default function RagTestPanel({
                   <span className="rounded-lg bg-muted px-2 py-1">{result.generation.model}</span>
                   <span className="rounded-lg bg-muted px-2 py-1">{result.generation.reasoningEffort}</span>
                   <span className="rounded-lg bg-muted px-2 py-1">{result.retrieval.embeddingModel}</span>
+                  <span
+                    className="rounded-lg bg-muted px-2 py-1"
+                    title={runCost?.unpricedModels.length
+                      ? `No published rate for ${runCost.unpricedModels.join(", ")}`
+                      : `Estimated at rates ${runCost?.rateVersion ?? "unknown"}`}
+                  >
+                    {formatUsd(runCost?.totalUsd ?? null)}
+                  </span>
                 </div>
               </div>
               <h5 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Answer</h5>

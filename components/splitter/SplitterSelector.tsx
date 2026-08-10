@@ -6,19 +6,27 @@ import { memo } from "react";
 interface SplitterSelectorProps {
   value: SplitterType;
   onChange: (value: SplitterType) => void;
+  /** Structure splitting is only possible for a parsed document. */
+  structureSplitAvailable?: boolean;
 }
 
 function SplitterSelector({
   value,
   onChange,
+  structureSplitAvailable = false,
 }: SplitterSelectorProps) {
+  const structureSelected = value === "DocumentStructureSplitter";
 
   return (
     <div>
-      <label className="block text-2xs font-medium text-surface-foreground mb-2">
+      <label
+        htmlFor="splitter-type"
+        className="block text-2xs font-medium text-surface-foreground mb-2"
+      >
         Splitter Type
       </label>
       <select
+        id="splitter-type"
         value={value}
         onChange={(e) => onChange(e.target.value as SplitterType)}
         className="w-full h-control-xl px-3 border border-border rounded-lg text-xs
@@ -27,11 +35,24 @@ function SplitterSelector({
                    transition-smooth"
       >
         {SPLITTER_TYPES.map((type) => (
-          <option key={type} value={type}>
+          <option
+            key={type}
+            value={type}
+            disabled={type === "DocumentStructureSplitter" && !structureSplitAvailable}
+          >
             {SPLITTER_INFO[type].name}
+            {type === "DocumentStructureSplitter" && !structureSplitAvailable
+              ? " · needs a parsed document"
+              : ""}
           </option>
         ))}
       </select>
+
+      {structureSelected && !structureSplitAvailable && (
+        <p className="mt-2 text-2xs text-danger">
+          Send a parser result to the splitter to chunk along document structure.
+        </p>
+      )}
     </div>
   );
 }

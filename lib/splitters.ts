@@ -7,6 +7,15 @@ import {
 import type { SupportedTextSplitterLanguage } from "@langchain/textsplitters";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { getEncoding } from "@langchain/core/utils/tiktoken";
+import {
+  buildDocumentSpanMap,
+  resolveChunkProvenance,
+} from "@/lib/document-text-map";
+import {
+  isStructureSplittableDocument,
+  splitDocumentByStructure,
+  StructureSplitError,
+} from "@/lib/structure-splitter";
 import type {
   SplitterConfig,
   ChunkResult,
@@ -169,6 +178,61 @@ export async function splitTextByTokensSafely(
   return chunks;
 }
 
+function summarizeChunks(
+  chunks: ChunkResult[],
+  config: SplitterConfig,
+  startTime: number,
+): SplitResponse {
+  const sizes = chunks.map((chunk) => chunk.metadata.length);
+  const total = sizes.reduce((sum, size) => sum + size, 0);
+
+  return {
+    chunks,
+    totalChunks: chunks.length,
+    splitterType: config.splitterType,
+    parameters: config,
+    statistics: {
+      averageChunkSize: sizes.length ? Math.round(total / sizes.length) : 0,
+      minChunkSize: sizes.length ? Math.min(...sizes) : 0,
+      maxChunkSize: sizes.length ? Math.max(...sizes) : 0,
+      processingTime: Date.now() - startTime,
+    },
+  };
+}
+
+function splitByDocumentStructure(
+  text: string,
+  config: SplitterConfig,
+  startTime: number,
+  sourceMetadata?: SourceMetadata,
+): SplitResponse {
+  const document = sourceMetadata?.originalJson;
+  if (!isStructureSplittableDocument(document)) {
+    throw new StructureSplitError(
+      "The Document Structure splitter needs a parsed document with blocks. "
+      + "Send a parser result to the splitter, or choose a character-based splitter."
+    );
+  }
+
+  const chunks = splitDocumentByStructure(
+    document,
+    { chunkSize: config.chunkSize },
+    sourceMetadata,
+  );
+
+  if (chunks.length === 0) {
+    throw new StructureSplitError(
+      "The parsed document contains no block text that can be chunked."
+    );
+  }
+
+  // `text` stays part of the contract so callers keep one call shape, even
+  // though structure splitting reads the document rather than the flat text.
+  void text;
+
+  return summarizeChunks(chunks, config, startTime);
+}
+
 /**
  * Split text using the specified splitter configuration
  */
@@ -178,6 +242,12 @@ export async function splitText(
   sourceMetadata?: SourceMetadata
 ): Promise<SplitResponse> {
   const startTime = Date.now();
+
+  // Structure splitting walks the Document IR directly instead of the flattened
+  // text, so it bypasses the character-splitter pipeline entirely.
+  if (config.splitterType === "DocumentStructureSplitter") {
+    return splitByDocumentStructure(text, config, startTime, sourceMetadata);
+  }
 
   let splitter;
   let chunks: string[] = [];
@@ -352,6 +422,10 @@ export async function splitText(
         throw new Error(`Unknown splitter type: ${config.splitterType}`);
     }
 
+    // Document IR spans let each chunk report the pages and blocks it covers,
+    // which is what retrieval evaluation matches expected evidence against.
+    const spans = buildDocumentSpanMap(sourceMetadata?.originalJson, text);
+
     // Build chunk results with metadata
     const chunkResults: ChunkResult[] = [];
     let previousStartIndex = -1;
@@ -363,11 +437,27 @@ export async function splitText(
 
       // If exact match not found (e.g., SemanticChunker modifies text),
       // use the current position as fallback
-      if (startIndex === -1) {
+      const offsetVerified = startIndex !== -1;
+      if (!offsetVerified) {
         startIndex = Math.min(previousEndIndex, text.length);
       }
 
       const endIndex = Math.min(startIndex + chunk.length, text.length);
+
+      // An unverified offset would attribute the chunk to the wrong page, so
+      // provenance is only derived from positions located in the source text.
+      const provenance = offsetVerified
+        ? resolveChunkProvenance(spans, startIndex, endIndex)
+        : null;
+
+      const source: SourceMetadata | undefined = sourceMetadata
+        ? {
+          ...sourceMetadata,
+          ...(provenance?.pageNumber !== undefined ? { pageNumber: provenance.pageNumber } : {}),
+          ...(provenance?.pageNumbers.length ? { pageNumbers: provenance.pageNumbers } : {}),
+          ...(provenance?.blockIds.length ? { blockIds: provenance.blockIds } : {}),
+        }
+        : undefined;
 
       chunkResults.push({
         index: i,
@@ -378,7 +468,7 @@ export async function splitText(
           length: chunk.length,
           chunkSize: config.chunkSize,
           chunkOverlap: config.chunkOverlap,
-          source: sourceMetadata, // Include source metadata if provided
+          source,
         },
       });
 

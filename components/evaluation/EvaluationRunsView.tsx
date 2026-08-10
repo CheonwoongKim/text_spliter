@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
+import ParserImpactView from "@/components/evaluation/ParserImpactView";
+import { costFromStoredRun, formatUsd, sumRunCosts } from "@/lib/cost-estimate";
+import type { MetricBreakdownRow } from "@/lib/evaluation-metrics";
 import type {
   EvaluationCaseRun,
   EvaluationJudgeBatch,
@@ -200,6 +203,11 @@ export default function EvaluationRunsView({
   const manualAverages = (metrics.manualAverages || {}) as Record<string, unknown>;
   const deterministic = asRecord(metrics.deterministic);
   const breakdowns = asRecord(metrics.breakdowns);
+  // Parser attribution answers whether a better parse actually retrieves better,
+  // which neither parser evaluation nor RAG evaluation shows on its own.
+  const parserBreakdownRows = (Array.isArray(breakdowns.parser)
+    ? breakdowns.parser
+    : []) as MetricBreakdownRow[];
   const breakdownRows = Array.isArray(breakdowns[breakdownDimension])
     ? breakdowns[breakdownDimension].map(asRecord)
     : [];
@@ -213,6 +221,12 @@ export default function EvaluationRunsView({
   const judgeMetricAverages = asRecord(judgeAggregate.metrics);
   const judgeUsage = asRecord(judgeAggregate.usage);
   const judgeModel = selectedJudgeBatch?.evaluator_config.model || "—";
+  // Summed across the cases actually executed, so an unpriced or partial run
+  // reports what is known instead of an invented total.
+  const runCostUsd = sumRunCosts(
+    selectedRunCases.map((caseRun) =>
+      costFromStoredRun(caseRun.rag_usage, caseRun.rag_pipeline_config)),
+  );
   const activeJudgeBatch = selectedRunJudgeBatches.some((batch) => batch.status === "running");
 
   return (
@@ -344,9 +358,22 @@ export default function EvaluationRunsView({
                     <p className="text-2xs uppercase tracking-wide text-muted-foreground">Judge usage</p>
                     <p className="text-2xs font-semibold text-card-foreground mt-1">{Number(judgeUsage.totalTokens || 0).toLocaleString()} <span className="font-normal text-muted-foreground">tokens</span></p>
                   </div>
+                  <div className="flex-[1_1_130px] min-w-[130px] py-3 pr-4">
+                    <p className="text-2xs uppercase tracking-wide text-muted-foreground">Retrieval cost</p>
+                    <p className="text-2xs font-semibold text-card-foreground mt-1" title="Estimated embedding and answer cost for this run">{formatUsd(runCostUsd)} <span className="font-normal text-muted-foreground">est.</span></p>
+                  </div>
                 </div>
               )}
             </div>
+            <details className="mt-4 pt-4 border-t border-border group">
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-2xs font-medium text-card-foreground">
+                <span>Parser impact on retrieval</span>
+                <span className="text-2xs font-normal text-muted-foreground group-open:hidden">파서별 검색 품질 비교</span>
+              </summary>
+              <div className="mt-4">
+                <ParserImpactView parserBreakdown={parserBreakdownRows} />
+              </div>
+            </details>
             <details className="mt-4 pt-4 border-t border-border group">
               <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-2xs font-medium text-card-foreground">
                 <span>Metric breakdown</span>

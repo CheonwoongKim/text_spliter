@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect } from "react";
 
 import {
   SplitResultDialog,
@@ -15,10 +15,37 @@ import { useStoragePanel } from "@/components/storage/useStoragePanel";
 
 interface StoragePanelProps {
   onNavigateToDetail?: (id: number) => void;
+  /** Split result sent straight from the splitter, ready to embed. */
+  vectorUploadHandoff?: { token: number; splitResultId: number } | null;
+  onVectorUploadHandoffConsumed?: () => void;
 }
 
-const StoragePanel = memo(function StoragePanel({ onNavigateToDetail }: StoragePanelProps) {
+const StoragePanel = memo(function StoragePanel({
+  onNavigateToDetail,
+  vectorUploadHandoff,
+  onVectorUploadHandoffConsumed,
+}: StoragePanelProps) {
   const storage = useStoragePanel(onNavigateToDetail);
+
+  const handoffToken = vectorUploadHandoff?.token;
+  const handoffSplitResultId = vectorUploadHandoff?.splitResultId;
+  const { setActiveTab, handleUploadToVdb } = storage;
+
+  // Chunks arriving from the splitter open the upload dialog directly, so the
+  // user never has to find the row they just created.
+  useEffect(() => {
+    if (handoffToken === undefined || handoffSplitResultId === undefined) return;
+
+    setActiveTab("split");
+    void handleUploadToVdb(handoffSplitResultId);
+    onVectorUploadHandoffConsumed?.();
+  }, [
+    handoffToken,
+    handoffSplitResultId,
+    setActiveTab,
+    handleUploadToVdb,
+    onVectorUploadHandoffConsumed,
+  ]);
 
   return (
     <div className="flex h-full flex-col bg-surface">

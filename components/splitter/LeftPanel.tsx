@@ -18,6 +18,8 @@ interface LeftPanelProps {
   onConfigChange: (config: Partial<SplitterConfigType>) => void;
   onSplit: () => void;
   onReset: () => void;
+  handoff?: { token: number; label: string } | null;
+  structureSplitAvailable?: boolean;
 }
 
 const LeftPanel = memo(function LeftPanel({
@@ -30,6 +32,8 @@ const LeftPanel = memo(function LeftPanel({
   onConfigChange,
   onSplit,
   onReset,
+  handoff,
+  structureSplitAvailable = false,
 }: LeftPanelProps) {
   return (
     <div className="relative flex h-full flex-col">
@@ -40,6 +44,7 @@ const LeftPanel = memo(function LeftPanel({
             value={text}
             onChange={onTextChange}
             onSourceMetadataChange={onSourceMetadataChange}
+            handoff={handoff}
           />
         </div>
 
@@ -48,6 +53,7 @@ const LeftPanel = memo(function LeftPanel({
           <SplitterSelector
             value={config.splitterType}
             onChange={onSplitterTypeChange}
+            structureSplitAvailable={structureSplitAvailable}
           />
         </div>
 

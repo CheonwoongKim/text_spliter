@@ -1,6 +1,6 @@
 "use client";
 
-import { CloudUpload } from "lucide-react";
+import { CloudUpload, FileText } from "lucide-react";
 import { useRef, useState, useCallback, memo, useEffect } from "react";
 import { readFile, isValidFileType } from "@/lib/fileReader";
 import {
@@ -14,6 +14,11 @@ interface TextInputProps {
   value: string;
   onChange: (value: string) => void;
   onSourceMetadataChange?: (metadata: SourceMetadata | null) => void;
+  /**
+   * Set when a parser run was sent here directly. `token` changes on every
+   * transfer so repeating the same handoff still reveals the received text.
+   */
+  handoff?: { token: number; label: string } | null;
 }
 
 interface ParseResult {
@@ -29,7 +34,7 @@ interface ParseResult {
   created_at: string;
 }
 
-function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) {
+function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<InputMode>("upload");
@@ -41,6 +46,17 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
   useEffect(() => {
     setPlaintextValue(value);
   }, [value]);
+
+  const handoffToken = handoff?.token;
+  const handoffLabel = handoff?.label;
+
+  // A received parser run must be visible and editable immediately, otherwise
+  // the source text would change silently behind the upload tab.
+  useEffect(() => {
+    if (handoffToken === undefined) return;
+    setActiveTab("plaintext");
+    setFileName(handoffLabel || "");
+  }, [handoffToken, handoffLabel]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -245,17 +261,39 @@ function TextInput({ value, onChange, onSourceMetadataChange }: TextInputProps) 
           </div>
         ) : activeTab === "plaintext" ? (
           // Plain Text input
-          <textarea
-            value={plaintextValue}
-            onChange={handlePlaintextChange}
-            placeholder="Type or paste your plain text here..."
-            className="w-full h-full p-4 border border-border rounded-lg
-                       focus-ring
-                       bg-card text-card-foreground placeholder-light
-                       resize-none font-mono text-xs
-                       scrollbar-thin transition-smooth"
-            maxLength={100000}
-          />
+          <div className="flex h-full flex-col">
+            {fileName && (
+              <div className="mb-2 flex flex-shrink-0 items-center justify-between rounded-lg bg-muted p-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <FileText
+                    className="h-4 w-4 flex-shrink-0 text-muted-foreground"
+                    strokeWidth={1}
+                    aria-hidden="true"
+                  />
+                  <span className="truncate text-2xs font-medium text-surface-foreground">
+                    Source: {fileName}
+                  </span>
+                </div>
+                <button
+                  onClick={handleClearFile}
+                  className="flex-shrink-0 text-2xs text-muted-foreground transition-smooth hover:text-surface-foreground"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+            <textarea
+              value={plaintextValue}
+              onChange={handlePlaintextChange}
+              placeholder="Type or paste your plain text here..."
+              className="min-h-0 w-full flex-1 p-4 border border-border rounded-lg
+                         focus-ring
+                         bg-card text-card-foreground placeholder-light
+                         resize-none font-mono text-xs
+                         scrollbar-thin transition-smooth"
+              maxLength={100000}
+            />
+          </div>
         ) : (
           // Storage - Parse Results list
           <div className="h-full flex flex-col border border-border rounded-lg bg-card overflow-hidden">

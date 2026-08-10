@@ -7,6 +7,26 @@ export const MANAGED_VECTOR_SCHEMA = "vector_store";
 export const MANAGED_VECTOR_DIMENSIONS = DEFAULT_EMBEDDING_DIMENSIONS;
 export const MANAGED_VECTOR_EMBEDDING_MODEL = DEFAULT_EMBEDDING_MODEL;
 
+/** Search RPC that dispatches on the collection's embedding width. */
+export const MANAGED_VECTOR_SEARCH_FUNCTION = "match_vector_documents_v2";
+
+/**
+ * pgvector needs a fixed width per column, so each supported dimension has its
+ * own column and a row populates exactly one of them.
+ */
+const EMBEDDING_COLUMN_BY_DIMENSIONS: Record<number, string> = {
+  1536: "embedding",
+  3072: "embedding_3072",
+};
+
+export function embeddingColumnForDimensions(dimensions: number): string {
+  const column = EMBEDDING_COLUMN_BY_DIMENSIONS[dimensions];
+  if (!column) {
+    throw new Error(`Managed Vector Store does not store ${dimensions}-dimension embeddings.`);
+  }
+  return column;
+}
+
 const COLLECTION_NAME_PATTERN = /^[a-z][a-z0-9_]{0,62}$/;
 
 export interface NormalizedVectorChunk {

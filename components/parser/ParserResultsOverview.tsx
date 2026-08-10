@@ -1,8 +1,9 @@
 "use client";
 
-import { AlertTriangle, ArrowRight, Check, GitCompare } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, GitCompare, ListTree } from "lucide-react";
 import { memo, useMemo } from "react";
 import { buildParserFocusAreas } from "@/lib/parser-focus-analysis";
+import { resolveHandoffText } from "@/lib/workbench-handoff";
 import type { ParseResponse } from "@/lib/types";
 
 interface ParserResultsOverviewProps {
@@ -12,6 +13,7 @@ interface ParserResultsOverviewProps {
   onOpenRun: (runId: string) => void;
   onCompare: () => void;
   onOpenFocus: (areaId?: string) => void;
+  onUseInSplitter?: (runIndex: number) => void;
 }
 
 export function parserRunId(run: ParseResponse, index: number): string {
@@ -42,6 +44,7 @@ function ParserResultsOverview({
   onOpenRun,
   onCompare,
   onOpenFocus,
+  onUseInSplitter,
 }: ParserResultsOverviewProps) {
   const focusAreas = useMemo(
     () => buildParserFocusAreas(runs).filter((area) => area.hasDisagreement),
@@ -144,14 +147,15 @@ function ParserResultsOverview({
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[760px]">
-          <div className="grid grid-cols-[minmax(200px,1.5fr)_minmax(92px,0.6fr)_minmax(180px,1.2fr)_80px_100px_96px] bg-upload-zone">
+        <div className="min-w-[892px]">
+          <div className="grid grid-cols-[minmax(200px,1.5fr)_minmax(92px,0.6fr)_minmax(180px,1.2fr)_80px_100px_96px_132px] bg-upload-zone">
             <div className="px-3 py-2 text-2xs font-medium text-muted-foreground">Engine</div>
             <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Role</div>
             <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Output</div>
             <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Pages</div>
             <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Processing</div>
             <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Result</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Next step</div>
           </div>
 
           {runs.map((run, index) => {
@@ -162,11 +166,12 @@ function ParserResultsOverview({
             const model = run.run?.model || run.run?.version;
             const pageCount = run.document?.statistics?.pageCount || run.metadata?.pageCount;
             const selected = selectedRunId === id;
+            const chunkable = Boolean(resolveHandoffText(run).trim());
 
             return (
               <div
                 key={id}
-                className={`grid grid-cols-[minmax(200px,1.5fr)_minmax(92px,0.6fr)_minmax(180px,1.2fr)_80px_100px_96px]
+                className={`grid grid-cols-[minmax(200px,1.5fr)_minmax(92px,0.6fr)_minmax(180px,1.2fr)_80px_100px_96px_132px]
                            border-t border-border-subtle ${selected ? "bg-upload-zone" : "bg-card"}`}
               >
                 <div className="min-w-0 px-3 py-3">
@@ -201,6 +206,21 @@ function ParserResultsOverview({
                   >
                     Detail
                     <ArrowRight className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                  </button>
+                </div>
+                <div className="flex items-center border-l border-border-subtle px-3 py-3">
+                  <button
+                    type="button"
+                    onClick={() => onUseInSplitter?.(index)}
+                    disabled={!onUseInSplitter || !chunkable}
+                    title={chunkable
+                      ? `Chunk the ${engine} result in the splitter`
+                      : "This engine returned no text to chunk"}
+                    className="flex items-center gap-1 text-2xs font-medium text-card-foreground transition-smooth
+                             hover:opacity-hover disabled:cursor-not-allowed disabled:opacity-disabled"
+                  >
+                    <ListTree className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                    Split text
                   </button>
                 </div>
               </div>

@@ -49,6 +49,16 @@ interface ContextIdentity {
   chunkKey?: string;
 }
 
+/**
+ * A chunk can span several pages and blocks. The retrieved side reports every
+ * covered identifier so an expectation naming any of them still matches; the
+ * expected side always names a single identifier.
+ */
+interface RetrievedIdentity extends ContextIdentity {
+  pageNumbers?: number[];
+  blockIds?: string[];
+}
+
 interface ContextLike {
   rank?: unknown;
   chunkId?: unknown;
@@ -87,7 +97,23 @@ function optionalPage(value: unknown): number | undefined {
   return Number.isInteger(page) && page > 0 ? page : undefined;
 }
 
-function contextIdentity(context: ContextLike): ContextIdentity {
+function optionalPageList(value: unknown): number[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const pages = value
+    .map(optionalPage)
+    .filter((page): page is number => page !== undefined);
+  return pages.length > 0 ? pages : undefined;
+}
+
+function optionalStringList(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const items = value
+    .map((item) => optionalString(item))
+    .filter((item): item is string => item !== undefined);
+  return items.length > 0 ? items : undefined;
+}
+
+function contextIdentity(context: ContextLike): RetrievedIdentity {
   const metadata = asRecord(context.metadata);
   const sourceMetadata = asRecord(metadata.source_metadata || metadata.sourceMetadata);
   const provenance = asRecord(metadata.provenance);
@@ -98,7 +124,9 @@ function contextIdentity(context: ContextLike): ContextIdentity {
       true
     ),
     pageNumber: optionalPage(firstValue(records, ["page_number", "pageNumber", "page"])),
+    pageNumbers: optionalPageList(firstValue(records, ["page_numbers", "pageNumbers"])),
     blockId: optionalString(firstValue(records, ["block_id", "blockId"])),
+    blockIds: optionalStringList(firstValue(records, ["block_ids", "blockIds"])),
     chunkKey: optionalString(
       firstValue(records, ["chunk_key", "chunkKey", "chunk_id", "chunkId"]) ?? context.chunkId
     ),
@@ -118,10 +146,20 @@ function isScorable(identity: ContextIdentity): boolean {
   return Object.values(identity).some((value) => value !== undefined);
 }
 
-function matches(expected: ContextIdentity, actual: ContextIdentity): boolean {
+function matches(expected: ContextIdentity, actual: RetrievedIdentity): boolean {
   return (Object.keys(expected) as Array<keyof ContextIdentity>)
     .filter((key) => expected[key] !== undefined)
-    .every((key) => expected[key] === actual[key]);
+    .every((key) => {
+      if (key === "pageNumber") {
+        return actual.pageNumber === expected.pageNumber
+          || Boolean(actual.pageNumbers?.includes(expected.pageNumber as number));
+      }
+      if (key === "blockId") {
+        return actual.blockId === expected.blockId
+          || Boolean(actual.blockIds?.includes(expected.blockId as string));
+      }
+      return expected[key] === actual[key];
+    });
 }
 
 function normalizedRank(context: ContextLike, index: number): number {

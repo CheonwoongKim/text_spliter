@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getUserFromToken } from "@/lib/auth-server";
+import {
+  isSupportedEmbeddingModel,
+  SUPPORTED_EMBEDDING_MODELS,
+} from "@/lib/constants";
 import { assertSupabaseResult, getAppSupabase } from "@/lib/supabase-server";
 import {
   MANAGED_VECTOR_DIMENSIONS,
@@ -18,17 +22,24 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getUserFromToken(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const body = await request.json() as { tableName?: unknown; vectorDimension?: unknown };
+    const body = await request.json() as {
+      tableName?: unknown;
+      vectorDimension?: unknown;
+      embeddingModel?: unknown;
+    };
     let name: string;
     try {
       name = normalizeVectorCollectionName(body.tableName);
     } catch (error) {
       throw new VectorStoreRequestError(error instanceof Error ? error.message : "Invalid collection name.");
     }
+    // The model and its width are fixed when the collection is created, because
+    // every chunk in it must be comparable to the query embedding.
+    const embeddingModel = body.embeddingModel ?? MANAGED_VECTOR_EMBEDDING_MODEL;
     const vectorDimension = body.vectorDimension ?? MANAGED_VECTOR_DIMENSIONS;
-    if (vectorDimension !== MANAGED_VECTOR_DIMENSIONS) {
+    if (!isSupportedEmbeddingModel(embeddingModel, vectorDimension)) {
       throw new VectorStoreRequestError(
-        `Managed Vector Store uses ${MANAGED_VECTOR_DIMENSIONS}-dimension embeddings.`
+        `Embedding model must be one of ${SUPPORTED_EMBEDDING_MODELS.map((model) => model.key).join(", ")}.`
       );
     }
 
@@ -37,8 +48,8 @@ export async function POST(request: NextRequest) {
       .insert({
         owner_id: user.id,
         name,
-        embedding_model: MANAGED_VECTOR_EMBEDDING_MODEL,
-        vector_dimension: MANAGED_VECTOR_DIMENSIONS,
+        embedding_model: embeddingModel,
+        vector_dimension: vectorDimension,
       })
       .select("id,name,embedding_model,vector_dimension,created_at,updated_at")
       .single();
@@ -52,7 +63,7 @@ export async function POST(request: NextRequest) {
       message: `Collection '${name}' created successfully`,
       schema: MANAGED_VECTOR_SCHEMA,
       tableName: name,
-      vectorDimension: MANAGED_VECTOR_DIMENSIONS,
+      vectorDimension,
       collection: data,
     });
   } catch (error) {

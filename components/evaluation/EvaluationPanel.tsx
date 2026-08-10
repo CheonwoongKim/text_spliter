@@ -6,9 +6,14 @@ import DocumentEvaluationView from "@/components/evaluation/DocumentEvaluationVi
 import EvaluationRunsView from "@/components/evaluation/EvaluationRunsView";
 import GoldenCaseEditor, { type GoldenCasePayload } from "@/components/evaluation/GoldenCaseEditor";
 import RagasEvaluationModal from "@/components/evaluation/RagasEvaluationModal";
+import RobustnessCoveragePanel from "@/components/evaluation/RobustnessCoveragePanel";
 import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import { getAuthToken } from "@/lib/auth";
-import { DEFAULT_EMBEDDING_MODEL } from "@/lib/constants";
+import {
+  DEFAULT_EMBEDDING_DIMENSIONS,
+  DEFAULT_EMBEDDING_MODEL,
+  describeEmbeddingModel,
+} from "@/lib/constants";
 import type {
   DatabaseSchema,
   EvaluationCase,
@@ -23,6 +28,7 @@ import type {
   ReviewerDecision,
 } from "@/lib/types";
 import { evaluationCaseSelectionLabel } from "@/lib/evaluation-accessibility";
+import { buildRobustnessCoverage } from "@/lib/robustness-coverage";
 import { MANAGED_VECTOR_SCHEMA } from "@/lib/vectorstore";
 
 const NEW_CASE_ID = "__new_case__";
@@ -104,7 +110,16 @@ export default function EvaluationPanel() {
   const [runSchema, setRunSchema] = useState(MANAGED_VECTOR_SCHEMA);
   const [runTable, setRunTable] = useState("");
   const [topK, setTopK] = useState(5);
-  const [embeddingModel, setEmbeddingModel] = useState(DEFAULT_EMBEDDING_MODEL);
+  // Derived from the chosen collection, never chosen separately: a run embedded
+  // with a different model than the index would compare nothing.
+  const selectedCollection = useMemo(
+    () => schemas
+      .find((schema) => schema.name === runSchema)
+      ?.tables.find((table) => table.name === runTable),
+    [runSchema, runTable, schemas],
+  );
+  const embeddingModel = selectedCollection?.embeddingModel || DEFAULT_EMBEDDING_MODEL;
+  const embeddingDimensions = selectedCollection?.vectorDimension || DEFAULT_EMBEDDING_DIMENSIONS;
   const [generationModel, setGenerationModel] = useState<RagGenerationModel>("gpt-5.6-terra");
   const [reasoningEffort, setReasoningEffort] = useState<RagReasoningEffort>("low");
   const [baselineRunId, setBaselineRunId] = useState("");
@@ -178,6 +193,7 @@ export default function EvaluationPanel() {
       .sort((left, right) => left.position - right.position || left.created_at.localeCompare(right.created_at)),
     [workspace.cases, selectedVersionId]
   );
+  const robustnessCoverage = useMemo(() => buildRobustnessCoverage(versionCases), [versionCases]);
   const selectedCase = workspace.cases.find((evaluationCase) => evaluationCase.id === selectedCaseId) || null;
   const datasetRuns = useMemo(
     () => workspace.runs.filter((run) => datasetVersions.some((version) => version.id === run.dataset_version_id)),
@@ -343,6 +359,7 @@ export default function EvaluationPanel() {
       tableName: runTable,
       topK,
       embeddingModel,
+      embeddingDimensions,
       generationModel,
       reasoningEffort,
     };
@@ -593,6 +610,17 @@ export default function EvaluationPanel() {
         ) : (
           <div className="h-full grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)]">
             <aside className="h-full overflow-y-auto border-r border-border-subtle">
+              <details className="border-b border-border-subtle px-4 py-4 group">
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-2xs font-medium text-card-foreground">
+                  <span>Robustness coverage</span>
+                  <span className="text-2xs font-normal text-muted-foreground">
+                    {robustnessCoverage.coveredCount}/{robustnessCoverage.scenarios.length}
+                  </span>
+                </summary>
+                <div className="mt-3">
+                  <RobustnessCoveragePanel cases={versionCases} />
+                </div>
+              </details>
               <div className="sticky top-0 z-navigation bg-card px-4 py-4 border-b border-border-subtle">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -687,7 +715,7 @@ export default function EvaluationPanel() {
               <label className="block md:col-span-2"><span className="block text-2xs font-medium text-muted-foreground mb-2">Run name</span><input value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing} className={styles.field} /></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Schema</span><select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground">{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</select></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Vector collection</span><select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"><option value="">Select collection</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</select></label>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Embedding</span><select value={embeddingModel} onChange={(event) => setEmbeddingModel(event.target.value)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"><option value={DEFAULT_EMBEDDING_MODEL}>3-small · managed 1536d</option></select></label>
+              <div className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Embedding</span><div title="Fixed by the selected collection" className="flex h-10 items-center px-3 border border-border rounded-lg bg-muted text-xs text-card-foreground">{describeEmbeddingModel(embeddingModel, embeddingDimensions)}</div></div>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Answer model</span><select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></select></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Reasoning</span><select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"><option value="none">None</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Top K</span><input type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing} className={styles.field} /></label>
