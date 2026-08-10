@@ -6,6 +6,7 @@ import EvaluationRunsView from "@/components/evaluation/EvaluationRunsView";
 import GoldenCaseEditor, { type GoldenCasePayload } from "@/components/evaluation/GoldenCaseEditor";
 import RagasEvaluationModal from "@/components/evaluation/RagasEvaluationModal";
 import RobustnessCoveragePanel from "@/components/evaluation/RobustnessCoveragePanel";
+import PagePanel from "@/components/shared/PagePanel";
 import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import { getAuthToken } from "@/lib/auth";
 import {
@@ -513,8 +514,10 @@ export default function EvaluationPanel() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-surface">
-      <header className="border-b border-border-subtle bg-card px-4 py-4 sm:px-6 lg:px-10">
+    <PagePanel
+      title="답변 평가"
+      description="골든셋 기준으로 검색 근거와 생성된 답변의 품질을 측정합니다."
+      actions={<>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 min-w-0">
               <select
@@ -548,6 +551,8 @@ export default function EvaluationPanel() {
             <button type="button" onClick={() => openDatasetModal()} className={styles.primaryButton}>New dataset</button>
           </div>
         </div>
+      </>}
+      toolbar={<>
         <div className="flex items-center justify-between gap-4 mt-4 -mb-4">
           <nav className="flex items-center gap-4">
             <button type="button" onClick={() => setActiveTab("golden")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "golden" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>Golden set</button>
@@ -564,7 +569,11 @@ export default function EvaluationPanel() {
             </div>
           )}
         </div>
-      </header>
+      </>}
+      bodyScroll="hidden"
+      bleed
+    >
+
 
       {error && (
         <div className="flex items-center justify-between gap-4 border-b border-danger-border bg-danger-surface px-4 py-3 text-xs text-danger sm:px-6 lg:px-10">
@@ -750,6 +759,6 @@ export default function EvaluationPanel() {
         }}
         onRun={executeRagasEvaluation}
       />
-    </div>
+    </PagePanel>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState, useCallback, useEffect, useRef } from "react";
+import PagePanel from "@/components/shared/PagePanel";
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 
 interface FileItem {
@@ -314,9 +315,10 @@ const FilesPanel = memo(function FilesPanel() {
   }));
 
   return (
-    <div className="h-full flex flex-col bg-surface">
-      {/* Header */}
-      <div className="border-b border-border-subtle bg-card px-4 py-3 sm:px-6 lg:px-10">
+    <PagePanel
+      title="문서"
+      description="실험에 사용할 원본 문서를 올리고 관리합니다."
+      toolbar={<>
         {/* Single Row: Breadcrumb, Search, Actions */}
         <div className="grid grid-cols-1 items-center gap-3 lg:grid-cols-3 lg:gap-6">
           {/* Left: Breadcrumb Navigation */}
@@ -453,7 +455,11 @@ const FilesPanel = memo(function FilesPanel() {
             </button>
           </div>
         </div>
-      </div>
+      </>}
+      bodyScroll="hidden"
+      bleed
+    >
+
 
       {/* Hidden File Input */}
       <input
@@ -704,9 +710,10 @@ const FilesPanel = memo(function FilesPanel() {
           </div>
         )}
       </div>
-    </div>
+    </PagePanel>
   );
 });
 
 FilesPanel.displayName = "FilesPanel";
+
 export default FilesPanel;

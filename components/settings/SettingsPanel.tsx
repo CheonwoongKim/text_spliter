@@ -2,6 +2,8 @@
 
 import LicensesPanel from "@/components/connect/LicensesPanel";
 import ParserEngineSettingsPanel from "@/components/settings/ParserEngineSettingsPanel";
+import PagePanel from "@/components/shared/PagePanel";
+import TabBar from "@/components/shared/TabBar";
 import type {
   DocumentEngineConfig,
   DocumentEngineConfigMap,
@@ -47,45 +49,23 @@ export default function SettingsPanel({
   onReloadParserSettings,
 }: SettingsPanelProps) {
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-border bg-surface px-4 py-6 sm:px-6 lg:px-10">
-        <div className="mx-auto max-w-5xl">
-          <h1 className="text-lg font-semibold text-card-foreground">Settings</h1>
-          <p className="mt-2 text-xs text-muted-foreground">
-            연결 정보와 문서 파서·Vision 모델 실행 프로필을 한 곳에서 관리합니다.
-          </p>
-          <div className="mt-6 inline-flex gap-1 rounded-lg bg-muted p-1" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeSection === "connections"}
-              onClick={() => onSectionChange("connections")}
-              className={`rounded-sm px-3 py-2 text-2xs font-medium transition-smooth ${
-                activeSection === "connections"
-                  ? "bg-card text-card-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-card-foreground"
-              }`}
-            >
-              Connections
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeSection === "document-engines"}
-              onClick={() => onSectionChange("document-engines")}
-              className={`rounded-sm px-3 py-2 text-2xs font-medium transition-smooth ${
-                activeSection === "document-engines"
-                  ? "bg-card text-card-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-card-foreground"
-              }`}
-            >
-              Document engines
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="min-h-0 flex-1">
+    <PagePanel
+      title="설정"
+      description="연결 정보와 문서 파서·Vision 모델 실행 프로필을 한 곳에서 관리합니다."
+      toolbar={
+        <TabBar
+          label="설정 구역"
+          value={activeSection}
+          onChange={onSectionChange}
+          options={[
+            { value: "connections", label: "연결" },
+            { value: "document-engines", label: "문서 엔진" },
+          ]}
+        />
+      }
+      bodyScroll="hidden"
+      bleed
+    >
         {activeSection === "connections" ? (
           <LicensesPanel embedded />
         ) : (
@@ -105,7 +85,6 @@ export default function SettingsPanel({
             onOpenConnections={() => onSectionChange("connections")}
           />
         )}
-      </div>
-    </div>
+    </PagePanel>
   );
 }
