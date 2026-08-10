@@ -96,6 +96,7 @@ Use Node.js 20.9 or newer. The Ragas worker supports Python 3.11 through 3.13.
 ## Change Guidelines
 
 - Keep feature UI in its matching `components/<feature>` directory. Move code to `components/shared` only when multiple features use it.
+- Build UI from the shared primitives rather than hand-rolling a control. `npm run check:design` enforces this as a shrinking budget: the counts in `COMPONENT_BUDGETS` may only go down. Lower one when a migration lands; never raise one. The script prints the new number when a budget can be tightened.
 - Keep provider-specific parsing and credentials on the server. API routes should return shared contracts rather than leaking provider-specific shapes into UI code.
 - Preserve provider-native parser output in `raw` and normalize new parsing runs to the shared Document IR.
 - Add database, Storage, RPC, pgvector, and RLS changes as new timestamped files in `supabase/migrations/`; do not rewrite applied migrations.

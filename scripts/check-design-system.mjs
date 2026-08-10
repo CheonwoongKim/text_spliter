@@ -75,6 +75,55 @@ const RULES = [
 
 const SPACING_PATTERN = /\b(?:p[trblxy]?|m[trblxy]?|gap|space-[xy])-([0-9]+(?:\.[0-9]+)?)\b/g;
 
+/**
+ * Component rules work as a shrinking budget rather than a hard ban.
+ *
+ * The shared primitives already existed and were used almost nowhere, because
+ * nothing stopped a panel from hand-rolling its own control. A hard ban would
+ * fail the build on day one; a budget fails it the moment the count goes up,
+ * and each migration phase lowers the number until the rule can simply be
+ * "never".
+ *
+ * Lower a budget when a phase lands. Never raise one.
+ */
+const COMPONENT_BUDGETS = [
+  {
+    name: "hand-rolled button",
+    pattern: /<button\b/g,
+    budget: 163,
+    guidance: "Use <Button> from components/shared. See docs/DESIGN_SYSTEM.md.",
+    exempt: ["components/shared/Button.tsx"],
+  },
+  {
+    name: "hand-rolled text input",
+    pattern: /<input\b/g,
+    budget: 51,
+    guidance: "Use the field primitives in components/shared/FormFields.tsx.",
+    exempt: ["components/shared/FormFields.tsx"],
+  },
+  {
+    name: "hand-rolled select",
+    pattern: /<select\b/g,
+    budget: 40,
+    guidance: "Use the field primitives in components/shared/FormFields.tsx.",
+    exempt: ["components/shared/FormFields.tsx"],
+  },
+  {
+    name: "hand-rolled overlay",
+    pattern: /className="fixed inset-0/g,
+    budget: 7,
+    guidance: "Use <Modal> so focus handling and dismissal behave the same everywhere.",
+    exempt: ["components/shared/Modal.tsx", "components/shared/ModalDialog.tsx"],
+  },
+  {
+    name: "parallel style constant",
+    pattern: /evaluationControlStyles/g,
+    budget: 5,
+    guidance: "A second style system defeats the first. Migrate to shared primitives.",
+    exempt: ["components/evaluation/controlStyles.ts"],
+  },
+];
+
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -98,8 +147,17 @@ function lineAt(source, index) {
 const files = (await Promise.all(ROOTS.map(collectFiles))).flat();
 const violations = [];
 
+const componentCounts = new Map(COMPONENT_BUDGETS.map((rule) => [rule.name, 0]));
+
 for (const file of files) {
   const source = await readFile(file, "utf8");
+  const normalizedPath = file.split(path.sep).join("/");
+
+  for (const rule of COMPONENT_BUDGETS) {
+    if (rule.exempt.includes(normalizedPath)) continue;
+    const count = [...source.matchAll(rule.pattern)].length;
+    componentCounts.set(rule.name, componentCounts.get(rule.name) + count);
+  }
 
   for (const rule of RULES) {
     for (const match of source.matchAll(rule.pattern)) {
@@ -120,6 +178,33 @@ for (const file of files) {
   }
 }
 
+const budgetFailures = COMPONENT_BUDGETS
+  .map((rule) => ({ rule, count: componentCounts.get(rule.name) }))
+  .filter(({ rule, count }) => count > rule.budget);
+
+const budgetWins = COMPONENT_BUDGETS
+  .map((rule) => ({ rule, count: componentCounts.get(rule.name) }))
+  .filter(({ rule, count }) => count < rule.budget);
+
+if (budgetFailures.length) {
+  console.error("Component budgets exceeded:\n");
+  for (const { rule, count } of budgetFailures) {
+    console.error(
+      `${rule.name}: ${count} found, budget ${rule.budget}\n  ${rule.guidance}`,
+    );
+  }
+  console.error("");
+  process.exitCode = 1;
+}
+
+if (budgetWins.length) {
+  console.log("Component budgets can be lowered:");
+  for (const { rule, count } of budgetWins) {
+    console.log(`  ${rule.name}: ${rule.budget} -> ${count}`);
+  }
+  console.log("");
+}
+
 if (violations.length) {
   console.error("Design system violations found:\n");
   for (const violation of violations) {
@@ -129,6 +214,6 @@ if (violations.length) {
     );
   }
   process.exitCode = 1;
-} else {
+} else if (!budgetFailures.length) {
   console.log(`Design system check passed (${files.length} files).`);
 }

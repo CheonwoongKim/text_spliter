@@ -38,6 +38,21 @@ styles/design-tokens.css → tailwind.config.ts → app/globals.css / components
 - [tailwind.config.ts](../tailwind.config.ts): 허용된 유틸리티만 노출
 - [globals.css](../app/globals.css): 기본 typography와 전역 interaction
 - [check-design-system.mjs](../scripts/check-design-system.mjs): 허용되지 않은 값 차단
+- [components/shared](../components/shared): 화면이 조립해 쓰는 공용 프리미티브
+
+## 공용 컴포넌트
+
+버튼·필드·표·오버레이는 손으로 만들지 않고 `components/shared`의 프리미티브를 조립합니다.
+
+프리미티브가 있어도 강제 장치가 없으면 쓰이지 않습니다. 실제로 이 저장소는 `Button`을 갖고 있으면서 화면마다 `<button>`을 다시 작성했고, `evaluation`은 별도 스타일 상수 파일까지 만들었습니다. 그래서 `check:design`이 **줄어들기만 하는 예산**으로 이를 감시합니다.
+
+```
+COMPONENT_BUDGETS = [ hand-rolled button, text input, select, overlay, parallel style constant ]
+```
+
+- 개수가 예산을 넘으면 빌드가 실패합니다.
+- 마이그레이션이 끝나면 스크립트가 새 숫자를 알려주고, 그때 예산을 **낮춥니다**.
+- 예산을 올리는 변경은 허용하지 않습니다.
 
 ## Typography
 
