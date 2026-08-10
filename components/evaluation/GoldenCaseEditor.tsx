@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
 import { Button } from "@/components/shared/Button";
 
 import type { EvaluationCase, ExpectedEvidence } from "@/lib/types";
@@ -129,14 +130,10 @@ export default function GoldenCaseEditor({
 
   if (!evaluationCase && !isNew) {
     return (
-      <div className="h-full flex items-center justify-center px-10 text-center">
-        <div>
-          <p className="text-xs font-medium text-card-foreground">케이스를 선택하세요</p>
-          <p className="text-2xs text-muted-foreground mt-2">
-            질문, 기준 답변과 기대 근거를 한 화면에서 편집할 수 있습니다.
-          </p>
-        </div>
-      </div>
+      <PanelPlaceholder
+        title="케이스를 선택하세요"
+        description="질문, 기준 답변과 기대 근거를 작성하면 실행 결과를 그 기준으로 채점합니다."
+      />
     );
   }
 

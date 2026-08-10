@@ -13,6 +13,11 @@ const MIGRATED = [
   "components/splitter/RightPanel.tsx",
   "components/vectorstore/RagRunHistory.tsx",
   "components/vectorstore/VectorStoreRightPanel.tsx",
+  "components/vectorstore/RagTestPanel.tsx",
+  "components/parser/ParserRightPanel.tsx",
+  "components/storage/StorageResultsTables.tsx",
+  "components/evaluation/EvaluationRunsView.tsx",
+  "components/evaluation/GoldenCaseEditor.tsx",
 ] as const;
 
 test("loading and empty share one slot, because screens always wrote them as one", () => {

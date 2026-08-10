@@ -1,4 +1,5 @@
 import { Archive, Eye, LoaderCircle, Trash2, Upload } from "lucide-react";
+import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
 import { Button } from "@/components/shared/Button";
 
 import Pagination from "@/components/shared/Pagination";
@@ -36,10 +37,7 @@ function TableEmptyRow({ colSpan, message }: { colSpan: number; message: string 
   return (
     <tr>
       <td colSpan={colSpan} className="h-96">
-        <div className="flex h-full flex-col items-center justify-center">
-          <Archive className="mb-3 h-6 w-6 text-muted-foreground" strokeWidth={1} aria-hidden="true" />
-          <p className="text-xs text-muted-foreground">{message}</p>
-        </div>
+        <PanelPlaceholder icon={Archive} title={message} />
       </td>
     </tr>
   );

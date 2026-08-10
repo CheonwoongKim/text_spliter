@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
 import { Select } from "@/components/shared/FormFields";
 
+import { Boxes } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
 import {
   DEFAULT_EMBEDDING_DIMENSIONS,
@@ -180,9 +182,11 @@ export default function RagTestPanel({
 
   if (!selectedTable) {
     return (
-      <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-        왼쪽에서 테스트할 벡터 컬렉션을 선택하세요.
-      </div>
+      <PanelPlaceholder
+        icon={Boxes}
+        title="질의할 컬렉션을 선택하세요"
+        description="위에서 컬렉션을 고르면 그 인덱스에 대해 근거 기반 답변을 실행할 수 있습니다."
+      />
     );
   }
 

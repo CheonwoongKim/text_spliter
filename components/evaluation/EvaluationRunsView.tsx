@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ClipboardCheck } from "lucide-react";
+import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
 import { Select } from "@/components/shared/FormFields";
 import { Button } from "@/components/shared/Button";
 
@@ -187,12 +189,11 @@ export default function EvaluationRunsView({
 
   if (!runs.length) {
     return (
-      <div className="h-full flex items-center justify-center text-center px-8">
-        <div>
-          <p className="text-xs font-medium text-card-foreground">아직 평가 실행이 없습니다</p>
-          <p className="text-2xs text-muted-foreground mt-2">Golden set에서 케이스를 선택해 첫 실행을 만드세요.</p>
-        </div>
-      </div>
+      <PanelPlaceholder
+          icon={ClipboardCheck}
+          title="아직 평가 실행이 없습니다"
+          description="Golden set 탭에서 케이스를 고르고 Run selected를 누르면 첫 실행이 만들어집니다."
+        />
     );
   }
 
@@ -439,7 +440,7 @@ export default function EvaluationRunsView({
 
           <div className="overflow-y-auto">
             {!selectedCaseRun ? (
-              <div className="h-full flex items-center justify-center text-xs text-muted-foreground">케이스 실행을 선택하세요.</div>
+              <PanelPlaceholder title="케이스 실행을 선택하세요" description="왼쪽 목록에서 케이스를 고르면 기준 답변과 실제 답변을 나란히 검토할 수 있습니다." />
             ) : (
               <div className="max-w-5xl mx-auto px-8 py-8 space-y-8">
                 <section>

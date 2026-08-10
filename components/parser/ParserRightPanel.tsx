@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Clipboard, FileText, LoaderCircle, Save } from "lucide-react";
+import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
 import { Button } from "@/components/shared/Button";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import JsonViewer from "@/components/parser/JsonViewer";
@@ -642,17 +643,11 @@ function ParserRightPanel({
               onReviewChange={handleFocusReviewChange}
             />
           ) : loading && !result ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <LoaderCircle
-                className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-              <p className="text-xs font-medium text-card-foreground">Processing document</p>
-              <p className="mt-1 text-2xs text-muted-foreground">
-                The result will appear when processing is complete.
-              </p>
-            </div>
+            <PanelPlaceholder
+              loading
+              title="문서를 처리하는 중"
+              description="엔진은 순차로 실행됩니다. 먼저 끝난 결과부터 여기에 나타납니다."
+            />
           ) : showComparison ? (
             <ParseComparisonWorkbench
               runs={workspaceRuns}
@@ -661,17 +656,11 @@ function ParserRightPanel({
               sampleMode={isPreview}
             />
           ) : !displayResult || availableTabs.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <FileText
-                className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-              <p className="text-xs font-medium text-card-foreground">No output returned</p>
-              <p className="mt-1 text-2xs text-muted-foreground">
-                This engine did not return a supported output format.
-              </p>
-            </div>
+            <PanelPlaceholder
+              icon={FileText}
+              title="이 엔진은 결과를 반환하지 않았습니다"
+              description="지원되는 출력 형식이 없습니다. 다른 엔진의 결과를 보거나 설정을 바꿔 다시 실행하세요."
+            />
           ) : (
             <>
               {activeViewMode === "text" && displayResult.text && (
