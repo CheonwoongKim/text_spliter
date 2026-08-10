@@ -1,6 +1,7 @@
 "use client";
 
 import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
+import { Button } from "@/components/shared/Button";
 import type { EvaluationRun, RagGenerationModel, RagasMetricKey } from "@/lib/types";
 
 const METRICS: Array<{ key: RagasMetricKey; label: string; description: string }> = [
@@ -122,10 +123,10 @@ export default function RagasEvaluationModal({
         )}
 
         <div className="flex justify-end gap-3 mt-6">
-          <button type="button" onClick={onClose} disabled={executing} className={styles.textButton}>Cancel</button>
-          <button type="button" onClick={onRun} disabled={checking || executing || !available || !health?.allowedModels.includes(model) || !metrics.length || run.succeeded_count === 0} className={styles.primaryButton}>
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={executing}>Cancel</Button>
+          <Button variant="primary" size="md" onClick={onRun} disabled={checking || executing || !available || !health?.allowedModels.includes(model) || !metrics.length || run.succeeded_count === 0}>
             {executing ? "Evaluating..." : `Evaluate ${run.succeeded_count} cases`}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

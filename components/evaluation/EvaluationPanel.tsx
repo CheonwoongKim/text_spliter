@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/shared/Button";
 
 import EvaluationRunsView from "@/components/evaluation/EvaluationRunsView";
 import GoldenCaseEditor, { type GoldenCasePayload } from "@/components/evaluation/GoldenCaseEditor";
@@ -544,11 +545,11 @@ export default function EvaluationPanel() {
           <div className="flex items-center gap-2">
             {selectedDataset && (
               <>
-                <button type="button" onClick={() => openDatasetModal(selectedDataset)} className={styles.textButton}>Edit</button>
-                <button type="button" onClick={handleDeleteDataset} disabled={saving} className={styles.dangerTextButton}>Delete</button>
+                <Button variant="ghost" size="sm" onClick={() => openDatasetModal(selectedDataset)}>Edit</Button>
+                <Button variant="dangerGhost" size="sm" onClick={handleDeleteDataset} disabled={saving}>Delete</Button>
               </>
             )}
-            <button type="button" onClick={() => openDatasetModal()} className={styles.primaryButton}>New dataset</button>
+            <Button variant="primary" size="md" onClick={() => openDatasetModal()}>New dataset</Button>
           </div>
         </div>
       </>}
@@ -561,11 +562,11 @@ export default function EvaluationPanel() {
           {activeTab === "golden" && selectedVersion && (
             <div className="flex items-center gap-2 pb-2">
               {selectedVersion.status !== "draft" && (
-                <button type="button" onClick={handleCloneVersion} disabled={saving} className={styles.secondaryButton}>Create next version</button>
+                <Button variant="outline" size="sm" onClick={handleCloneVersion} disabled={saving}>Create next version</Button>
               )}
-              <button type="button" onClick={openRunModal} disabled={!selectedCaseIds.size || executing} className={styles.compactPrimaryButton}>
+              <Button variant="primary" size="sm" onClick={openRunModal} disabled={!selectedCaseIds.size || executing}>
                 Run selected · {selectedCaseIds.size}
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -695,7 +696,7 @@ export default function EvaluationPanel() {
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Name *</span><input autoFocus value={datasetName} onChange={(event) => setDatasetName(event.target.value)} className={styles.field} placeholder="Korean financial reports" /></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Description</span><textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} className={styles.textArea} placeholder="평가 목적과 포함 문서 범위" /></label>
             </div>
-            <div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setDatasetModalOpen(false)} disabled={saving} className={styles.textButton}>Cancel</button><button type="button" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()} className={styles.primaryButton}>{saving ? "Saving..." : "Save dataset"}</button></div>
+            <div className="flex justify-end gap-3 mt-6"><Button variant="ghost" size="sm" onClick={() => setDatasetModalOpen(false)} disabled={saving}>Cancel</Button><Button variant="primary" size="md" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()}>{saving ? "Saving..." : "Save dataset"}</Button></div>
           </div>
         </div>
       )}
@@ -736,7 +737,7 @@ export default function EvaluationPanel() {
             {executing && (
               <div className="mt-4"><div className="flex items-center justify-between text-2xs text-muted-foreground mb-2"><span>Executing cases</span><span>{executionProgress.completed}/{executionProgress.total}</span></div><div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-surface-foreground transition-all duration-slow" style={{ width: `${executionProgress.total ? (executionProgress.completed / executionProgress.total) * 100 : 0}%` }} /></div></div>
             )}
-            <div className="flex justify-end gap-3 mt-6"><button type="button" onClick={() => setRunModalOpen(false)} disabled={executing} className={styles.textButton}>Cancel</button><button type="button" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20 || regressionTolerance < 0 || regressionTolerance > 100} className={styles.primaryButton}>{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</button></div>
+            <div className="flex justify-end gap-3 mt-6"><Button variant="ghost" size="sm" onClick={() => setRunModalOpen(false)} disabled={executing}>Cancel</Button><Button variant="primary" size="md" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20 || regressionTolerance < 0 || regressionTolerance > 100}>{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</Button></div>
           </div>
         </div>
       )}

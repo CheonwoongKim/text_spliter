@@ -90,7 +90,7 @@ const COMPONENT_BUDGETS = [
   {
     name: "hand-rolled button",
     pattern: /<button\b/g,
-    budget: 162,
+    budget: 139,
     guidance: "Use <Button> from components/shared. See docs/DESIGN_SYSTEM.md.",
     exempt: ["components/shared/Button.tsx"],
   },
@@ -118,7 +118,7 @@ const COMPONENT_BUDGETS = [
   {
     name: "parallel style constant",
     pattern: /evaluationControlStyles/g,
-    budget: 5,
+    budget: 3,
     guidance: "A second style system defeats the first. Migrate to shared primitives.",
     exempt: ["components/evaluation/controlStyles.ts"],
   },

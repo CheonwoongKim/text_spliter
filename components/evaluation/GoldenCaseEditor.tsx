@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/shared/Button";
 
-import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import type { EvaluationCase, ExpectedEvidence } from "@/lib/types";
 
 export interface GoldenCasePayload {
@@ -285,20 +285,20 @@ export default function GoldenCaseEditor({
           <div className="flex items-center justify-between gap-4 pt-4 border-t border-border">
             <div>
               {!isNew && (
-                <button type="button" onClick={onDelete} disabled={saving} className={styles.dangerButton}>
+                <Button variant="danger" size="sm" onClick={onDelete} disabled={saving}>
                   Delete case
-                </button>
+                </Button>
               )}
             </div>
             <div className="flex items-center gap-3">
               {isNew && (
-                <button type="button" onClick={onCancelNew} disabled={saving} className={styles.textButton}>
+                <Button variant="ghost" size="sm" onClick={onCancelNew} disabled={saving}>
                   Cancel
-                </button>
+                </Button>
               )}
-              <button type="button" onClick={handleSubmit} disabled={saving || !question.trim()} className={styles.primaryButton}>
+              <Button variant="primary" size="md" onClick={handleSubmit} disabled={saving || !question.trim()}>
                 {saving ? "Saving..." : isNew ? "Add case" : "Save changes"}
-              </button>
+              </Button>
             </div>
           </div>
         )}

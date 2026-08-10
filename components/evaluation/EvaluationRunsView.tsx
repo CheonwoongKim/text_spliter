@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/shared/Button";
 
-import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
 import ParserImpactView from "@/components/evaluation/ParserImpactView";
 import { costFromStoredRun, formatUsd, sumRunCosts } from "@/lib/cost-estimate";
 import type { MetricBreakdownRow } from "@/lib/evaluation-metrics";
@@ -335,14 +335,9 @@ export default function EvaluationRunsView({
                   </select>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => selectedRun && onRunRagas(selectedRun)}
-                disabled={!selectedRun || selectedRun.status !== "completed" || !selectedRun.succeeded_count || ragasExecuting}
-                className={styles.compactPrimaryButton}
-              >
+              <Button variant="primary" size="sm" onClick={() => selectedRun && onRunRagas(selectedRun)} disabled={!selectedRun || selectedRun.status !== "completed" || !selectedRun.succeeded_count || ragasExecuting}>
                 {ragasExecuting ? "Ragas running..." : activeJudgeBatch ? "Resume Ragas" : "Run Ragas"}
-              </button>
+              </Button>
               {selectedJudgeBatch && (
                 <div className="basis-full flex flex-wrap border-y border-border">
                   {RAGAS_METRIC_COLUMNS.map(([key, label]) => {
@@ -585,18 +580,9 @@ export default function EvaluationRunsView({
                     </label>
                   </div>
                   <div className="flex justify-end mt-4">
-                    <button
-                      type="button"
-                      onClick={() => onReview(selectedCaseRun.id, {
-                        manualScore: { correctness, faithfulness, citationQuality },
-                        decision,
-                        notes,
-                      })}
-                      disabled={reviewSaving || selectedCaseRun.status === "pending" || selectedCaseRun.status === "running"}
-                      className={styles.primaryButton}
-                    >
+                    <Button variant="primary" size="md" onClick={() => onReview(selectedCaseRun.id, { manualScore: { correctness, faithfulness, citationQuality }, decision, notes, })} disabled={reviewSaving || selectedCaseRun.status === "pending" || selectedCaseRun.status === "running"}>
                       {reviewSaving ? "Saving..." : "Save review"}
-                    </button>
+                    </Button>
                   </div>
                 </section>
               </div>
