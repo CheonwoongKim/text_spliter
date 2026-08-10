@@ -15,6 +15,10 @@
     font-size: var(--ds-font-size-base);
     line-height: var(--ds-line-height-base);
     letter-spacing: var(--ds-letter-spacing-normal);
+    /* Render the UI face at the x-height this scale was drawn against, so the
+       type steps look the size they are meant to and the Arial fallback lands
+       at the same optical size during a font swap. */
+    font-size-adjust: var(--ds-typography-x-height);
   }
 
   /* Labels and small text */
@@ -32,11 +36,14 @@
   }
 
   /* Preserve data alignment while the Korean-first UI uses tighter tracking. */
+  /* Monospace data keeps its own metrics: adjusting it to the UI face's
+     x-height would resize the column widths that make it readable. */
   code,
   pre,
   kbd,
   samp {
     letter-spacing: var(--ds-letter-spacing-mono);
+    font-size-adjust: none;
   }
 
   /* Heading styles */
@@ -63,6 +70,7 @@
 
   .font-mono {
     letter-spacing: var(--ds-letter-spacing-mono);
+    font-size-adjust: none;
   }
 
   /* Text balance & pretty utilities */

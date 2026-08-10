@@ -407,7 +407,7 @@ export default function MemoryGuidePanel() {
                 <li key={step as string} className="rounded-xl border border-border p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-2xs font-medium text-muted-foreground">{step as string}</span>
-                    <StepIcon className="h-4 w-4 text-muted-foreground" strokeWidth={1} aria-hidden="true" />
+                    <StepIcon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   </div>
                   <h3 className="mt-4 text-xs font-medium text-card-foreground">{title as string}</h3>
                   <p className="mt-2 text-2xs leading-5 text-muted-foreground">{description as string}</p>
@@ -423,11 +423,11 @@ export default function MemoryGuidePanel() {
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-card-foreground">
                 <span className="rounded-lg bg-subtle px-3 py-2">현재 질문</span>
-                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1} aria-hidden="true" />
+                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1.5} aria-hidden="true" />
                 <span className="rounded-lg bg-subtle px-3 py-2">기억 검색</span>
-                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1} aria-hidden="true" />
+                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1.5} aria-hidden="true" />
                 <span className="rounded-lg bg-subtle px-3 py-2">문서 검색</span>
-                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1} aria-hidden="true" />
+                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1.5} aria-hidden="true" />
                 <span className="rounded-lg bg-subtle px-3 py-2">답변</span>
               </div>
             </div>
@@ -437,11 +437,11 @@ export default function MemoryGuidePanel() {
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-card-foreground">
                 <span className="rounded-lg bg-subtle px-3 py-2">새 대화</span>
-                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1} aria-hidden="true" />
+                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1.5} aria-hidden="true" />
                 <span className="rounded-lg bg-subtle px-3 py-2">중요도 판단</span>
-                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1} aria-hidden="true" />
+                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1.5} aria-hidden="true" />
                 <span className="rounded-lg bg-subtle px-3 py-2">충돌 검사</span>
-                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1} aria-hidden="true" />
+                <ArrowRight className="h-4 w-4 text-subdued" strokeWidth={1.5} aria-hidden="true" />
                 <span className="rounded-lg bg-subtle px-3 py-2">저장·갱신</span>
               </div>
             </div>
@@ -465,7 +465,7 @@ export default function MemoryGuidePanel() {
                       <h3 className="text-xs font-medium text-card-foreground">{layer.name}</h3>
                       <p className="mt-1 text-2xs text-muted-foreground">{layer.englishName}</p>
                     </div>
-                    <Icon className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1} aria-hidden="true" />
+                    <Icon className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   </div>
                   <p className="mt-4 text-xs leading-6 text-muted-foreground">{layer.description}</p>
                   <dl className="mt-4 space-y-3 border-t border-border-subtle pt-4 text-2xs">
@@ -498,7 +498,7 @@ export default function MemoryGuidePanel() {
                 <article key={method.id} className="rounded-xl border border-border p-6">
                   <div className="flex items-start gap-3">
                     <div className="flex h-control-md w-control-md shrink-0 items-center justify-center rounded-lg bg-subtle">
-                      <Icon className="h-5 w-5 text-card-foreground" strokeWidth={1} aria-hidden="true" />
+                      <Icon className="h-5 w-5 text-card-foreground" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <div>
                       <h3 className="text-base font-semibold text-card-foreground">{method.name}</h3>
@@ -602,7 +602,7 @@ export default function MemoryGuidePanel() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-start gap-3">
                       <div className="flex h-control-md w-control-md shrink-0 items-center justify-center rounded-lg bg-subtle">
-                        <Icon className="h-5 w-5 text-card-foreground" strokeWidth={1} aria-hidden="true" />
+                        <Icon className="h-5 w-5 text-card-foreground" strokeWidth={1.5} aria-hidden="true" />
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-base font-semibold text-card-foreground">{provider.name}</h3>
@@ -648,7 +648,7 @@ export default function MemoryGuidePanel() {
                       aria-label={`${provider.name} 공식 문서 새 창에서 열기`}
                     >
                       공식 문서
-                      <ExternalLink className="h-3 w-3" strokeWidth={1} aria-hidden="true" />
+                      <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
                     </a>
                   </div>
                 </article>
@@ -723,7 +723,7 @@ export default function MemoryGuidePanel() {
           <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <article className="rounded-xl border border-border p-6">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-card-foreground" strokeWidth={1} aria-hidden="true" />
+                <ShieldCheck className="h-5 w-5 text-card-foreground" strokeWidth={1.5} aria-hidden="true" />
                 <h3 className="text-xs font-medium text-card-foreground">반드시 확인할 품질 기준</h3>
               </div>
               <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -746,7 +746,7 @@ export default function MemoryGuidePanel() {
 
             <article className="rounded-xl border border-border bg-upload-zone p-6">
               <div className="flex items-center gap-2">
-                <BrainCircuit className="h-5 w-5 text-card-foreground" strokeWidth={1} aria-hidden="true" />
+                <BrainCircuit className="h-5 w-5 text-card-foreground" strokeWidth={1.5} aria-hidden="true" />
                 <h3 className="text-xs font-medium text-card-foreground">이 서비스에서의 권장 출발점</h3>
               </div>
               <p className="mt-4 text-xs leading-6 text-muted-foreground">

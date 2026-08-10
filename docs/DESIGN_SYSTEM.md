@@ -100,6 +100,8 @@ Spacing은 다음 9개 값만 사용합니다. `0`은 값 없음의 의미로 �
 | Utility | Value | Role |
 | --- | --- | --- |
 | `h-icon-md`, `w-icon-md` | 20px | primary navigation icon (stroke 1.5, 선택 시 2) |
+
+Lucide 아이콘의 stroke는 24 단위 viewBox 기준이므로 실제 두께는 `strokeWidth × 크기 ÷ 24`입니다. 1px 미만이면 배경과 섞여 아이콘이 지정한 색보다 연하게 보이므로, 16px·20px 아이콘은 `strokeWidth={1.5}`를 사용합니다. 24px 이상에서만 `1`이 1px을 채웁니다.
 | `h-control-sm` | 32px | compact control |
 | `h-control-md` | 36px | icon button, compact select |
 | `h-control-lg` | 40px | default control |

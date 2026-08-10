@@ -30,10 +30,11 @@ test("typography has five core sizes and a shared compact-label floor", () => {
   assert.doesNotMatch(tokens, /--ds-font-size-(?:micro|caption|sm|3xl)/);
 });
 
-test("Korean-first typography uses compact tracking and readable line height", () => {
-  assert.match(tokens, /--ds-line-height-xs: 1\.25rem/);
+test("Korean-first typography uses readable line height and neutral tracking", () => {
+  assert.match(tokens, /--ds-line-height-xs: 1\.375rem/);
   assert.match(tokens, /--ds-line-height-base: 1\.5rem/);
-  assert.match(tokens, /--ds-letter-spacing-normal: -0\.01em/);
+  // IBM Plex Sans KR already sets Hangul tightly; see typography-metrics.test.ts.
+  assert.match(tokens, /--ds-letter-spacing-normal: 0em/);
   assert.match(tokens, /--ds-letter-spacing-mono: 0/);
   assert.match(tokens, /--ds-icon-md: 1\.25rem/);
   assert.match(tokens, /--ds-layout-topbar-height: 3\.5rem/);

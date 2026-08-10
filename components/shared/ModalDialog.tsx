@@ -113,7 +113,7 @@ export default function ModalDialog({
             aria-label={`Close ${title}`}
             className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted transition-smooth rounded-sm"
           >
-            <X className="h-icon-md w-icon-md" strokeWidth={1} aria-hidden="true" />
+            <X className="h-icon-md w-icon-md" strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
         {children}

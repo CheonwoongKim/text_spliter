@@ -91,7 +91,7 @@ const LeftPanel = memo(function LeftPanel({
             className="flex items-center gap-2 text-xs font-medium text-muted-foreground transition-smooth
                      hover:text-surface-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
           >
-            <RotateCcw className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+            <RotateCcw className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             Reset
           </button>
 
@@ -105,13 +105,13 @@ const LeftPanel = memo(function LeftPanel({
           >
           {loading ? (
             <>
-              <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1} aria-hidden="true" />
+              <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
               Processing...
             </>
           ) : (
             <>
               Split Text
-              <ArrowRight className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+              <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             </>
           )}
           </button>

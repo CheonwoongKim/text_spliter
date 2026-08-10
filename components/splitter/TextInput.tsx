@@ -245,7 +245,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
               >
                 <CloudUpload
                   className="h-icon-md w-icon-md text-muted-foreground"
-                  strokeWidth={1}
+                  strokeWidth={1.5}
                   aria-hidden="true"
                 />
                 <div className="text-center">
@@ -267,7 +267,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                 <div className="flex min-w-0 items-center gap-2">
                   <FileText
                     className="h-4 w-4 flex-shrink-0 text-muted-foreground"
-                    strokeWidth={1}
+                    strokeWidth={1.5}
                     aria-hidden="true"
                   />
                   <span className="truncate text-2xs font-medium text-surface-foreground">

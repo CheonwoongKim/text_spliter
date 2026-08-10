@@ -582,11 +582,11 @@ function ParserRightPanel({
                            disabled:cursor-not-allowed disabled:opacity-disabled"
                 >
                   {saving ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1} aria-hidden="true" />
+                    <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
                   ) : saved ? (
-                    <Check className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                    <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   ) : (
-                    <Save className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                    <Save className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   )}
                   {saving ? "Saving..." : saved ? "Saved" : "Save"}
                 </button>
@@ -597,9 +597,9 @@ function ParserRightPanel({
                            font-medium text-card-foreground transition-smooth hover:border-border-darkest"
                 >
                   {copied ? (
-                    <Check className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                    <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   ) : (
-                    <Clipboard className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                    <Clipboard className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   )}
                   {copied ? "Copied" : "Copy"}
                 </button>
@@ -656,7 +656,7 @@ function ParserRightPanel({
             <div className="flex h-full flex-col items-center justify-center text-center">
               <LoaderCircle
                 className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
-                strokeWidth={1}
+                strokeWidth={1.5}
                 aria-hidden="true"
               />
               <p className="text-xs font-medium text-card-foreground">Processing document</p>
@@ -675,7 +675,7 @@ function ParserRightPanel({
             <div className="flex h-full flex-col items-center justify-center text-center">
               <FileText
                 className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-                strokeWidth={1}
+                strokeWidth={1.5}
                 aria-hidden="true"
               />
               <p className="text-xs font-medium text-card-foreground">No output returned</p>

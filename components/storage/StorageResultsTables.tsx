@@ -109,7 +109,7 @@ export function ParseResultsTable({
                         aria-label={`View ${result.file_name}`}
                         title="View"
                       >
-                        <Eye className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                        <Eye className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                       </button>
                       <button
                         type="button"
@@ -118,7 +118,7 @@ export function ParseResultsTable({
                         aria-label={`Delete ${result.file_name}`}
                         title="Delete"
                       >
-                        <Trash2 className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                        <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                       </button>
                     </div>
                   </td>
@@ -202,7 +202,7 @@ export function SplitResultsTable({
                         aria-label={`View split result ${result.id}`}
                         title="View"
                       >
-                        <Eye className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                        <Eye className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                       </button>
                       <button
                         type="button"
@@ -211,7 +211,7 @@ export function SplitResultsTable({
                         aria-label={`Upload split result ${result.id} to Vector DB`}
                         title="Upload to Vector DB"
                       >
-                        <Upload className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                        <Upload className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                       </button>
                       <button
                         type="button"
@@ -220,7 +220,7 @@ export function SplitResultsTable({
                         aria-label={`Delete split result ${result.id}`}
                         title="Delete"
                       >
-                        <Trash2 className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                        <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                       </button>
                     </div>
                   </td>

@@ -50,24 +50,30 @@
   --ds-font-size-lg: 1.0625rem;
   --ds-font-size-xl: 1.25rem;
   --ds-font-size-2xl: 1.5rem;
-  /* 11px, matching the compact-label tier: IBM Plex Sans KR has a 3.9% smaller
-     x-height than the face this scale was tuned for, so a 10px label lost the
-     legibility the navigation was designed with. */
+  /* 11px, the shared compact-label floor. */
   --ds-navigation-font-size: 0.6875rem;
-  /* 18px: an 11px line in this face occupies 16.5px, so a 16px line box left
-     the text sitting off-centre inside fixed-height controls. */
+  /* The x-height this scale was drawn against. `font-size-adjust` renders the
+     UI face, and any fallback, at this ratio, so a face swap no longer changes
+     how large every step looks. IBM Plex Sans KR draws 0.522 on its own. */
+  --ds-typography-x-height: 0.543;
+  /* Each line box holds the face's 1.5em content box at the x-height-adjusted
+     size, so text sits centred inside fixed-height controls instead of riding
+     high on a deeper descender. */
   --ds-line-height-2xs: 1.125rem;
-  --ds-line-height-xs: 1.25rem;
+  --ds-line-height-xs: 1.375rem;
   --ds-line-height-base: 1.5rem;
-  --ds-line-height-lg: 1.625rem;
-  --ds-line-height-xl: 1.875rem;
-  --ds-line-height-2xl: 2.25rem;
+  --ds-line-height-lg: 1.75rem;
+  --ds-line-height-xl: 2rem;
+  --ds-line-height-2xl: 2.375rem;
   --ds-leading-4: 1rem;
   --ds-leading-5: 1.25rem;
   --ds-leading-6: 1.5rem;
   --ds-leading-7: 1.75rem;
-  --ds-letter-spacing-tight: -0.02em;
-  --ds-letter-spacing-normal: -0.01em;
+  /* IBM Plex Sans KR already sets Hangul with 0.050em of side bearing against
+     the 0.092em of the previous face. Subtracting more closes the gap between
+     syllables, so normal tracking is neutral and tight is halved. */
+  --ds-letter-spacing-tight: -0.01em;
+  --ds-letter-spacing-normal: 0em;
   --ds-letter-spacing-wide: 0.04em;
   --ds-letter-spacing-mono: 0;
 

@@ -20,7 +20,23 @@ const UI_FACE = {
   capHeight: 0.698,
   /** hhea ascent minus descent, which is what the browser lays out with. */
   contentBox: 1.5,
+  /** Side bearing either side of a Hangul syllable, before any tracking. */
+  hangulSideBearing: 0.05,
 } as const;
+
+/**
+ * `font-size-adjust` scales the face until its x-height matches this ratio, so
+ * a step renders larger than its nominal size by exactly this factor.
+ */
+function xHeightTarget(): number {
+  const match = tokens.match(/--ds-typography-x-height:\s*([\d.]+)/);
+  assert.ok(match, "the scale must declare the x-height it was drawn against");
+  return Number(match[1]);
+}
+
+function renderedScale(): number {
+  return xHeightTarget() / UI_FACE.xHeight;
+}
 
 /**
  * Below roughly 5.4px of x-height, Korean glyphs lose the internal counters
@@ -44,17 +60,31 @@ const TYPE_STEPS = [
   { token: "ds-font-size-2xl", lineHeight: "ds-line-height-2xl" },
 ] as const;
 
-test("every type step stays above the legibility floor for the current face", () => {
+test("every type step stays above the legibility floor as rendered", () => {
   for (const step of TYPE_STEPS) {
     const px = remToken(step.token);
-    const xHeightPx = px * UI_FACE.xHeight;
+    const xHeightPx = px * xHeightTarget();
 
     assert.ok(
       xHeightPx >= MIN_X_HEIGHT_PX,
-      `${step.token} is ${px}px, drawing an x-height of ${xHeightPx.toFixed(2)}px in `
-      + `${UI_FACE.name}, under the ${MIN_X_HEIGHT_PX}px floor`,
+      `${step.token} is ${px}px, drawing an x-height of ${xHeightPx.toFixed(2)}px, `
+      + `under the ${MIN_X_HEIGHT_PX}px floor`,
     );
   }
+});
+
+test("the scale renders at the x-height it was drawn against, not the face's own", () => {
+  assert.notEqual(
+    xHeightTarget(),
+    UI_FACE.xHeight,
+    "a face whose x-height already matches needs no adjustment; record that instead",
+  );
+  assert.ok(renderedScale() > 1, "this face draws smaller, so it must scale up");
+
+  const globals = readFileSync("app/globals.css", "utf8");
+  assert.match(globals, /font-size-adjust: var\(--ds-typography-x-height\)/);
+  // Monospace columns depend on their own metrics staying put.
+  assert.match(globals, /\.font-mono \{[^}]*font-size-adjust: none/s);
 });
 
 test("the navigation label is no smaller than the compact-label tier", () => {
@@ -63,6 +93,25 @@ test("the navigation label is no smaller than the compact-label tier", () => {
     "the navigation label was the first casualty of the smaller face; it must not "
     + "drop below the smallest documented tier again",
   );
+});
+
+test("tracking never closes the gap this face already sets tightly", () => {
+  const tracking = (name: string) => {
+    const match = tokens.match(new RegExp(`--ds-letter-spacing-${name}:\\s*(-?[\\d.]+)em`));
+    assert.ok(match, `${name} tracking must be defined in em`);
+    return Number(match[1]);
+  };
+
+  for (const name of ["tight", "normal"]) {
+    const gap = UI_FACE.hangulSideBearing + tracking(name);
+    assert.ok(
+      gap > 0.03,
+      `${name} tracking leaves ${gap.toFixed(3)}em between Hangul syllables, which `
+      + `runs them together in a face that already sets them at `
+      + `${UI_FACE.hangulSideBearing}em`,
+    );
+  }
+  assert.ok(tracking("normal") >= 0, "an already tight face must not be tightened further");
 });
 
 test("the type scale rises monotonically", () => {
@@ -86,7 +135,7 @@ test("line heights leave room for the face's content box", () => {
   for (const step of TYPE_STEPS) {
     const px = remToken(step.token);
     const lineHeight = remToken(step.lineHeight);
-    const needed = px * UI_FACE.contentBox;
+    const needed = px * renderedScale() * UI_FACE.contentBox;
     if (lineHeight < needed) {
       shortfalls.push(
         `${step.token}: ${px}px needs ${needed.toFixed(1)}px but has ${lineHeight}px`,

@@ -150,7 +150,7 @@ function VectorStoreRightPanel({
           <div className="flex h-full flex-col items-center justify-center text-center">
             <Database
               className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-              strokeWidth={1}
+              strokeWidth={1.5}
               aria-hidden="true"
             />
             <p className="text-xs font-medium text-card-foreground">No collection selected</p>
@@ -162,7 +162,7 @@ function VectorStoreRightPanel({
           <div className="flex h-full flex-col items-center justify-center text-center">
             <LoaderCircle
               className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
-              strokeWidth={1}
+              strokeWidth={1.5}
               aria-hidden="true"
             />
             <p className="text-xs font-medium text-card-foreground">Loading collection</p>
@@ -171,7 +171,7 @@ function VectorStoreRightPanel({
           <div className="flex h-full flex-col items-center justify-center text-center">
             <Database
               className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-              strokeWidth={1}
+              strokeWidth={1.5}
               aria-hidden="true"
             />
             <p className="text-xs font-medium text-card-foreground">Collection is empty</p>

@@ -81,9 +81,9 @@ function ParserResultsOverview({
                      font-medium text-surface transition-smooth hover:opacity-hover"
           >
             {focusAreas.length > 0 ? (
-              <AlertTriangle className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+              <AlertTriangle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             ) : (
-              <Check className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+              <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             )}
             {focusAreas.length > 0
               ? `Review ${focusAreas.length} area${focusAreas.length === 1 ? "" : "s"}`
@@ -101,7 +101,7 @@ function ParserResultsOverview({
             className="flex w-full items-center gap-3 border-b border-border-subtle bg-card px-3 py-3 text-left
                      transition-smooth last:border-b-0 hover:bg-upload-zone"
           >
-            <AlertTriangle className="h-4 w-4 shrink-0 text-warning" strokeWidth={1} aria-hidden="true" />
+            <AlertTriangle className="h-4 w-4 shrink-0 text-warning" strokeWidth={1.5} aria-hidden="true" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs font-medium text-card-foreground">
                 Page {area.pageNumber} · {area.label}
@@ -111,11 +111,11 @@ function ParserResultsOverview({
               </span>
             </span>
             <span className="text-2xs font-medium text-card-foreground">Review</span>
-            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1} aria-hidden="true" />
+            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
           </button>
         )) : (
           <div className="flex items-start gap-3 bg-card p-4">
-            <Check className="h-4 w-4 shrink-0 text-success" strokeWidth={1} aria-hidden="true" />
+            <Check className="h-4 w-4 shrink-0 text-success" strokeWidth={1.5} aria-hidden="true" />
             <div>
               <p className="text-xs font-medium text-card-foreground">No exact block-level differences found</p>
               <p className="mt-1 text-2xs text-muted-foreground">
@@ -140,7 +140,7 @@ function ParserResultsOverview({
             className="flex h-control-sm items-center gap-2 rounded-lg border border-border px-3 text-2xs
                      font-medium text-card-foreground transition-smooth hover:border-border-darkest"
           >
-            <GitCompare className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+            <GitCompare className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             Full comparison
           </button>
         )}
@@ -205,7 +205,7 @@ function ParserResultsOverview({
                              hover:opacity-hover"
                   >
                     Detail
-                    <ArrowRight className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                    <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   </button>
                 </div>
                 <div className="flex items-center border-l border-border-subtle px-3 py-3">
@@ -219,7 +219,7 @@ function ParserResultsOverview({
                     className="flex items-center gap-1 text-2xs font-medium text-card-foreground transition-smooth
                              hover:opacity-hover disabled:cursor-not-allowed disabled:opacity-disabled"
                   >
-                    <ListTree className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                    <ListTree className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                     Split text
                   </button>
                 </div>

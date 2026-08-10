@@ -99,7 +99,7 @@ function RagRunHistory({ refreshToken, onReuseQuestion }: RagRunHistoryProps) {
       <div className="flex h-full flex-col items-center justify-center text-center">
         <LoaderCircle
           className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
-          strokeWidth={1}
+          strokeWidth={1.5}
           aria-hidden="true"
         />
         <p className="text-xs text-muted-foreground">실행 이력을 불러오는 중</p>
@@ -120,7 +120,7 @@ function RagRunHistory({ refreshToken, onReuseQuestion }: RagRunHistoryProps) {
       <div className="flex h-full flex-col items-center justify-center text-center px-6">
         <History
           className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-          strokeWidth={1}
+          strokeWidth={1.5}
           aria-hidden="true"
         />
         <p className="text-xs font-medium text-card-foreground">아직 실행 이력이 없습니다</p>

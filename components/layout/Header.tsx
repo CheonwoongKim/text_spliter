@@ -33,7 +33,7 @@ export default function Header({ breadcrumbs, activeMenu, onMenuChange }: Header
                   {index > 0 && (
                     <ChevronRight
                       className="h-3 w-3 text-subdued"
-                      strokeWidth={1}
+                      strokeWidth={1.5}
                       aria-hidden="true"
                     />
                   )}
@@ -68,7 +68,7 @@ export default function Header({ breadcrumbs, activeMenu, onMenuChange }: Header
               >
                 <MenuIcon
                   className="h-icon-md w-icon-md"
-                  strokeWidth={1}
+                  strokeWidth={1.5}
                   aria-hidden="true"
                 />
               </button>

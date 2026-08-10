@@ -169,11 +169,11 @@ const RightPanel = memo(function RightPanel({
                        disabled:cursor-not-allowed disabled:opacity-disabled"
             >
               {saving ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1} aria-hidden="true" />
+                <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
               ) : saved ? (
-                <Check className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               ) : (
-                <Save className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                <Save className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               )}
               {saving ? "Saving..." : saved ? "Saved" : "Save"}
             </button>
@@ -189,9 +189,9 @@ const RightPanel = memo(function RightPanel({
                          disabled:cursor-not-allowed disabled:opacity-disabled"
               >
                 {sending ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1} aria-hidden="true" />
+                  <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
                 ) : (
-                  <Boxes className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                  <Boxes className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                 )}
                 {sending ? "Preparing..." : "Send to VDB"}
               </button>
@@ -242,13 +242,13 @@ const RightPanel = memo(function RightPanel({
             {loading ? (
               <LoaderCircle
                 className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
-                strokeWidth={1}
+                strokeWidth={1.5}
                 aria-hidden="true"
               />
             ) : (
               <FileText
                 className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-                strokeWidth={1}
+                strokeWidth={1.5}
                 aria-hidden="true"
               />
             )}

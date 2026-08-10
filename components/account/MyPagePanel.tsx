@@ -60,7 +60,7 @@ export default function MyPagePanel() {
             {loading && (
               <LoaderCircle
                 className="mr-2 h-4 w-4 animate-spin text-muted-foreground"
-                strokeWidth={1}
+                strokeWidth={1.5}
                 aria-hidden="true"
               />
             )}
@@ -76,7 +76,7 @@ export default function MyPagePanel() {
               className="flex h-control-md items-center gap-2 rounded-lg border border-border px-3 text-xs
                        font-medium text-card-foreground transition-smooth hover:border-border-darkest focus-ring"
             >
-              <LogOut className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+              <LogOut className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               Log out
             </button>
           </div>

@@ -89,6 +89,8 @@ Use Node.js 20.9 or newer. The Ragas worker supports Python 3.11 through 3.13.
 - Type sizes are tuned to the face's x-height, not to a nominal pixel value. Changing the UI face changes the optical size at every step, so re-check the smallest tiers against `tests/typography-metrics.test.ts` before shipping one.
 - Use IBM Plex Sans KR for UI copy and the configured mono font only for data/code. Korean copy uses the design system's tighter tracking and readable line height.
 - Interactive controls use Lucide icons with the established sizing and stroke conventions. Preserve visible keyboard focus and accessible names.
+- A Lucide stroke renders at `strokeWidth * size / 24`. Below one pixel it is antialiased toward the background and the icon reads lighter than the colour it was given, so 16px and 20px icons use 1.5.
+- Tracking and line height belong to the face, not to a habit: this face already sets Hangul tightly, so normal tracking is neutral. `font-size-adjust` renders the scale at the x-height it was drawn against, which keeps a face swap from resizing every step.
 - React list keys must be unique and stable. Do not derive a key only from display content that may repeat within the same list.
 
 ## Change Guidelines

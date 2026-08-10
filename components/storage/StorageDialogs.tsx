@@ -96,7 +96,7 @@ export function VectorUploadDialog({
           </label>
           {tablesLoading ? (
             <div className="flex h-10 items-center justify-center rounded-lg border border-border bg-surface">
-              <LoaderCircle className="h-5 w-5 animate-spin text-card-foreground" strokeWidth={1} aria-label="Loading vector collections" />
+              <LoaderCircle className="h-5 w-5 animate-spin text-card-foreground" strokeWidth={1.5} aria-label="Loading vector collections" />
             </div>
           ) : tables.length === 0 ? (
             <div className="rounded-lg border border-warning-border bg-warning-surface p-3">

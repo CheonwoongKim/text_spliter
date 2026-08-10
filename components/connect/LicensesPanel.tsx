@@ -184,7 +184,7 @@ function CredentialCard({
               className="flex items-center gap-1 text-2xs font-medium text-card-foreground transition-smooth hover:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
             >
               {result.status === "testing" && (
-                <LoaderCircle className="h-3 w-3 animate-spin" strokeWidth={1} aria-hidden="true" />
+                <LoaderCircle className="h-3 w-3 animate-spin" strokeWidth={1.5} aria-hidden="true" />
               )}
               {result.status === "testing" ? "Testing..." : "Test"}
             </button>
@@ -209,9 +209,9 @@ function CredentialCard({
           {result.status !== "idle" && result.status !== "testing" && (
             <p className={`mt-3 flex items-center gap-1 text-2xs ${result.status === "success" ? "text-success" : "text-danger"}`}>
               {result.status === "success" ? (
-                <CheckCircle className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                <CheckCircle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               ) : (
-                <CircleAlert className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                <CircleAlert className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               )}
               <span>{result.message}</span>
             </p>

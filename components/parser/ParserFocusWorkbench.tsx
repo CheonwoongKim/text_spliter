@@ -212,7 +212,7 @@ export default function ParserFocusWorkbench({
   if (areas.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-center">
-        <FileText className="mb-3 h-icon-md w-icon-md text-muted-foreground" strokeWidth={1} aria-hidden="true" />
+        <FileText className="mb-3 h-icon-md w-icon-md text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
         <p className="text-xs font-medium text-card-foreground">No comparable document areas</p>
         <p className="mt-1 text-2xs text-muted-foreground">
           The selected engines did not return block-level or text output.
@@ -296,11 +296,11 @@ export default function ParserFocusWorkbench({
                   }`}
                 >
                   {reviewed ? (
-                    <Check className="mt-1 h-4 w-4 shrink-0 text-success" strokeWidth={1} aria-hidden="true" />
+                    <Check className="mt-1 h-4 w-4 shrink-0 text-success" strokeWidth={1.5} aria-hidden="true" />
                   ) : area.hasDisagreement ? (
-                    <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-warning" strokeWidth={1} aria-hidden="true" />
+                    <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-warning" strokeWidth={1.5} aria-hidden="true" />
                   ) : (
-                    <FileText className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1} aria-hidden="true" />
+                    <FileText className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-2xs font-medium text-card-foreground">
@@ -312,7 +312,7 @@ export default function ParserFocusWorkbench({
                         : `${area.groups.length} result group${area.groups.length === 1 ? "" : "s"}`}
                     </span>
                   </span>
-                  <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1} aria-hidden="true" />
+                  <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                 </button>
               );
             }) : (
@@ -370,7 +370,7 @@ export default function ParserFocusWorkbench({
             <div className="grid gap-4 p-4 xl:grid-cols-[minmax(220px,0.8fr)_minmax(0,2fr)]">
               <div className="min-w-0">
                 <div className="mb-2 flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" strokeWidth={1} aria-hidden="true" />
+                  <MapPin className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   <h4 className="text-2xs font-medium text-card-foreground">Original evidence</h4>
                 </div>
                 <div className="overflow-hidden rounded-lg border border-border bg-upload-zone">
@@ -404,7 +404,7 @@ export default function ParserFocusWorkbench({
                         </div>
                       ) : (
                         <div className="flex min-h-[240px] flex-col items-center justify-center text-center">
-                          <FileText className="mb-3 h-icon-md w-icon-md text-muted-foreground" strokeWidth={1} aria-hidden="true" />
+                          <FileText className="mb-3 h-icon-md w-icon-md text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                           <p className="text-2xs font-medium text-card-foreground">Original preview unavailable</p>
                           <p className="mt-1 text-2xs text-muted-foreground">
                             Verify this page and detected block position in the source file.

@@ -32,9 +32,9 @@ function RobustnessCoveragePanel({ cases }: RobustnessCoveragePanelProps) {
             className="flex items-start gap-3 border-b border-border-subtle bg-card px-3 py-3 last:border-b-0"
           >
             {entry.covered ? (
-              <Check className="h-4 w-4 shrink-0 text-success" strokeWidth={1} aria-hidden="true" />
+              <Check className="h-4 w-4 shrink-0 text-success" strokeWidth={1.5} aria-hidden="true" />
             ) : (
-              <AlertTriangle className="h-4 w-4 shrink-0 text-warning" strokeWidth={1} aria-hidden="true" />
+              <AlertTriangle className="h-4 w-4 shrink-0 text-warning" strokeWidth={1.5} aria-hidden="true" />
             )}
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-card-foreground">{entry.scenario.label}</p>

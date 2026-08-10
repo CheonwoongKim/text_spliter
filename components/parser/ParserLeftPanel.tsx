@@ -224,7 +224,7 @@ function ParserLeftPanel({
                              rounded-lg text-muted-foreground transition-smooth hover:bg-muted
                              hover:text-card-foreground focus-ring"
                   >
-                    <X className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                    <X className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   </button>
                   <FileText
                     className="h-6 w-6 shrink-0 text-muted-foreground"
@@ -290,7 +290,7 @@ function ParserLeftPanel({
 
                 {loadingFiles ? (
                   <div className="flex flex-1 items-center justify-center">
-                    <LoaderCircle className="h-icon-md w-icon-md animate-spin text-muted-foreground" strokeWidth={1} aria-hidden="true" />
+                    <LoaderCircle className="h-icon-md w-icon-md animate-spin text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   </div>
                 ) : storageFiles.length === 0 ? (
                   <EmptyState
@@ -353,7 +353,7 @@ function ParserLeftPanel({
               className="flex h-control-sm w-control-sm shrink-0 items-center justify-center rounded-lg
                        text-card-foreground transition-smooth hover:bg-muted focus-ring"
             >
-              <Settings className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+              <Settings className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             </button>
           </div>
 
@@ -461,7 +461,7 @@ function ParserLeftPanel({
             disabled={loading}
             className="flex items-center gap-2 text-xs font-medium text-muted-foreground transition-smooth hover:text-card-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
           >
-            <RotateCcw className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+            <RotateCcw className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             Reset
           </button>
 
@@ -487,7 +487,7 @@ function ParserLeftPanel({
           >
             {loading ? (
               <>
-                <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1} aria-hidden="true" />
+                <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
                 Processing {experimentEngines.length}...
               </>
             ) : (
@@ -495,7 +495,7 @@ function ParserLeftPanel({
                 {experimentEngines.length > 1
                   ? `Run ${experimentEngines.length} Engines`
                   : "Process Document"}
-                <ArrowRight className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               </>
             )}
           </button>

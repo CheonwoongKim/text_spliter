@@ -60,7 +60,7 @@ function SplitterResultsOverview({
           className="flex h-control-sm items-center gap-2 rounded-lg border border-border px-3 text-2xs
                    font-medium text-card-foreground transition-smooth hover:border-border-darkest"
         >
-          <Trash2 className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+          <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
           Clear runs
         </button>
       </div>
@@ -132,7 +132,7 @@ function SplitterResultsOverview({
                              hover:opacity-hover"
                   >
                     Detail
-                    <ArrowRight className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                    <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   </button>
                 </div>
               </div>
