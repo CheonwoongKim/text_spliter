@@ -62,7 +62,7 @@ function DataTableInner<Row>({
               key={column.key}
               role="columnheader"
               title={column.title}
-              className={`px-3 py-2 text-2xs font-medium text-muted-foreground ${
+              className={`px-3 py-2 text-xs font-medium text-muted-foreground ${
                 index > 0 ? "border-l border-border-subtle" : ""
               }`}
             >
@@ -87,7 +87,7 @@ function DataTableInner<Row>({
                 <div
                   key={column.key}
                   role="cell"
-                  className={`flex min-w-0 items-center px-3 py-3 text-2xs text-card-foreground ${
+                  className={`flex min-w-0 items-center px-3 py-3 text-xs text-card-foreground ${
                     index > 0 ? "border-l border-border-subtle" : ""
                   }`}
                 >

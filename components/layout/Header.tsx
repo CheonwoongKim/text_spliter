@@ -52,13 +52,13 @@ export default function Header({ breadcrumbs, activeMenu, onMenuChange }: Header
                   />
                   {isCurrent ? (
                     <h1
-                      className="truncate text-2xs font-semibold text-card-foreground"
+                      className="truncate text-base font-semibold text-card-foreground"
                       aria-current="page"
                     >
                       {breadcrumb}
                     </h1>
                   ) : (
-                    <span className="shrink-0 text-2xs font-normal text-muted-foreground">
+                    <span className="shrink-0 text-xs font-normal text-muted-foreground">
                       {breadcrumb}
                     </span>
                   )}

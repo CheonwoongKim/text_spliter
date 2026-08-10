@@ -28,8 +28,8 @@ const dotColors: Record<BadgeVariant, string> = {
 };
 
 const sizeStyles: Record<BadgeSize, string> = {
-  sm: "px-2 py-1 text-2xs",
-  md: "px-3 py-1 text-2xs font-medium",
+  sm: "px-2 py-1 text-xs",
+  md: "px-3 py-1 text-xs font-medium",
 };
 
 export const Badge: React.FC<BadgeProps> = ({

@@ -46,7 +46,7 @@ test("screens use the shared table rather than rebuilding the grid", () => {
     assert.match(source, /<DataTable/, `${path} must use the shared table`);
     assert.doesNotMatch(
       source,
-      /border-l border-border-subtle px-3 py-2 text-2xs font-medium/,
+      /border-l border-border-subtle px-3 py-2 text-xs font-medium/,
       `${path} still hand-builds header cells`,
     );
   }

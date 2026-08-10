@@ -9,48 +9,58 @@
  */
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* Single light palette: neutral + one accent */
-  --ds-color-bg-canvas: #fafafa;
-  --ds-color-bg-raised: #ffffff;
-  --ds-color-bg-muted: #f5f5f5;
-  --ds-color-bg-upload-zone: #f8f9fa;
-  --ds-color-bg-secondary: #e5e5e5;
-  --ds-color-fg-default: #171717;
-  --ds-color-fg-strong: #262626;
-  --ds-color-fg-muted: #525252;
-  --ds-color-fg-placeholder: #a3a3a3;
-  --ds-color-border-default: #d4d4d4;
-  --ds-color-border-strong: #a3a3a3;
-  --ds-color-accent: #2563eb;
-  --ds-color-accent-foreground: #ffffff;
+  /* Single dark palette: neutral + one accent */
+  --ds-color-bg-canvas: #0f1115;
+  --ds-color-bg-raised: #171a21;
+  --ds-color-bg-muted: #20252e;
+  --ds-color-bg-upload-zone: #242a33;
+  --ds-color-bg-secondary: #292f3a;
+  --ds-color-fg-default: #e5e7eb;
+  --ds-color-fg-strong: #f5f5f5;
+  --ds-color-fg-muted: #a3acb9;
+  --ds-color-fg-placeholder: #7b8492;
+  --ds-color-border-default: #343b46;
+  --ds-color-border-strong: #566171;
+  --ds-color-border-control: #606b7b;
+  --ds-color-accent: #60a5fa;
+  --ds-color-accent-foreground: #0f1115;
   --ds-color-brand-canvas: #ffffff;
-  --ds-color-overlay: rgb(0 0 0 / 0.6);
+  --ds-color-overlay: rgb(0 0 0 / 0.72);
 
   /* Status colors: use only when status has meaning */
-  --ds-color-success: #166534;
-  --ds-color-success-surface: #f0fdf4;
-  --ds-color-success-border: #bbf7d0;
-  --ds-color-warning: #92400e;
-  --ds-color-warning-surface: #fffbeb;
-  --ds-color-warning-border: #fde68a;
-  --ds-color-danger: #991b1b;
-  --ds-color-danger-surface: #fef2f2;
-  --ds-color-danger-border: #fecaca;
+  --ds-color-success: #86efac;
+  --ds-color-success-surface: #12261a;
+  --ds-color-success-border: #27633b;
+  --ds-color-warning: #fcd34d;
+  --ds-color-warning-surface: #2a210f;
+  --ds-color-warning-border: #6b5118;
+  --ds-color-danger: #fca5a5;
+  --ds-color-danger-surface: #2e171a;
+  --ds-color-danger-border: #74343a;
   --ds-color-danger-action: #dc2626;
   --ds-color-danger-action-foreground: #ffffff;
 
-  /* Typography: 13px core minimum; 11px compact-label exception */
+  /* Typography.
+     13px is the floor for anything a person reads, and it is a real floor: the
+     scale has no step below it. It used to have one at 11px, described as an
+     exception for compact labels, and that exception became 69% of the type in
+     the product — table cells, helper text and descriptions all set at the
+     smallest size the system offered. Hangul packs two or three jamo into the
+     box a Latin letter gets, so it loses legibility at a size Latin survives,
+     and this product is read in Korean.
+     15px is the body size, two steps of weight and colour away from 13px,
+     which is enough to carry the hierarchy without a size below the floor. */
   --ds-font-family-sans: var(--font-ibm-plex-sans-kr), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --ds-font-family-mono: var(--font-geist-mono), Menlo, Monaco, "Courier New", monospace;
-  --ds-font-size-2xs: 0.6875rem;
   --ds-font-size-xs: 0.8125rem;
   --ds-font-size-base: 0.9375rem;
   --ds-font-size-lg: 1.0625rem;
   --ds-font-size-xl: 1.25rem;
   --ds-font-size-2xl: 1.5rem;
-  /* 11px, the shared compact-label floor. */
+  /* 11px, and only for the GNB, where the label sits under its own icon and is
+     read as part of a fixed, memorised set rather than as running text. */
   --ds-navigation-font-size: 0.6875rem;
   /* The x-height this scale was drawn against. `font-size-adjust` renders the
      UI face, and any fallback, at this ratio, so a face swap no longer changes
@@ -59,7 +69,7 @@
   /* Each line box holds the face's 1.5em content box at the x-height-adjusted
      size, so text sits centred inside fixed-height controls instead of riding
      high on a deeper descender. */
-  --ds-line-height-2xs: 1.125rem;
+  --ds-line-height-nav: 1.125rem;
   --ds-line-height-xs: 1.375rem;
   --ds-line-height-base: 1.5rem;
   --ds-line-height-lg: 1.75rem;
@@ -96,9 +106,9 @@
   --ds-radius-full: 9999px;
 
   /* Elevation: use only to communicate overlap */
-  --ds-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
-  --ds-shadow-md: 0 4px 12px rgb(0 0 0 / 0.1);
-  --ds-shadow-lg: 0 16px 32px rgb(0 0 0 / 0.16);
+  --ds-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.24);
+  --ds-shadow-md: 0 4px 12px rgb(0 0 0 / 0.32);
+  --ds-shadow-lg: 0 16px 32px rgb(0 0 0 / 0.5);
 
   /* Motion: feedback, state change, and entrance */
   --ds-duration-fast: 120ms;

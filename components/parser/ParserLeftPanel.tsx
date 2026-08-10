@@ -178,7 +178,7 @@ function ParserLeftPanel({
               <button
                 type="button"
                 onClick={() => setUploadMode("upload")}
-                className={`whitespace-nowrap rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                className={`whitespace-nowrap rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                   uploadMode === "upload"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -189,7 +189,7 @@ function ParserLeftPanel({
               <button
                 type="button"
                 onClick={() => setUploadMode("select")}
-                className={`whitespace-nowrap rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                className={`whitespace-nowrap rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                   uploadMode === "select"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -236,7 +236,7 @@ function ParserLeftPanel({
                     <p className="truncate text-xs font-medium text-card-foreground">
                       {selectedFile.name}
                     </p>
-                    <p className="mt-1 text-2xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {selectedFile.type || "Unknown type"} · {(selectedFile.size / 1024).toFixed(2)} KB
                       {selectedFileKey ? " · from storage" : ""}
                     </p>
@@ -259,7 +259,7 @@ function ParserLeftPanel({
                     <p className="text-xs font-medium text-card-foreground">
                       Click to upload or drag and drop
                     </p>
-                    <p className="mt-1 text-2xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {acceptedFileProfile.label} (max 50MB)
                     </p>
                   </div>
@@ -326,7 +326,7 @@ function ParserLeftPanel({
                           <p className="truncate text-xs font-medium text-card-foreground">
                             {file.filename}
                           </p>
-                          <p className="mt-1 text-2xs text-muted-foreground">
+                          <p className="mt-1 text-xs text-muted-foreground">
                             {supported
                               ? `${(file.file_size / 1024).toFixed(2)} KB`
                               : "Not supported by all selected engines"}
@@ -343,7 +343,7 @@ function ParserLeftPanel({
 
         <section className="mb-6">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Document processing engine
             </h3>
             <Button variant="ghost" size="sm" onClick={() => onOpenSettings(primaryEngine)} aria-label="엔진 설정" title="엔진 설정">
@@ -353,7 +353,7 @@ function ParserLeftPanel({
 
           <div>
             <p className="text-xs font-medium text-card-foreground">1. Primary engine</p>
-            <p className="mt-1 text-2xs text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               Required. Runs first and provides the main result.
             </p>
           </div>
@@ -362,7 +362,7 @@ function ParserLeftPanel({
             value={primaryEngine}
             onChange={(event) => onPrimaryEngineChange(event.target.value as DocumentEngineType)}
             disabled={loading}
-            className="mt-3 h-control-xl w-full rounded-lg border border-border bg-card px-3 text-xs
+            className="mt-3 h-control-xl w-full rounded-lg border border-control bg-card px-3 text-xs
                      text-card-foreground transition-smooth focus-ring
                      disabled:cursor-not-allowed disabled:opacity-disabled"
           >
@@ -378,7 +378,7 @@ function ParserLeftPanel({
               <p className="text-xs font-medium text-card-foreground">
                 2. Additional engines <span className="font-normal text-muted-foreground">(optional)</span>
               </p>
-              <p className="mt-1 text-2xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Run after Primary when you want to compare results.
               </p>
             </div>
@@ -406,7 +406,7 @@ function ParserLeftPanel({
                           event.target.checked,
                         )}
                         disabled={loading}
-                        className="h-4 w-4 appearance-none rounded-lg border border-border bg-card
+                        className="h-4 w-4 appearance-none rounded-lg border border-control bg-card
                                  checked:border-surface-foreground checked:bg-surface-foreground
                                  focus:outline-none focus-visible:border-surface-foreground"
                       />

@@ -17,17 +17,39 @@ function tokenNames(prefix: string) {
     .map((match) => match[1]);
 }
 
-test("typography has five core sizes and a shared compact-label floor", () => {
-  assert.deepEqual(tokenNames("ds-font-size"), ["2xs", "xs", "base", "lg", "xl", "2xl"]);
-  assert.match(tokens, /--ds-font-size-2xs: 0\.6875rem/);
+/**
+ * 13px is the floor, and the scale enforces it by having nothing below it.
+ *
+ * The 11px step was described as an exception for compact labels and grew into
+ * 69% of the type in the product. A floor that only exists in a comment is not
+ * a floor, so the step itself is gone.
+ */
+test("the type scale starts at the 13px floor and has no step below it", () => {
+  assert.deepEqual(tokenNames("ds-font-size"), ["xs", "base", "lg", "xl", "2xl"]);
   assert.match(tokens, /--ds-font-size-xs: 0\.8125rem/);
   assert.match(tokens, /--ds-font-size-base: 0\.9375rem/);
   assert.match(tokens, /--ds-font-size-lg: 1\.0625rem/);
   assert.match(tokens, /--ds-font-size-2xl: 1\.5rem/);
-  // The navigation label shares the 11px floor rather than sitting a step below
-  // it; see tests/typography-metrics.test.ts for why the 10px step was dropped.
+  assert.doesNotMatch(tokens, /--ds-font-size-(?:2xs|micro|caption|sm|3xl)/);
+});
+
+test("11px survives only for the GNB, which no other surface can reach", () => {
   assert.match(tokens, /--ds-navigation-font-size: 0\.6875rem/);
-  assert.doesNotMatch(tokens, /--ds-font-size-(?:micro|caption|sm|3xl)/);
+
+  const scale = tailwind.slice(tailwind.indexOf("fontSize:"), tailwind.indexOf("fontWeight:"));
+
+  assert.match(scale, /nav: \["var\(--ds-navigation-font-size\)"/);
+  assert.doesNotMatch(scale, /"2xs":/, "a 2xs step lets 11px back into the rest of the UI");
+});
+
+test("a field label sits at the floor rather than below it", () => {
+  const rule = globalStyles.slice(
+    globalStyles.indexOf("  label {"),
+    globalStyles.indexOf("  input,"),
+  );
+
+  assert.match(rule, /font-size: var\(--ds-font-size-xs\)/);
+  assert.doesNotMatch(rule, /--ds-font-size-2xs/);
 });
 
 test("Korean-first typography uses readable line height and neutral tracking", () => {
@@ -99,8 +121,8 @@ test("login and signup are distinct public routes with password confirmation", (
   assert.match(authForm, /비밀번호가 일치하지 않습니다/);
   assert.match(authForm, /href: "\/signup"/);
   assert.match(authForm, /href: "\/login"/);
-  assert.match(authForm, /Welcom, Back!/);
-  assert.match(authForm, /Sign Up/);
+  assert.match(authForm, /다시 만나 반갑습니다/);
+  assert.match(authForm, /만나서 반갑습니다/);
   assert.equal([...authForm.matchAll(/<PasswordField/g)].length, 2);
   assert.match(authForm, /type=\{isVisible \? "text" : "password"\}/);
   assert.match(authForm, /aria-pressed=\{isVisible\}/);
@@ -120,7 +142,14 @@ test("spacing and radius expose only the approved scales", () => {
   assert.deepEqual(tokenNames("ds-radius"), ["sm", "lg", "xl", "2xl", "full"]);
 });
 
-test("the single light palette exposes only neutral, accent, and meaningful status colors", () => {
+test("the single dark palette exposes only neutral, accent, and meaningful status colors", () => {
+  assert.match(tokens, /color-scheme: dark/);
+  assert.match(tokens, /--ds-color-bg-canvas: #0f1115/);
+  assert.match(tokens, /--ds-color-bg-raised: #171a21/);
+  assert.match(tokens, /--ds-color-bg-upload-zone: #242a33/);
+  assert.match(tokens, /--ds-color-fg-default: #e5e7eb/);
+  assert.match(tokens, /--ds-color-fg-placeholder: #7b8492/);
+  assert.match(tokens, /--ds-color-border-control: #606b7b/);
   for (const token of [
     "--ds-color-bg-canvas",
     "--ds-color-bg-upload-zone",

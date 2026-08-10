@@ -49,14 +49,14 @@ export default function MyPagePanel() {
     <div className="h-full overflow-y-auto px-4 py-6 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-5xl">
         <header>
-          <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Account
           </p>
           <h1 className="mt-1 text-lg font-semibold text-card-foreground">My Page</h1>
         </header>
 
         <section className="mt-6 border-t border-border-subtle py-6">
-          <p className="text-2xs text-muted-foreground">이메일</p>
+          <p className="text-xs text-muted-foreground">이메일</p>
           <div className="mt-1 flex min-h-control-sm items-center">
             {loading && (
               <LoaderCircle

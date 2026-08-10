@@ -46,7 +46,7 @@ function SplitterResultsOverview({
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-xs font-medium text-card-foreground">Chunking runs</h3>
-          <p className="mt-1 text-2xs text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground">
             Every run uses the same source text. Split again with different settings to add a row.
             {anyProvenance
               ? " Provenance shows how many chunks can be scored against page evidence."
@@ -82,7 +82,7 @@ function SplitterResultsOverview({
                   <p className="truncate text-xs font-medium text-card-foreground">
                     {describeSplitterRun(run)}
                   </p>
-                  <p className="mt-1 truncate text-2xs text-muted-foreground">
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
                     {badges.length > 0 ? badges.join(" · ") : formatDuration(metric.processingTime)}
                   </p>
                 </div>

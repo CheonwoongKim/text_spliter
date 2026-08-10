@@ -91,7 +91,7 @@ export function VectorUploadDialog({
         )}
 
         <div>
-          <label htmlFor="storage-vector-collection" className="mb-2 block text-2xs font-medium text-card-foreground">
+          <label htmlFor="storage-vector-collection" className="mb-2 block text-xs font-medium text-card-foreground">
             Vector Collection <span className="text-danger">*</span>
           </label>
           {tablesLoading ? (
@@ -100,7 +100,7 @@ export function VectorUploadDialog({
             </div>
           ) : tables.length === 0 ? (
             <div className="rounded-lg border border-warning-border bg-warning-surface p-3">
-              <p className="text-2xs text-warning">
+              <p className="text-xs text-warning">
                 No collections found. Create a collection in the VDB page first.
               </p>
             </div>
@@ -111,7 +111,7 @@ export function VectorUploadDialog({
                 value={selectedTable}
                 onChange={(event) => onSelectedTableChange(event.target.value)}
                 disabled={uploading}
-                className="focus-ring h-10 w-full rounded-lg border border-border bg-surface px-3 text-xs text-card-foreground disabled:opacity-disabled"
+                className="focus-ring h-10 w-full rounded-lg border border-control bg-surface px-3 text-xs text-card-foreground disabled:opacity-disabled"
               >
                 <option value="">Select a collection...</option>
                 {tables.map((tableName) => (
@@ -120,7 +120,7 @@ export function VectorUploadDialog({
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-2xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Select the owner-scoped collection where chunks will be uploaded
               </p>
             </>
@@ -128,7 +128,7 @@ export function VectorUploadDialog({
         </div>
 
         <div>
-          <label htmlFor="storage-vector-batch-size" className="mb-2 block text-2xs font-medium text-card-foreground">
+          <label htmlFor="storage-vector-batch-size" className="mb-2 block text-xs font-medium text-card-foreground">
             Batch Size
           </label>
           <input
@@ -141,18 +141,18 @@ export function VectorUploadDialog({
             min="1"
             max="100"
             disabled={uploading}
-            className="focus-ring h-10 w-full rounded-lg border border-border bg-surface px-3 text-xs text-card-foreground disabled:opacity-disabled"
+            className="focus-ring h-10 w-full rounded-lg border border-control bg-surface px-3 text-xs text-card-foreground disabled:opacity-disabled"
           />
-          <p className="mt-1 text-2xs text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground">
             Number of chunks to process at once (1-100). Lower values reduce rate limit errors.
           </p>
         </div>
 
         <div className="rounded-lg bg-upload-zone p-3">
-          <p className="text-2xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             <strong className="text-card-foreground">Note:</strong> This generates OpenAI embeddings and stores them in the managed Supabase Vector Store. Make sure:
           </p>
-          <ul className="mt-2 list-inside list-disc space-y-1 text-2xs text-muted-foreground">
+          <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-muted-foreground">
             <li>OpenAI API key is configured in Connect page</li>
             <li>The target collection has been created in the VDB page</li>
           </ul>

@@ -14,25 +14,25 @@ function CardView({ result }: CardViewProps) {
       <div className="mb-4 border-b border-border-subtle pb-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="text-left">
-            <p className="text-2xs text-muted-foreground">Total Chunks</p>
+            <p className="text-xs text-muted-foreground">Total Chunks</p>
             <p className="mt-1 text-xs font-medium text-surface-foreground">
               {result.totalChunks}
             </p>
           </div>
           <div className="text-left">
-            <p className="text-2xs text-muted-foreground">Average Size</p>
+            <p className="text-xs text-muted-foreground">Average Size</p>
             <p className="mt-1 text-xs font-medium text-surface-foreground">
               {result.statistics.averageChunkSize}
             </p>
           </div>
           <div className="text-left">
-            <p className="text-2xs text-muted-foreground">Min / Max</p>
+            <p className="text-xs text-muted-foreground">Min / Max</p>
             <p className="mt-1 text-xs font-medium text-surface-foreground">
               {result.statistics.minChunkSize} / {result.statistics.maxChunkSize}
             </p>
           </div>
           <div className="text-left">
-            <p className="text-2xs text-muted-foreground">Processing Time</p>
+            <p className="text-xs text-muted-foreground">Processing Time</p>
             <p className="mt-1 text-xs font-medium text-surface-foreground">
               {result.statistics.processingTime}ms
             </p>

@@ -141,11 +141,11 @@ function RagRunHistory({ refreshToken, onReuseQuestion }: RagRunHistoryProps) {
                   <p className="min-w-0 flex-1 truncate text-xs font-medium text-card-foreground">
                     {run.question}
                   </p>
-                  <span className={`shrink-0 rounded-full px-2 py-1 text-2xs font-medium ${statusClass(run.status)}`}>
+                  <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${statusClass(run.status)}`}>
                     {run.status}
                   </span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-2 text-2xs text-muted-foreground">
+                <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
                   <span>{summary.collection}</span>
                   <span>·</span>
                   <span>{summary.models}</span>
@@ -161,11 +161,11 @@ function RagRunHistory({ refreshToken, onReuseQuestion }: RagRunHistoryProps) {
               {expanded && (
                 <div className="mt-3 rounded-lg bg-upload-zone p-3">
                   {run.answer ? (
-                    <p className="whitespace-pre-wrap text-2xs leading-6 text-card-foreground">
+                    <p className="whitespace-pre-wrap text-xs leading-6 text-card-foreground">
                       {run.answer}
                     </p>
                   ) : (
-                    <p className="text-2xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {typeof asRecord(run.error).message === "string"
                         ? String(asRecord(run.error).message)
                         : "저장된 답변이 없습니다."}
@@ -175,7 +175,7 @@ function RagRunHistory({ refreshToken, onReuseQuestion }: RagRunHistoryProps) {
                     <button
                       type="button"
                       onClick={() => onReuseQuestion(run.question)}
-                      className="mt-3 text-2xs font-medium text-card-foreground transition-smooth hover:opacity-hover"
+                      className="mt-3 text-xs font-medium text-card-foreground transition-smooth hover:opacity-hover"
                     >
                       이 질문 다시 사용
                     </button>

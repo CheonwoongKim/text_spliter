@@ -51,8 +51,7 @@ function remToken(name: string): number {
 }
 
 const TYPE_STEPS = [
-  { token: "ds-navigation-font-size", lineHeight: "ds-line-height-2xs" },
-  { token: "ds-font-size-2xs", lineHeight: "ds-line-height-2xs" },
+  { token: "ds-navigation-font-size", lineHeight: "ds-line-height-nav" },
   { token: "ds-font-size-xs", lineHeight: "ds-line-height-xs" },
   { token: "ds-font-size-base", lineHeight: "ds-line-height-base" },
   { token: "ds-font-size-lg", lineHeight: "ds-line-height-lg" },
@@ -87,12 +86,30 @@ test("the scale renders at the x-height it was drawn against, not the face's own
   assert.match(globals, /\.font-mono \{[^}]*font-size-adjust: none/s);
 });
 
-test("the navigation label is no smaller than the compact-label tier", () => {
+/**
+ * 11px survives in exactly one place.
+ *
+ * A GNB label sits under its own icon in a small, fixed set, so it is
+ * recognised rather than read. Everywhere else it was running text at a size
+ * Hangul cannot hold, which is how the old compact tier reached 69% of the
+ * product. The floor is kept by the scale itself, not by a comment: nothing
+ * below 13px may be reachable through a type step.
+ */
+test("11px belongs to the GNB alone and nothing else can reach it", () => {
+  const floor = remToken("ds-font-size-xs");
   assert.ok(
-    remToken("ds-navigation-font-size") >= remToken("ds-font-size-2xs"),
-    "the navigation label was the first casualty of the smaller face; it must not "
-    + "drop below the smallest documented tier again",
+    remToken("ds-navigation-font-size") < floor,
+    "the navigation label is the one documented exception to the floor",
   );
+
+  const belowFloor = [...tokens.matchAll(/--(ds-font-size-[a-z0-9]+):\s*([\d.]+)rem/g)]
+    .filter((match) => Number(match[2]) * 16 < floor)
+    .map((match) => match[1]);
+
+  assert.deepEqual(belowFloor, [], "a step under the floor puts 11px back within reach");
+
+  const tailwind = readFileSync("tailwind.config.ts", "utf8");
+  assert.doesNotMatch(tailwind, /"2xs":/);
 });
 
 test("tracking never closes the gap this face already sets tightly", () => {
@@ -116,7 +133,6 @@ test("tracking never closes the gap this face already sets tightly", () => {
 
 test("the type scale rises monotonically", () => {
   const sizes = [
-    "ds-font-size-2xs",
     "ds-font-size-xs",
     "ds-font-size-base",
     "ds-font-size-lg",

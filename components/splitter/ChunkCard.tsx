@@ -20,16 +20,16 @@ function ChunkCard({ chunk }: ChunkCardProps) {
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-2">
-          <span className="inline-block px-2 py-1 bg-upload-zone text-card-foreground text-2xs font-medium rounded-sm">
+          <span className="inline-block px-2 py-1 bg-upload-zone text-card-foreground text-xs font-medium rounded-sm">
             Chunk #{chunk.index + 1}
           </span>
-          <span className="text-2xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {chunk.metadata.length} Characters
           </span>
         </div>
         <button
           onClick={copyToClipboard}
-          className="text-2xs px-2 py-1 bg-subtle hover:bg-secondary-background rounded-sm transition-smooth"
+          className="text-xs px-2 py-1 bg-subtle hover:bg-secondary-background rounded-sm transition-smooth"
           title="복사"
         >
           {copied ? "✓ Copied" : "Copy"}
@@ -45,7 +45,7 @@ function ChunkCard({ chunk }: ChunkCardProps) {
 
       {/* Metadata */}
       <div className="border-t border-border pt-3">
-        <div className="grid grid-cols-2 gap-2 text-2xs">
+        <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
             <span className="text-muted-foreground">Start:</span>{" "}
             <span className="text-surface-foreground font-mono">

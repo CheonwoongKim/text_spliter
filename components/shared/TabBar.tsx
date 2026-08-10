@@ -46,7 +46,7 @@ function TabBarInner<Value extends string>({
             aria-selected={selected}
             disabled={option.disabled}
             onClick={() => onChange(option.value)}
-            className={`flex items-center gap-1 rounded-sm px-3 py-1 text-2xs transition-smooth
+            className={`flex items-center gap-1 rounded-sm px-3 py-1 text-xs transition-smooth
                      disabled:cursor-not-allowed disabled:opacity-disabled ${
               selected
                 ? "bg-card font-semibold text-card-foreground shadow-sm"
@@ -55,7 +55,7 @@ function TabBarInner<Value extends string>({
           >
             {option.label}
             {option.badge !== undefined && (
-              <span className="text-2xs font-normal text-muted-foreground">{option.badge}</span>
+              <span className="text-xs font-normal text-muted-foreground">{option.badge}</span>
             )}
           </button>
         );

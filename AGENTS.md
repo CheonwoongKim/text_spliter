@@ -15,7 +15,7 @@ The Memory Guide is currently educational UI only. It explains memory architectu
 - `components/{layout,settings,account,auth}/`: Application shell, configuration, account, and public authentication UI.
 - `components/shared/`: Reusable primitives consumed by more than one feature.
 - `lib/`: Shared contracts, server integrations, authentication, persistence, parsing, retrieval, comparison, and evaluation logic.
-- `styles/design-tokens.css` and `tailwind.config.ts`: The single-light-theme design system and strict Tailwind adapter.
+- `styles/design-tokens.css` and `tailwind.config.ts`: The single-dark-theme design system and strict Tailwind adapter.
 - `services/ragas-worker/`: Python 3.11+ FastAPI worker and pytest suite.
 - `supabase/migrations/`: Versioned database, Storage, pgvector, RPC, and RLS changes.
 - `tests/`: Node/TypeScript unit tests.
@@ -83,9 +83,9 @@ Use Node.js 20.9 or newer. The Ragas worker supports Python 3.11 through 3.13.
 
 ### Design system
 
-- The MVP has one light theme. Do not add dark-theme branches or raw Tailwind palette colors.
+- The MVP has one dark theme. Do not add theme branches, a theme toggle, or raw Tailwind palette colors.
 - Use semantic colors, typography, spacing, radius, motion, and layout dimensions from `styles/design-tokens.css` through `tailwind.config.ts`.
-- The approved spacing scale is 4, 8, 12, 16, 24, 32, 40, 48, and 64px. Core UI type sizes are 13, 15, 17, 20, and 24px; 11px is the floor, used for compact labels, helpers, breadcrumbs, GNB labels, and similar secondary UI.
+- The approved spacing scale is 4, 8, 12, 16, 24, 32, 40, 48, and 64px. The type scale is 13, 15, 17, 20, and 24px. 13px is the floor for anything a person reads and the scale has no step below it, so a field or label that declares no size lands on the floor rather than under it. 11px exists only as `text-nav`, for the GNB label, and `scripts/check-design-system.mjs` fails the build on any other size.
 - Type sizes are tuned to the face's x-height, not to a nominal pixel value. Changing the UI face changes the optical size at every step, so re-check the smallest tiers against `tests/typography-metrics.test.ts` before shipping one.
 - Use IBM Plex Sans KR for UI copy and the configured mono font only for data/code. Korean copy uses the design system's tighter tracking and readable line height.
 - The product speaks Korean. Anything a person is asked to do or told about — actions, states, labels, explanations — is Korean, and the shared wording lives in `lib/ui-copy.ts` so one action does not read three ways on three screens.

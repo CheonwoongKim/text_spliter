@@ -21,10 +21,10 @@ function SplitterDescription({
         {info.description}
       </p>
       <div>
-        <p className="text-2xs font-medium text-surface-foreground mb-1">
+        <p className="text-xs font-medium text-surface-foreground mb-1">
           사용 사례:
         </p>
-        <ul className="text-2xs text-muted-foreground list-disc list-inside space-y-1">
+        <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1">
           {info.useCases.map((useCase, index) => (
             <li key={index}>{useCase}</li>
           ))}

@@ -43,7 +43,7 @@ export default function StoragePanelHeader({
     <>
       <div className="border-b border-border-subtle bg-card px-4 py-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between">
-          <p className="text-2xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {activeTab === "parse"
               ? `${parseTotal} saved parse results`
               : `${splitTotal} saved split results`}
@@ -56,7 +56,7 @@ export default function StoragePanelHeader({
                 role="tab"
                 aria-selected={activeTab === "parse"}
                 onClick={() => onTabChange("parse")}
-                className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                className={`rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                   activeTab === "parse"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -69,7 +69,7 @@ export default function StoragePanelHeader({
                 role="tab"
                 aria-selected={activeTab === "split"}
                 onClick={() => onTabChange("split")}
-                className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                className={`rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                   activeTab === "split"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -85,7 +85,7 @@ export default function StoragePanelHeader({
                   type="button"
                   onClick={onCheckMigration}
                   disabled={syncing || loading}
-                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-2xs font-medium text-muted-foreground transition-smooth hover:text-card-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
+                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-smooth hover:text-card-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
                   title="Check and run database migration"
                 >
                   {syncing ? (
@@ -99,7 +99,7 @@ export default function StoragePanelHeader({
                   type="button"
                   onClick={onSyncStorage}
                   disabled={syncing || loading}
-                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-2xs font-medium text-muted-foreground transition-smooth hover:text-card-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
+                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-smooth hover:text-card-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
                   title="Sync with Files storage"
                 >
                   {syncing ? (

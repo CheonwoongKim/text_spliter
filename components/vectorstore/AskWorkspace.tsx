@@ -50,7 +50,7 @@ function AskWorkspace({
         <div className="border-b border-border-subtle bg-card px-4 py-3 sm:px-6 lg:px-10">
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-2">
-              <span className="text-2xs font-medium text-muted-foreground">컬렉션</span>
+              <span className="text-xs font-medium text-muted-foreground">컬렉션</span>
               <select
                 value={selectedTable || ""}
                 onChange={(event) => onSelectCollection(
@@ -58,7 +58,7 @@ function AskWorkspace({
                   event.target.value,
                 )}
                 disabled={loading}
-                className="h-control-md min-w-52 rounded-lg border border-border bg-surface px-3 text-xs
+                className="h-control-md min-w-52 rounded-lg border border-control bg-surface px-3 text-xs
                          text-card-foreground focus-ring"
               >
                 <option value="">질의할 컬렉션을 선택하세요</option>
@@ -71,7 +71,7 @@ function AskWorkspace({
             </label>
 
             {activeCollection?.table.embeddingModel && (
-              <span className="rounded-lg bg-muted px-2 py-1 text-2xs text-muted-foreground">
+              <span className="rounded-lg bg-muted px-2 py-1 text-xs text-muted-foreground">
                 {describeEmbeddingModel(
                   activeCollection.table.embeddingModel,
                   activeCollection.table.vectorDimension || 0,
@@ -95,7 +95,7 @@ function AskWorkspace({
 
       <aside className="flex h-full min-h-0 flex-col border-t border-border-subtle lg:border-l lg:border-t-0">
         <div className="border-b border-border-subtle bg-card px-4 py-3">
-          <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             실행 이력
           </h3>
         </div>

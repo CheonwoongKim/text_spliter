@@ -37,7 +37,7 @@ type Feedback = {
 
 const AUTH_CONTENT = {
   signin: {
-    title: "Welcom, Back!",
+    title: "다시 만나 반갑습니다",
     submit: "로그인",
     pending: "로그인 중...",
     link: "계정이 없나요? 회원가입",
@@ -46,7 +46,7 @@ const AUTH_CONTENT = {
     passwordMinLength: 6,
   },
   signup: {
-    title: "Sign Up",
+    title: "만나서 반갑습니다",
     submit: "계정 생성",
     pending: "계정 생성 중...",
     link: "이미 계정이 있나요? 로그인",
@@ -57,7 +57,7 @@ const AUTH_CONTENT = {
 } as const;
 
 const FIELD_CLASS =
-  "h-control-xl w-full rounded-2xl border border-border bg-card text-xs text-card-foreground placeholder-light focus-ring";
+  "h-control-xl w-full rounded-2xl border border-control bg-card text-xs text-card-foreground placeholder-light focus-ring";
 
 function PasswordVisibilityIcon({ visible }: { visible: boolean }) {
   return (
@@ -102,7 +102,7 @@ function PasswordField({
 
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block text-2xs font-normal text-surface-foreground">
+      <label htmlFor={id} className="mb-2 block text-xs font-normal text-surface-foreground">
         {label}
       </label>
       <div className="relative">
@@ -227,7 +227,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     <main className="min-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-auth">
         <header className="text-center mb-10">
-          <h1 className="text-2xl font-medium text-card-foreground">
+          <h1 className="text-2xl font-semibold text-card-foreground">
             {content.title}
           </h1>
         </header>
@@ -235,7 +235,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         <form onSubmit={handleSubmit}>
           <div className="space-y-6">
             <div>
-              <label htmlFor={`${fieldPrefix}-email`} className="mb-2 block text-2xs font-normal text-surface-foreground">
+              <label htmlFor={`${fieldPrefix}-email`} className="mb-2 block text-xs font-normal text-surface-foreground">
                 이메일
               </label>
               <input
@@ -280,7 +280,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   type="checkbox"
                   checked={shouldRememberEmail}
                   onChange={handleRememberEmailChange}
-                  className="h-4 w-4 appearance-none rounded-lg border border-border bg-card
+                  className="h-4 w-4 appearance-none rounded-lg border border-control bg-card
                            checked:border-surface-foreground checked:bg-surface-foreground
                            focus:outline-none focus-visible:border-surface-foreground"
                 />

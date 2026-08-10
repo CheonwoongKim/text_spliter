@@ -159,7 +159,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
         <div className="flex gap-1 bg-muted rounded-lg p-1">
           <button
             onClick={() => setActiveTab("upload")}
-            className={`px-3 py-1 text-2xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
+            className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
               activeTab === "upload"
                 ? "bg-card text-card-foreground shadow-sm"
                 : "text-muted-foreground hover:text-card-foreground"
@@ -169,7 +169,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
           </button>
           <button
             onClick={() => setActiveTab("plaintext")}
-            className={`px-3 py-1 text-2xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
+            className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
               activeTab === "plaintext"
                 ? "bg-card text-card-foreground shadow-sm"
                 : "text-muted-foreground hover:text-card-foreground"
@@ -179,7 +179,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
           </button>
           <button
             onClick={() => setActiveTab("storage")}
-            className={`px-3 py-1 text-2xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
+            className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
               activeTab === "storage"
                 ? "bg-card text-card-foreground shadow-sm"
                 : "text-muted-foreground hover:text-card-foreground"
@@ -188,7 +188,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
             보관함
           </button>
         </div>
-        <span className="text-2xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           {plaintextValue.length.toLocaleString()} Characters
         </span>
       </div>
@@ -213,11 +213,11 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                     <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span className="text-2xs font-medium text-surface-foreground">{fileName}</span>
+                    <span className="text-xs font-medium text-surface-foreground">{fileName}</span>
                   </div>
                   <button
                     onClick={handleClearFile}
-                    className="text-2xs text-muted-foreground hover:text-surface-foreground transition-smooth"
+                    className="text-xs text-muted-foreground hover:text-surface-foreground transition-smooth"
                   >
                     지우기
                   </button>
@@ -225,7 +225,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                 <textarea
                   value={plaintextValue}
                   readOnly
-                  className="flex-1 min-h-0 w-full p-4 border border-border rounded-lg
+                  className="flex-1 min-h-0 w-full p-4 border border-control rounded-lg
                              bg-card text-card-foreground
                              resize-none font-mono text-xs
                              scrollbar-thin"
@@ -252,7 +252,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                   <p className="text-xs font-medium text-surface-foreground mb-1">
                     {loading ? "Loading..." : "Click to upload or drag and drop"}
                   </p>
-                  <p className="text-2xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     TXT, PDF, DOC, or DOCX (max 100MB)
                   </p>
                 </div>
@@ -270,13 +270,13 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                     strokeWidth={1.5}
                     aria-hidden="true"
                   />
-                  <span className="truncate text-2xs font-medium text-surface-foreground">
+                  <span className="truncate text-xs font-medium text-surface-foreground">
                     Source: {fileName}
                   </span>
                 </div>
                 <button
                   onClick={handleClearFile}
-                  className="flex-shrink-0 text-2xs text-muted-foreground transition-smooth hover:text-surface-foreground"
+                  className="flex-shrink-0 text-xs text-muted-foreground transition-smooth hover:text-surface-foreground"
                 >
                   지우기
                 </button>
@@ -286,7 +286,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
               value={plaintextValue}
               onChange={handlePlaintextChange}
               placeholder="Type or paste your plain text here..."
-              className="min-h-0 w-full flex-1 p-4 border border-border rounded-lg
+              className="min-h-0 w-full flex-1 p-4 border border-control rounded-lg
                          focus-ring
                          bg-card text-card-foreground placeholder-light
                          resize-none font-mono text-xs
@@ -342,7 +342,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                   <p className="text-xs font-medium text-surface-foreground mb-1">
                     No parse results found
                   </p>
-                  <p className="text-2xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Parse documents first to see them here
                   </p>
                 </div>
@@ -391,7 +391,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                           />
                         </svg>
                       </div>
-                      <div className="flex items-center gap-2 text-2xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span className="px-2 py-1 bg-muted rounded-sm">
                           {result.parser_type}
                         </span>

@@ -21,7 +21,7 @@ function SplitterSelector({
     <div>
       <label
         htmlFor="splitter-type"
-        className="block text-2xs font-medium text-surface-foreground mb-2"
+        className="block text-xs font-medium text-surface-foreground mb-2"
       >
         Splitter Type
       </label>
@@ -29,7 +29,7 @@ function SplitterSelector({
         id="splitter-type"
         value={value}
         onChange={(e) => onChange(e.target.value as SplitterType)}
-        className="w-full h-control-xl px-3 border border-border rounded-lg text-xs
+        className="w-full h-control-xl px-3 border border-control rounded-lg text-xs
                    focus-ring
                    bg-card text-card-foreground
                    transition-smooth"
@@ -49,7 +49,7 @@ function SplitterSelector({
       </select>
 
       {structureSelected && !structureSplitAvailable && (
-        <p className="mt-2 text-2xs text-danger">
+        <p className="mt-2 text-xs text-danger">
           Send a parser result to the splitter to chunk along document structure.
         </p>
       )}

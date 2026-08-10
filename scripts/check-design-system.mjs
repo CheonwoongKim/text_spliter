@@ -8,8 +8,8 @@ const ALLOWED_SPACING = new Set(["0", "1", "2", "3", "4", "6", "8", "10", "12", 
 const RULES = [
   {
     name: "unsupported font size",
-    pattern: /\btext-(?:micro|caption|sm|3xl|4xl|5xl|6xl|7xl|8xl|9xl|\[[^\]]+\])/g,
-    guidance: "Use text-xs, text-base, text-lg, text-xl, or text-2xl. text-nav is for GNB labels and text-2xs is for eyebrows, compact tabs/helper text, authentication labels, and Top bar breadcrumbs only.",
+    pattern: /\btext-(?:2xs|micro|caption|sm|3xl|4xl|5xl|6xl|7xl|8xl|9xl|\[[^\]]+\])/g,
+    guidance: "Use text-xs, text-base, text-lg, text-xl, or text-2xl. 13px (text-xs) is the floor for anything a person reads; there is no step below it. text-nav is 11px and belongs to the GNB alone.",
   },
   {
     name: "unsupported font weight",
@@ -64,7 +64,7 @@ const RULES = [
   {
     name: "component theme color branch",
     pattern: /\bdark:(?:bg|text|border|ring)-[^\s"'`}]+/g,
-    guidance: "The MVP uses a single light theme; remove dark theme branches.",
+    guidance: "The MVP uses one global dark theme; remove component-level theme branches.",
   },
   {
     name: "arbitrary spacing",
@@ -90,7 +90,7 @@ const COMPONENT_BUDGETS = [
   {
     name: "hand-rolled button",
     pattern: /<button\b/g,
-    budget: 94,
+    budget: 92,
     guidance: "Use <Button> from components/shared. See docs/DESIGN_SYSTEM.md.",
     exempt: ["components/shared/Button.tsx"],
   },

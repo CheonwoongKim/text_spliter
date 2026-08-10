@@ -20,13 +20,13 @@ interface SplitterConfigProps {
 }
 
 // Common className constants to reduce duplication
-const INPUT_BASE_CLASS = `w-full h-control-xl px-3 border border-border rounded-lg text-xs
+const INPUT_BASE_CLASS = `w-full h-control-xl px-3 border border-control rounded-lg text-xs
                    focus-ring
                    bg-card text-card-foreground placeholder-light
                    transition-smooth`;
 
-const LABEL_CLASS = "block text-2xs text-muted-foreground mb-1";
-const HELP_TEXT_CLASS = "text-2xs text-muted-foreground mt-2";
+const LABEL_CLASS = "block text-xs text-muted-foreground mb-1";
+const HELP_TEXT_CLASS = "text-xs text-muted-foreground mt-2";
 
 function SplitterConfig({
   splitterType,
@@ -217,7 +217,7 @@ function SplitterConfig({
             <option value="gradient">Gradient (기울기)</option>
           </select>
           <div className="mt-2 p-3 bg-upload-zone rounded-lg border border-border">
-            <p className="text-2xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {breakpointType === "percentile" && (
                 <>
                   <strong className="text-surface-foreground">백분위수 방식:</strong> 유사도가 하위 25%에 해당하는 지점에서 분할합니다.

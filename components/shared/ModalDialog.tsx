@@ -104,7 +104,7 @@ export default function ModalDialog({
         <div className={`border-b border-border-subtle px-6 py-4 flex items-center justify-between bg-card ${headerClassName}`}>
           <div>
             <h2 id={titleId} className="text-base font-semibold text-card-foreground">{title}</h2>
-            {description && <p className="text-2xs text-muted-foreground mt-1">{description}</p>}
+            {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
           </div>
           <button
             ref={closeButtonRef}

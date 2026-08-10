@@ -48,7 +48,7 @@ function PagePanel({
           {(description || actions) && (
             <div className="flex flex-wrap items-start justify-between gap-4">
               {description && (
-                <p className="min-w-0 text-2xs text-muted-foreground">{description}</p>
+                <p className="min-w-0 text-xs text-muted-foreground">{description}</p>
               )}
               {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
             </div>
@@ -95,12 +95,12 @@ export const PanelSection = memo(function PanelSection({
         <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             {title && (
-              <h2 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {title}
               </h2>
             )}
             {description && (
-              <p className="mt-1 text-2xs text-muted-foreground">{description}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{description}</p>
             )}
           </div>
           {actions && <div className="flex items-center gap-2">{actions}</div>}

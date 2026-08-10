@@ -524,7 +524,7 @@ export default function EvaluationPanel() {
               <select
                 value={selectedDatasetId || ""}
                 onChange={(event) => setSelectedDatasetId(event.target.value || null)}
-                className="h-10 min-w-56 max-w-80 px-3 border border-border rounded-lg bg-surface text-xs font-medium text-card-foreground"
+                className="h-10 min-w-56 max-w-80 px-3 border border-control rounded-lg bg-surface text-xs font-medium text-card-foreground"
               >
                 {!workspace.datasets.length && <option value="">No datasets</option>}
                 {workspace.datasets.map((dataset) => <option key={dataset.id} value={dataset.id}>{dataset.name}</option>)}
@@ -533,14 +533,14 @@ export default function EvaluationPanel() {
                 <select
                   value={selectedVersionId || ""}
                   onChange={(event) => setSelectedVersionId(event.target.value)}
-                  className="h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"
+                  className="h-10 px-3 border border-control rounded-lg bg-surface text-xs text-card-foreground"
                 >
                   {datasetVersions.map((version) => (
                     <option key={version.id} value={version.id}>v{version.version_number} · {version.status}</option>
                   ))}
                 </select>
               )}
-            {selectedVersion && <span className={`px-3 py-1 rounded-full text-2xs font-medium ${statusClass(selectedVersion.status)}`}>{selectedVersion.status}</span>}
+            {selectedVersion && <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusClass(selectedVersion.status)}`}>{selectedVersion.status}</span>}
           </div>
           <div className="flex items-center gap-2">
             {selectedDataset && (
@@ -557,7 +557,7 @@ export default function EvaluationPanel() {
         <div className="flex items-center justify-between gap-4 mt-4 -mb-4">
           <nav className="flex items-center gap-4">
             <button type="button" onClick={() => setActiveTab("golden")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "golden" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>골든셋</button>
-            <button type="button" onClick={() => setActiveTab("runs")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "runs" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>실행 <span className="ml-1 text-2xs">{datasetRuns.length}</span></button>
+            <button type="button" onClick={() => setActiveTab("runs")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "runs" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>실행 <span className="ml-1 text-xs">{datasetRuns.length}</span></button>
           </nav>
           {activeTab === "golden" && selectedVersion && (
             <div className="flex items-center gap-2 pb-2">
@@ -578,7 +578,7 @@ export default function EvaluationPanel() {
 
       {error && (
         <div className="flex items-center justify-between gap-4 border-b border-danger-border bg-danger-surface px-4 py-3 text-xs text-danger sm:px-6 lg:px-10">
-          <span>{error}</span><button type="button" onClick={() => setError(null)} className="text-2xs transition-smooth hover:text-danger/80">닫기</button>
+          <span>{error}</span><button type="button" onClick={() => setError(null)} className="text-xs transition-smooth hover:text-danger/80">닫기</button>
         </div>
       )}
 
@@ -608,9 +608,9 @@ export default function EvaluationPanel() {
           <div className="h-full grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)]">
             <aside className="h-full overflow-y-auto border-r border-border-subtle">
               <details className="border-b border-border-subtle px-4 py-4 group">
-                <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-2xs font-medium text-card-foreground">
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-xs font-medium text-card-foreground">
                   <span>Robustness coverage</span>
-                  <span className="text-2xs font-normal text-muted-foreground">
+                  <span className="text-xs font-normal text-muted-foreground">
                     {robustnessCoverage.coveredCount}/{robustnessCoverage.scenarios.length}
                   </span>
                 </summary>
@@ -621,20 +621,20 @@ export default function EvaluationPanel() {
               <div className="sticky top-0 z-navigation bg-card px-4 py-4 border-b border-border-subtle">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-2xs font-medium text-card-foreground">케이스</p>
-                    <p className="text-2xs text-muted-foreground mt-1">{versionCases.length} total · {selectedCaseIds.size} selected</p>
+                    <p className="text-xs font-medium text-card-foreground">케이스</p>
+                    <p className="text-xs text-muted-foreground mt-1">{versionCases.length} total · {selectedCaseIds.size} selected</p>
                   </div>
                   {selectedVersion?.status === "draft" && (
                     <Button variant="soft" size="icon" className="text-base" onClick={() => setSelectedCaseId(NEW_CASE_ID)} title="케이스 추가">+</Button>
                   )}
                 </div>
                 {!!versionCases.length && (
-                  <label className="flex items-center gap-2 mt-3 text-2xs text-muted-foreground cursor-pointer">
+                  <label className="flex items-center gap-2 mt-3 text-xs text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedCaseIds.size === versionCases.length}
                       onChange={(event) => setSelectedCaseIds(event.target.checked ? new Set(versionCases.map((item) => item.id)) : new Set())}
-                      className="rounded-sm border-border accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground"
+                      className="rounded-sm border-control accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground"
                     />
                     Select all for run
                   </label>
@@ -649,26 +649,26 @@ export default function EvaluationPanel() {
                         checked={selectedCaseIds.has(evaluationCase.id)}
                         onChange={() => toggleCaseSelection(evaluationCase.id)}
                         aria-label={evaluationCaseSelectionLabel(evaluationCase)}
-                        className="rounded-sm border-border accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground"
+                        className="rounded-sm border-control accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground"
                       />
                     </label>
                     <button type="button" onClick={() => setSelectedCaseId(evaluationCase.id)} className="flex-1 min-w-0 text-left px-3 py-4">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-2xs uppercase tracking-wide text-muted-foreground">{evaluationCase.case_key || `Case ${index + 1}`}</span>
-                        <span className="text-2xs text-muted-foreground">{evaluationCase.difficulty}</span>
+                        <span className="text-xs uppercase tracking-wide text-muted-foreground">{evaluationCase.case_key || `Case ${index + 1}`}</span>
+                        <span className="text-xs text-muted-foreground">{evaluationCase.difficulty}</span>
                       </div>
                       <p className="text-xs leading-5 text-card-foreground mt-2 line-clamp-3">{evaluationCase.question}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {!evaluationCase.answerable && <span className="px-2 py-1 bg-warning-surface text-warning rounded-sm text-2xs">unanswerable</span>}
-                        {evaluationCase.tags.slice(0, 3).map((tag) => <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground rounded-sm text-2xs">{tag}</span>)}
+                        {!evaluationCase.answerable && <span className="px-2 py-1 bg-warning-surface text-warning rounded-sm text-xs">unanswerable</span>}
+                        {evaluationCase.tags.slice(0, 3).map((tag) => <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground rounded-sm text-xs">{tag}</span>)}
                       </div>
                     </button>
                   </div>
                 ))}
                 {!versionCases.length && (
                   <div className="px-4 py-10 text-center">
-                    <p className="text-2xs text-muted-foreground">이 버전에 케이스가 없습니다.</p>
-                    {selectedVersion?.status === "draft" && <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className="mt-3 text-2xs font-medium text-card-foreground hover:text-muted-foreground transition-smooth">Add first case</button>}
+                    <p className="text-xs text-muted-foreground">이 버전에 케이스가 없습니다.</p>
+                    {selectedVersion?.status === "draft" && <button type="button" onClick={() => setSelectedCaseId(NEW_CASE_ID)} className="mt-3 text-xs font-medium text-card-foreground hover:text-muted-foreground transition-smooth">Add first case</button>}
                   </div>
                 )}
               </div>
@@ -696,8 +696,8 @@ export default function EvaluationPanel() {
         footer={<><Button variant="ghost" size="sm" onClick={() => setDatasetModalOpen(false)} disabled={saving}>취소</Button><Button variant="primary" size="md" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()}>{saving ? "Saving..." : "Save dataset"}</Button></>}
       >
             <div className="space-y-4 mt-6">
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Name *</span><Input fieldSize="lg" autoFocus value={datasetName} onChange={(event) => setDatasetName(event.target.value)} placeholder="Korean financial reports"/></label>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">설명</span><Textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} placeholder="평가 목적과 포함 문서 범위"/></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Name *</span><Input fieldSize="lg" autoFocus value={datasetName} onChange={(event) => setDatasetName(event.target.value)} placeholder="Korean financial reports"/></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">설명</span><Textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} placeholder="평가 목적과 포함 문서 범위"/></label>
             </div>
       </Modal>
 
@@ -710,21 +710,21 @@ export default function EvaluationPanel() {
         footer={<><Button variant="ghost" size="sm" onClick={() => setRunModalOpen(false)} disabled={executing}>취소</Button><Button variant="primary" size="md" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20 || regressionTolerance < 0 || regressionTolerance > 100}>{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</Button></>}
       >
             <div className="flex items-start justify-between gap-4">
-              <div><h3 className="text-base font-semibold text-card-foreground">Run evaluation</h3><p className="text-2xs text-muted-foreground mt-1">선택한 {selectedCaseIds.size}개 케이스에 동일한 파이프라인을 적용합니다.</p></div>
-              <span className="px-3 py-1 rounded-full bg-warning-surface text-warning text-2xs">Version will freeze</span>
+              <div><h3 className="text-base font-semibold text-card-foreground">Run evaluation</h3><p className="text-xs text-muted-foreground mt-1">선택한 {selectedCaseIds.size}개 케이스에 동일한 파이프라인을 적용합니다.</p></div>
+              <span className="px-3 py-1 rounded-full bg-warning-surface text-warning text-xs">Version will freeze</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <label className="block md:col-span-2"><span className="block text-2xs font-medium text-muted-foreground mb-2">Run name</span><Input fieldSize="lg" value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing}/></label>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">스키마</span><Select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing}>{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</Select></label>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Vector collection</span><Select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing}><option value="">Select collection</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</Select></label>
-              <div className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">임베딩</span><div title="선택한 컬렉션이 결정합니다" className="flex h-10 items-center px-3 border border-border rounded-lg bg-muted text-xs text-card-foreground">{describeEmbeddingModel(embeddingModel, embeddingDimensions)}</div></div>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">답변 모델</span><Select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing}><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></Select></label>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">추론 강도</span><Select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing}><option value="none">None</option><option value="low">낮음</option><option value="medium">보통</option><option value="high">높음</option></Select></label>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Top K</span><Input fieldSize="lg" type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing}/></label>
+              <label className="block md:col-span-2"><span className="block text-xs font-medium text-muted-foreground mb-2">Run name</span><Input fieldSize="lg" value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing}/></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">스키마</span><Select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing}>{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</Select></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Vector collection</span><Select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing}><option value="">Select collection</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</Select></label>
+              <div className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">임베딩</span><div title="선택한 컬렉션이 결정합니다" className="flex h-10 items-center px-3 border border-border rounded-lg bg-muted text-xs text-card-foreground">{describeEmbeddingModel(embeddingModel, embeddingDimensions)}</div></div>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">답변 모델</span><Select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing}><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></Select></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">추론 강도</span><Select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing}><option value="none">None</option><option value="low">낮음</option><option value="medium">보통</option><option value="high">높음</option></Select></label>
+              <label className="block"><span className="block text-xs font-medium text-muted-foreground mb-2">Top K</span><Input fieldSize="lg" type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing}/></label>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">
               <label className="block">
-                <span className="block text-2xs font-medium text-muted-foreground mb-2">Baseline run</span>
+                <span className="block text-xs font-medium text-muted-foreground mb-2">Baseline run</span>
                 <Select fieldSize="lg" value={baselineRunId} onChange={(event) => setBaselineRunId(event.target.value)} disabled={executing}>
                   <option value="">No baseline</option>
                   {datasetRuns.filter((run) => run.status === "completed").map((run) => (
@@ -733,14 +733,14 @@ export default function EvaluationPanel() {
                 </Select>
               </label>
               <label className="block">
-                <span className="block text-2xs font-medium text-muted-foreground mb-2">Allowed metric drop (%)</span>
+                <span className="block text-xs font-medium text-muted-foreground mb-2">Allowed metric drop (%)</span>
                 <Input fieldSize="lg" type="number" min={0} max={100} step={1} value={regressionTolerance} onChange={(event) => setRegressionTolerance(Number(event.target.value))} disabled={executing || !baselineRunId}/>
               </label>
-              <p className="md:col-span-2 text-2xs leading-5 text-muted-foreground">기준 실행을 선택하면 자동 검색·인용 지표가 허용 범위보다 낮아질 때 회귀로 기록합니다.</p>
+              <p className="md:col-span-2 text-xs leading-5 text-muted-foreground">기준 실행을 선택하면 자동 검색·인용 지표가 허용 범위보다 낮아질 때 회귀로 기록합니다.</p>
             </div>
-            <div className="mt-4 px-4 py-3 bg-upload-zone border-l-2 border-surface-foreground text-2xs leading-5 text-muted-foreground">각 케이스는 OpenAI embedding 1회와 Responses API 1회를 호출합니다. 검색 함수와 사용자 격리는 Managed Supabase Vector Store에서 자동으로 적용됩니다.</div>
+            <div className="mt-4 px-4 py-3 bg-upload-zone border-l-2 border-surface-foreground text-xs leading-5 text-muted-foreground">각 케이스는 OpenAI embedding 1회와 Responses API 1회를 호출합니다. 검색 함수와 사용자 격리는 Managed Supabase Vector Store에서 자동으로 적용됩니다.</div>
             {executing && (
-              <div className="mt-4"><div className="flex items-center justify-between text-2xs text-muted-foreground mb-2"><span>Executing cases</span><span>{executionProgress.completed}/{executionProgress.total}</span></div><div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-surface-foreground transition-all duration-slow" style={{ width: `${executionProgress.total ? (executionProgress.completed / executionProgress.total) * 100 : 0}%` }} /></div></div>
+              <div className="mt-4"><div className="flex items-center justify-between text-xs text-muted-foreground mb-2"><span>Executing cases</span><span>{executionProgress.completed}/{executionProgress.total}</span></div><div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-surface-foreground transition-all duration-slow" style={{ width: `${executionProgress.total ? (executionProgress.completed / executionProgress.total) * 100 : 0}%` }} /></div></div>
             )}
       </Modal>
       <RagasEvaluationModal

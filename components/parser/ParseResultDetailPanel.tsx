@@ -361,10 +361,10 @@ export default function ParseResultDetailPanel({
                         <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
                       </svg>
                       <div className="flex-1 text-left">
-                        <p className="text-2xs font-medium text-warning">
+                        <p className="text-xs font-medium text-warning">
                           Original file preview unavailable
                         </p>
-                        <p className="text-2xs text-warning mt-1">
+                        <p className="text-xs text-warning mt-1">
                           The original file was not saved during parsing. Only the parsed content is available for editing.
                         </p>
                       </div>
@@ -383,7 +383,7 @@ export default function ParseResultDetailPanel({
             {result.text_content && (
               <button
                 onClick={() => handleViewModeChange("text")}
-                className={`px-3 py-2 text-2xs font-medium rounded-sm transition-smooth ${
+                className={`px-3 py-2 text-xs font-medium rounded-sm transition-smooth ${
                   viewMode === "text"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -395,7 +395,7 @@ export default function ParseResultDetailPanel({
             {result.html_content && (
               <button
                 onClick={() => handleViewModeChange("html")}
-                className={`px-3 py-2 text-2xs font-medium rounded-sm transition-smooth ${
+                className={`px-3 py-2 text-xs font-medium rounded-sm transition-smooth ${
                   viewMode === "html"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -407,7 +407,7 @@ export default function ParseResultDetailPanel({
             {result.markdown_content && (
               <button
                 onClick={() => handleViewModeChange("markdown")}
-                className={`px-3 py-2 text-2xs font-medium rounded-sm transition-smooth ${
+                className={`px-3 py-2 text-xs font-medium rounded-sm transition-smooth ${
                   viewMode === "markdown"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -419,7 +419,7 @@ export default function ParseResultDetailPanel({
             {result.json_content && (
               <button
                 onClick={() => handleViewModeChange("json")}
-                className={`px-3 py-2 text-2xs font-medium rounded-sm transition-smooth ${
+                className={`px-3 py-2 text-xs font-medium rounded-sm transition-smooth ${
                   viewMode === "json"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-card-foreground"
@@ -453,7 +453,7 @@ export default function ParseResultDetailPanel({
                     setEditedContent(e.target.value);
                   }
                 }}
-                className="w-full h-full p-4 bg-muted border border-border rounded-lg resize-none font-mono text-xs text-surface-foreground focus-ring"
+                className="w-full h-full p-4 bg-muted border border-control rounded-lg resize-none font-mono text-xs text-surface-foreground focus-ring"
                 placeholder="Edit content here..."
               />
             )}

@@ -82,7 +82,7 @@ function sourcePosition(area: ParserFocusArea): string | null {
 function TableComparison({ table, fallback }: { table?: DocumentTable; fallback: string }) {
   if (!table?.cells.length || (table.rowCount || 0) > 30 || (table.columnCount || 0) > 20) {
     return (
-      <pre className="whitespace-pre-wrap font-mono text-2xs leading-5 text-card-foreground">
+      <pre className="whitespace-pre-wrap font-mono text-xs leading-5 text-card-foreground">
         {fallback}
       </pre>
     );
@@ -98,7 +98,7 @@ function TableComparison({ table, fallback }: { table?: DocumentTable; fallback:
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-2xs">
+      <table className="w-full border-collapse text-xs">
         <tbody>
           {rows.map((cells, rowIndex) => (
             <tr key={rowIndex}>
@@ -130,14 +130,14 @@ function ResultGroupContent({
   group: ParserFocusVariantGroup;
 }) {
   if (group.missing) {
-    return <p className="text-2xs font-medium text-danger">These engines omitted the selected area.</p>;
+    return <p className="text-xs font-medium text-danger">These engines omitted the selected area.</p>;
   }
   if (area.blockType === "table") {
     return <TableComparison table={group.table} fallback={group.content} />;
   }
   const segments = differenceSegments(area.consensusContent, group.content);
   return (
-    <pre className="whitespace-pre-wrap font-mono text-2xs leading-5 text-card-foreground">
+    <pre className="whitespace-pre-wrap font-mono text-xs leading-5 text-card-foreground">
       {segments.map((segment, index) => segment.changed ? (
         <mark key={`${group.id}-${index}`} className="bg-warning-surface text-card-foreground">
           {segment.text}
@@ -215,7 +215,7 @@ export default function ParserFocusWorkbench({
       <div className="flex h-full flex-col items-center justify-center text-center">
         <FileText className="mb-3 h-icon-md w-icon-md text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
         <p className="text-xs font-medium text-card-foreground">No comparable document areas</p>
-        <p className="mt-1 text-2xs text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground">
           The selected engines did not return block-level or text output.
         </p>
       </div>
@@ -226,19 +226,19 @@ export default function ParserFocusWorkbench({
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden pb-4">
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-lg border border-border bg-card p-3">
-          <p className="text-2xs text-muted-foreground">Issue review</p>
+          <p className="text-xs text-muted-foreground">Issue review</p>
           <p className="mt-1 text-base font-semibold text-card-foreground">
-            {reviewedIssueCount}<span className="text-2xs font-normal text-muted-foreground"> / {issueAreas.length}</span>
+            {reviewedIssueCount}<span className="text-xs font-normal text-muted-foreground"> / {issueAreas.length}</span>
           </p>
         </div>
         <div className="rounded-lg border border-border bg-card p-3">
-          <p className="text-2xs text-muted-foreground">Agreement spot checks</p>
+          <p className="text-xs text-muted-foreground">Agreement spot checks</p>
           <p className="mt-1 text-base font-semibold text-card-foreground">{spotCheckAreas.length}</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-3">
-          <p className="text-2xs text-muted-foreground">Total reviewed</p>
+          <p className="text-xs text-muted-foreground">Total reviewed</p>
           <p className="mt-1 text-base font-semibold text-card-foreground">
-            {reviewedAreaCount}<span className="text-2xs font-normal text-muted-foreground"> / {areas.length}</span>
+            {reviewedAreaCount}<span className="text-xs font-normal text-muted-foreground"> / {areas.length}</span>
           </p>
         </div>
       </div>
@@ -247,7 +247,7 @@ export default function ParserFocusWorkbench({
         <aside className="flex min-h-0 flex-col border-b border-border lg:border-b-0 lg:border-r">
           <div className="border-b border-border p-3">
             <p className="text-xs font-medium text-card-foreground">Evidence queue</p>
-            <p className="mt-1 text-2xs text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               Review disagreements first, then sample agreed areas to catch shared errors.
             </p>
             <div className="mt-3 grid grid-cols-3 rounded-lg bg-muted p-1">
@@ -260,7 +260,7 @@ export default function ParserFocusWorkbench({
                   key={id}
                   type="button"
                   onClick={() => setFocusFilter(id)}
-                  className={`rounded-sm px-1 py-1 text-2xs font-medium transition-smooth ${
+                  className={`rounded-sm px-1 py-1 text-xs font-medium transition-smooth ${
                     focusFilter === id ? "bg-card text-card-foreground shadow-sm" : "text-muted-foreground"
                   }`}
                 >
@@ -269,11 +269,11 @@ export default function ParserFocusWorkbench({
               ))}
             </div>
             <label className="mt-3 block">
-              <span className="mb-2 block text-2xs text-muted-foreground">Page</span>
+              <span className="mb-2 block text-xs text-muted-foreground">Page</span>
               <select
                 value={pageFilter}
                 onChange={(event) => setPageFilter(event.target.value === "all" ? "all" : Number(event.target.value))}
-                className="h-control-sm w-full rounded-lg border border-border bg-card px-2 text-2xs text-card-foreground focus-ring"
+                className="h-control-sm w-full rounded-lg border border-control bg-card px-2 text-xs text-card-foreground focus-ring"
               >
                 <option value="all">All pages</option>
                 {pageNumbers.map((pageNumber) => (
@@ -304,10 +304,10 @@ export default function ParserFocusWorkbench({
                     <FileText className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   )}
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-2xs font-medium text-card-foreground">
+                    <span className="block truncate text-xs font-medium text-card-foreground">
                       Page {area.pageNumber} · {area.label}
                     </span>
-                    <span className="mt-1 block truncate text-2xs text-muted-foreground">
+                    <span className="mt-1 block truncate text-xs text-muted-foreground">
                       {reviewed
                         ? `${reviews[area.id]?.outcome?.toUpperCase()} · Reviewed`
                         : `${area.groups.length} result group${area.groups.length === 1 ? "" : "s"}`}
@@ -318,11 +318,11 @@ export default function ParserFocusWorkbench({
               );
             }) : (
               <div className="p-4 text-center">
-                <p className="text-2xs text-muted-foreground">No areas match this filter.</p>
+                <p className="text-xs text-muted-foreground">No areas match this filter.</p>
                 <button
                   type="button"
                   onClick={() => setFocusFilter("all")}
-                  className="mt-2 text-2xs font-medium text-card-foreground"
+                  className="mt-2 text-xs font-medium text-card-foreground"
                 >
                   Show all areas
                 </button>
@@ -340,7 +340,7 @@ export default function ParserFocusWorkbench({
                     <h3 className="text-xs font-medium text-card-foreground">
                       Page {selectedArea.pageNumber} · {selectedArea.label}
                     </h3>
-                    <span className={`rounded-sm px-2 py-1 text-2xs ${
+                    <span className={`rounded-sm px-2 py-1 text-xs ${
                       selectedArea.hasDisagreement
                         ? "bg-warning-surface text-warning"
                         : "bg-success-surface text-success"
@@ -348,10 +348,10 @@ export default function ParserFocusWorkbench({
                       {severityLabel(selectedArea)}
                     </span>
                   </div>
-                  <p className="mt-1 text-2xs text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {selectedArea.reasons.join(" · ")}
                   </p>
-                  <p className="mt-1 text-2xs text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Aligned by {alignmentMethodLabel(selectedArea)} · {Math.round(selectedArea.alignmentConfidence * 100)}% alignment confidence
                   </p>
                 </div>
@@ -367,14 +367,14 @@ export default function ParserFocusWorkbench({
               <div className="min-w-0">
                 <div className="mb-2 flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-                  <h4 className="text-2xs font-medium text-card-foreground">Original evidence</h4>
+                  <h4 className="text-xs font-medium text-card-foreground">Original evidence</h4>
                 </div>
                 <div className="overflow-hidden rounded-lg border border-border bg-upload-zone">
                   <div className="border-b border-border px-3 py-2">
-                    <p className="truncate text-2xs font-medium text-card-foreground">
+                    <p className="truncate text-xs font-medium text-card-foreground">
                       {selectedFile?.name || (sampleMode ? "product-brief.pdf" : "Original document")}
                     </p>
-                    <p className="mt-1 text-2xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Page {selectedArea.pageNumber}
                       {sourcePosition(selectedArea) ? ` · ${sourcePosition(selectedArea)}` : " · Detected block position"}
                     </p>
@@ -394,15 +394,15 @@ export default function ParserFocusWorkbench({
                       {sampleMode ? (
                         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
                           <p className="text-xs font-medium text-card-foreground">2026 Product Brief</p>
-                          <p className="mt-3 whitespace-pre-wrap text-2xs leading-5 text-card-foreground">
+                          <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-card-foreground">
                             {selectedArea.consensusContent || "Select a document area to inspect."}
                           </p>
                         </div>
                       ) : (
                         <div className="flex min-h-[240px] flex-col items-center justify-center text-center">
                           <FileText className="mb-3 h-icon-md w-icon-md text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-                          <p className="text-2xs font-medium text-card-foreground">Original preview unavailable</p>
-                          <p className="mt-1 text-2xs text-muted-foreground">
+                          <p className="text-xs font-medium text-card-foreground">Original preview unavailable</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
                             Verify this page and detected block position in the source file.
                           </p>
                         </div>
@@ -414,8 +414,8 @@ export default function ParserFocusWorkbench({
 
               <div className="min-w-0">
                 <div className="mb-2">
-                  <h4 className="text-2xs font-medium text-card-foreground">Distinct result groups</h4>
-                  <p className="mt-1 text-2xs text-muted-foreground">
+                  <h4 className="text-xs font-medium text-card-foreground">Distinct result groups</h4>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Engines with the same normalized content are grouped. Highlighting shows differences from the largest group.
                   </p>
                 </div>
@@ -424,8 +424,8 @@ export default function ParserFocusWorkbench({
                     ? "border-success-border bg-success-surface"
                     : "border-warning-border bg-warning-surface"
                 }`}>
-                  <p className="text-2xs font-medium text-card-foreground">Triage finding</p>
-                  <p className="mt-1 text-2xs leading-4 text-muted-foreground">
+                  <p className="text-xs font-medium text-card-foreground">Triage finding</p>
+                  <p className="mt-1 text-xs leading-4 text-muted-foreground">
                     {selectedArea.majorityGroupId
                       ? `${selectedArea.agreementCount} of ${selectedArea.engineCount} engines returned the same normalized result. This is not proof of correctness; verify it against the original.`
                       : "No majority result exists. Automated comparison cannot determine correctness, so original evidence review is required."}
@@ -448,7 +448,7 @@ export default function ParserFocusWorkbench({
                             <p className="truncate text-xs font-medium text-card-foreground">
                               {group.missing ? "Omitted result" : `Result group · ${group.engineCount} engine${group.engineCount === 1 ? "" : "s"}`}
                             </p>
-                            <p className="mt-1 text-2xs text-muted-foreground">
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {group.engines.join(" · ")}{isMajority ? " · Majority" : ""}
                             </p>
                           </div>
@@ -456,7 +456,7 @@ export default function ParserFocusWorkbench({
                             type="button"
                             disabled={group.missing}
                             onClick={() => updateReview({ groupId: group.id })}
-                            className={`h-control-sm shrink-0 rounded-lg px-3 text-2xs font-medium transition-smooth ${
+                            className={`h-control-sm shrink-0 rounded-lg px-3 text-xs font-medium transition-smooth ${
                               selected
                                 ? "bg-surface-foreground text-surface"
                                 : "border border-border text-card-foreground hover:border-border-darkest"
@@ -475,10 +475,10 @@ export default function ParserFocusWorkbench({
 
                 <section className="mt-4 rounded-lg border border-border bg-card p-4">
                   <h4 className="text-xs font-medium text-card-foreground">Your assessment</h4>
-                  <p className="mt-1 text-2xs text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Judge only against the original. Engine agreement alone is not a quality score.
                   </p>
-                  <p className="mt-2 rounded-lg bg-upload-zone px-3 py-2 text-2xs text-card-foreground">
+                  <p className="mt-2 rounded-lg bg-upload-zone px-3 py-2 text-xs text-card-foreground">
                     {reviewCriteria(selectedArea)}
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-2 2xl:grid-cols-4">
@@ -495,20 +495,20 @@ export default function ParserFocusWorkbench({
                               : "border-border hover:border-border-darkest"
                           }`}
                         >
-                          <span className="block text-2xs font-medium text-card-foreground">{outcome.label}</span>
-                          <span className="mt-1 block text-2xs text-muted-foreground">{outcome.description}</span>
+                          <span className="block text-xs font-medium text-card-foreground">{outcome.label}</span>
+                          <span className="mt-1 block text-xs text-muted-foreground">{outcome.description}</span>
                         </button>
                       );
                     })}
                   </div>
                   <label className="mt-3 block">
-                    <span className="mb-2 block text-2xs text-muted-foreground">Review note</span>
+                    <span className="mb-2 block text-xs text-muted-foreground">Review note</span>
                     <textarea
                       value={selectedReview.note}
                       onChange={(event) => updateReview({ note: event.target.value })}
                       placeholder="Describe the error or correction needed"
                       rows={3}
-                      className="w-full resize-y rounded-lg border border-border bg-card px-3 py-2 text-xs
+                      className="w-full resize-y rounded-lg border border-control bg-card px-3 py-2 text-xs
                                text-card-foreground placeholder-light focus-ring"
                     />
                   </label>

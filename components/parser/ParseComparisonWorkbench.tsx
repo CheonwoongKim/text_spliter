@@ -111,7 +111,7 @@ function ScorePicker({
           type="button"
           onClick={() => onChange(score)}
           aria-pressed={value === score}
-          className={`w-8 h-8 rounded-lg text-2xs font-medium transition-smooth ${
+          className={`w-8 h-8 rounded-lg text-xs font-medium transition-smooth ${
             value === score
               ? "bg-surface-foreground text-surface"
               : "border border-border text-muted-foreground hover:border-border-darkest hover:text-card-foreground"
@@ -152,13 +152,13 @@ function ResultColumn({
     }`}>
       <div className="p-3 border-b border-border bg-upload-zone">
         <div className="flex items-center gap-2 mb-2">
-          <span className="w-6 h-6 rounded-lg bg-surface-foreground text-surface flex items-center justify-center text-2xs font-semibold">
+          <span className="w-6 h-6 rounded-lg bg-surface-foreground text-surface flex items-center justify-center text-xs font-semibold">
             {label}
           </span>
           <select
             value={selectedId}
             onChange={(event) => onChange(event.target.value)}
-            className="min-w-0 flex-1 h-8 px-2 rounded-lg border border-border bg-card text-2xs text-card-foreground"
+            className="min-w-0 flex-1 h-8 px-2 rounded-lg border border-control bg-card text-xs text-card-foreground"
             aria-label={`Comparison result ${label}`}
           >
             {runs.map((candidate, index) => {
@@ -177,7 +177,7 @@ function ResultColumn({
           <button
             type="button"
             onClick={onChoose}
-            className={`h-8 px-3 rounded-lg text-2xs font-medium transition-smooth ${
+            className={`h-8 px-3 rounded-lg text-xs font-medium transition-smooth ${
               winner
                 ? "bg-surface-foreground text-surface"
                 : "border border-border text-muted-foreground hover:text-card-foreground"
@@ -186,7 +186,7 @@ function ResultColumn({
             {winner ? "Selected" : "Choose"}
           </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-2xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="px-2 py-1 rounded-sm bg-muted">{output.format}</span>
           {run?.metadata?.processingTime !== undefined && (
             <span>{run.metadata.processingTime}ms</span>
@@ -205,7 +205,7 @@ function ResultColumn({
         </div>
       </div>
       <div className="flex-1 min-h-[420px] overflow-auto p-4">
-        <pre className="text-2xs leading-5 text-card-foreground whitespace-pre-wrap font-mono">
+        <pre className="text-xs leading-5 text-card-foreground whitespace-pre-wrap font-mono">
           {output.content}
         </pre>
       </div>
@@ -338,13 +338,13 @@ export default function ParseComparisonWorkbench({
           <div className="p-3 border-b border-border bg-upload-zone">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="text-2xs font-semibold text-card-foreground">Original</p>
-                <p className="text-2xs text-muted-foreground truncate mt-1">
+                <p className="text-xs font-semibold text-card-foreground">Original</p>
+                <p className="text-xs text-muted-foreground truncate mt-1">
                   {selectedFile?.name || (sampleMode ? "product-brief.pdf" : "Source file unavailable")}
                 </p>
               </div>
               {selectedFile && (
-                <span className="text-2xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {(selectedFile.size / 1024).toFixed(1)} KB
                 </span>
               )}
@@ -365,7 +365,7 @@ export default function ParseComparisonWorkbench({
                     Document processing converts the source file into structured text while
                     preserving headings, paragraphs, and tables.
                   </p>
-                  <div className="mt-6 grid grid-cols-2 border border-border text-2xs">
+                  <div className="mt-6 grid grid-cols-2 border border-border text-xs">
                     <div className="bg-upload-zone px-3 py-2 font-medium text-card-foreground">지표</div>
                     <div className="border-l border-border bg-upload-zone px-3 py-2 font-medium text-card-foreground">결과</div>
                     <div className="border-t border-border px-3 py-2 text-muted-foreground">텍스트 정확도</div>
@@ -377,7 +377,7 @@ export default function ParseComparisonWorkbench({
               </div>
             ) : (
               <div className="h-full min-h-[420px] flex items-center justify-center p-8 text-center">
-                <p className="text-2xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   이 형식은 브라우저 원본 미리보기를 지원하지 않습니다.
                 </p>
               </div>
@@ -411,7 +411,7 @@ export default function ParseComparisonWorkbench({
         <div className="p-4 border-b border-border bg-upload-zone flex flex-wrap items-center justify-between gap-3">
           <div>
             <h4 className="text-xs font-semibold text-card-foreground">Evaluation scorecard</h4>
-            <p className="text-2xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               원본을 기준으로 각 결과를 1점(매우 미흡)부터 5점(매우 우수)까지 평가하세요.
             </p>
           </div>
@@ -420,7 +420,7 @@ export default function ParseComparisonWorkbench({
               type="button"
               onClick={chooseHigherScore}
               disabled={!canRecommend}
-              className="h-8 px-3 rounded-lg border border-border text-2xs font-medium text-card-foreground
+              className="h-8 px-3 rounded-lg border border-border text-xs font-medium text-card-foreground
                        hover:border-border-darkest disabled:opacity-40 disabled:cursor-not-allowed"
             >
               높은 점수 선택
@@ -428,7 +428,7 @@ export default function ParseComparisonWorkbench({
             <button
               type="button"
               onClick={copyEvaluation}
-              className="h-8 px-3 rounded-lg bg-upload-zone text-card-foreground text-2xs font-medium hover:bg-muted"
+              className="h-8 px-3 rounded-lg bg-upload-zone text-card-foreground text-xs font-medium hover:bg-muted"
             >
               {copiedEvaluation ? "복사됨" : "평가 JSON 복사"}
             </button>
@@ -438,16 +438,16 @@ export default function ParseComparisonWorkbench({
         <div className="overflow-x-auto">
           <div className="min-w-[780px]">
             <div className="grid grid-cols-[minmax(220px,1.2fr)_minmax(240px,1fr)_minmax(240px,1fr)] border-b border-border bg-upload-zone">
-              <div className="p-3 text-2xs font-medium text-muted-foreground">평가 기준</div>
+              <div className="p-3 text-xs font-medium text-muted-foreground">평가 기준</div>
               <div className="p-3 text-center border-l border-border">
-                <p className="text-2xs font-semibold text-card-foreground">A</p>
-                <p className="text-2xs text-muted-foreground truncate mt-1">
+                <p className="text-xs font-semibold text-card-foreground">A</p>
+                <p className="text-xs text-muted-foreground truncate mt-1">
                   {runAEntry ? runLabel(runAEntry.run, runAEntry.index) : "-"}
                 </p>
               </div>
               <div className="p-3 text-center border-l border-border">
-                <p className="text-2xs font-semibold text-card-foreground">B</p>
-                <p className="text-2xs text-muted-foreground truncate mt-1">
+                <p className="text-xs font-semibold text-card-foreground">B</p>
+                <p className="text-xs text-muted-foreground truncate mt-1">
                   {runBEntry ? runLabel(runBEntry.run, runBEntry.index) : "-"}
                 </p>
               </div>
@@ -459,8 +459,8 @@ export default function ParseComparisonWorkbench({
                 className="grid grid-cols-[minmax(220px,1.2fr)_minmax(240px,1fr)_minmax(240px,1fr)] border-b border-border last:border-b-0"
               >
                 <div className="p-3">
-                  <p className="text-2xs font-medium text-card-foreground">{criterion.label}</p>
-                  <p className="text-2xs leading-4 text-muted-foreground mt-1">
+                  <p className="text-xs font-medium text-card-foreground">{criterion.label}</p>
+                  <p className="text-xs leading-4 text-muted-foreground mt-1">
                     {criterion.description}
                   </p>
                 </div>
@@ -483,15 +483,15 @@ export default function ParseComparisonWorkbench({
 
             <div className="grid grid-cols-[minmax(220px,1.2fr)_minmax(240px,1fr)_minmax(240px,1fr)] border-b border-border">
               <div className="p-3">
-                <p className="text-2xs font-medium text-card-foreground">검토 메모</p>
-                <p className="text-2xs text-muted-foreground mt-1">오류 사례와 선택 근거를 기록합니다.</p>
+                <p className="text-xs font-medium text-card-foreground">검토 메모</p>
+                <p className="text-xs text-muted-foreground mt-1">오류 사례와 선택 근거를 기록합니다.</p>
               </div>
               <div className="p-3 border-l border-border">
                 <textarea
                   value={evaluationA?.notes || ""}
                   onChange={(event) => updateNotes(runAId, event.target.value)}
                   placeholder="A 결과의 장점과 오류"
-                  className="w-full min-h-20 resize-y rounded-lg border border-border bg-surface px-3 py-2 text-2xs
+                  className="w-full min-h-20 resize-y rounded-lg border border-control bg-surface px-3 py-2 text-xs
                            text-card-foreground placeholder:text-muted-foreground focus-ring"
                 />
               </div>
@@ -500,7 +500,7 @@ export default function ParseComparisonWorkbench({
                   value={evaluationB?.notes || ""}
                   onChange={(event) => updateNotes(runBId, event.target.value)}
                   placeholder="B 결과의 장점과 오류"
-                  className="w-full min-h-20 resize-y rounded-lg border border-border bg-surface px-3 py-2 text-2xs
+                  className="w-full min-h-20 resize-y rounded-lg border border-control bg-surface px-3 py-2 text-xs
                            text-card-foreground placeholder:text-muted-foreground focus-ring"
                 />
               </div>
@@ -508,19 +508,19 @@ export default function ParseComparisonWorkbench({
 
             <div className="grid grid-cols-[minmax(220px,1.2fr)_minmax(240px,1fr)_minmax(240px,1fr)] bg-upload-zone">
               <div className="p-3 flex items-center">
-                <p className="text-2xs font-semibold text-card-foreground">평균 점수</p>
+                <p className="text-xs font-semibold text-card-foreground">평균 점수</p>
               </div>
               <div className="p-3 border-l border-border text-center">
                 <span className="text-base font-semibold text-card-foreground">
                   {averageA === null ? "-" : averageA.toFixed(1)}
                 </span>
-                <span className="text-2xs text-muted-foreground"> / 5</span>
+                <span className="text-xs text-muted-foreground"> / 5</span>
               </div>
               <div className="p-3 border-l border-border text-center">
                 <span className="text-base font-semibold text-card-foreground">
                   {averageB === null ? "-" : averageB.toFixed(1)}
                 </span>
-                <span className="text-2xs text-muted-foreground"> / 5</span>
+                <span className="text-xs text-muted-foreground"> / 5</span>
               </div>
             </div>
           </div>

@@ -63,7 +63,7 @@ function PanelPlaceholder({
 
       <p className="text-xs font-medium text-card-foreground">{title}</p>
       {description && (
-        <p className="mt-1 max-w-sm text-pretty text-2xs text-muted-foreground">{description}</p>
+        <p className="mt-1 max-w-sm text-pretty text-xs text-muted-foreground">{description}</p>
       )}
 
       {action && !loading && (

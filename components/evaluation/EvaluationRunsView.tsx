@@ -110,7 +110,7 @@ function ScoreSelect({
 }) {
   return (
     <label className="block">
-      <span className="block text-2xs font-medium text-muted-foreground mb-2">{label}</span>
+      <span className="block text-xs font-medium text-muted-foreground mb-2">{label}</span>
       <Select value={value || ""} onChange={(event) => onChange(event.target.value ? Number(event.target.value) : undefined)}>
         <option value="">Not scored</option>
         <option value="1">1 · Poor</option>
@@ -231,7 +231,7 @@ export default function EvaluationRunsView({
     <div className="h-full grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="h-full overflow-y-auto border-r border-border-subtle">
         <div className="px-4 py-4 border-b border-border-subtle sticky top-0 bg-card z-navigation">
-          <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">Run history</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Run history</p>
         </div>
         <div>
           {runs.map((run) => (
@@ -245,9 +245,9 @@ export default function EvaluationRunsView({
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-medium text-card-foreground truncate">{run.name}</span>
-                <span className={`px-2 py-1 rounded-full text-2xs font-medium ${statusClass(run.status)}`}>{run.status}</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass(run.status)}`}>{run.status}</span>
               </div>
-              <div className="flex items-center justify-between mt-2 text-2xs text-muted-foreground">
+              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                 <span>{run.completed_count}/{run.case_count} cases</span>
                 <span>{new Date(run.created_at).toLocaleDateString()}</span>
               </div>
@@ -263,37 +263,37 @@ export default function EvaluationRunsView({
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-semibold text-card-foreground">{selectedRun.name}</h3>
-                  <span className={`px-2 py-1 rounded-full text-2xs font-medium ${statusClass(selectedRun.status)}`}>{selectedRun.status}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass(selectedRun.status)}`}>{selectedRun.status}</span>
                 </div>
-                <p className="text-2xs text-muted-foreground mt-1 font-mono">{selectedRun.id}</p>
+                <p className="text-xs text-muted-foreground mt-1 font-mono">{selectedRun.id}</p>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-3 text-center">
                 <div>
-                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">성공</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">성공</p>
                   <p className="text-xs font-semibold text-card-foreground mt-1">{percent(metrics.successRate)}</p>
                 </div>
                 <div>
-                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">Recall@K</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Recall@K</p>
                   <p className="text-xs font-semibold text-card-foreground mt-1">{percent(deterministic.recallAtK)}</p>
                 </div>
                 <div>
-                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">MRR</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">MRR</p>
                   <p className="text-xs font-semibold text-card-foreground mt-1">{numberMetric(deterministic.mrr)}</p>
                 </div>
                 <div>
-                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">nDCG@K</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">nDCG@K</p>
                   <p className="text-xs font-semibold text-card-foreground mt-1">{numberMetric(deterministic.ndcgAtK)}</p>
                 </div>
                 <div>
-                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">인용 재현율</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">인용 재현율</p>
                   <p className="text-xs font-semibold text-card-foreground mt-1">{percent(deterministic.citationRecall)}</p>
                 </div>
                 <div>
-                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">Reviewed</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Reviewed</p>
                   <p className="text-xs font-semibold text-card-foreground mt-1">{String(metrics.reviewedCount ?? 0)}</p>
                 </div>
                 <div>
-                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">Correctness</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Correctness</p>
                   <p className="text-xs font-semibold text-card-foreground mt-1">{numberMetric(manualAverages.correctness)}</p>
                 </div>
               </div>
@@ -301,10 +301,10 @@ export default function EvaluationRunsView({
             {!!comparison.baselineRunId && (
               <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-border">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className={`px-2 py-1 rounded-full text-2xs font-medium ${statusClass(String(comparison.status || "pending"))}`}>{String(comparison.status || "pending")}</span>
-                  <p className="text-2xs text-muted-foreground truncate">{String(comparison.baselineRunName || comparison.baselineRunId)}</p>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass(String(comparison.status || "pending"))}`}>{String(comparison.status || "pending")}</span>
+                  <p className="text-xs text-muted-foreground truncate">{String(comparison.baselineRunName || comparison.baselineRunId)}</p>
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted-foreground">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   {METRIC_COLUMNS.filter(([key]) => ["recallAtK", "mrr", "ndcgAtK", "citationRecall"].includes(key)).map(([key, label]) => (
                     <span key={key}>{label} <strong className={typeof comparisonDeltas[key] === "number" && Number(comparisonDeltas[key]) < 0 ? "text-danger" : "text-card-foreground"}>{signedPercent(comparisonDeltas[key])}</strong></span>
                   ))}
@@ -314,8 +314,8 @@ export default function EvaluationRunsView({
             <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-border">
               <div className="flex flex-wrap items-center gap-3 min-w-0">
                 <div>
-                  <p className="text-2xs font-medium text-card-foreground">Model evaluation</p>
-                  <p className="text-2xs text-muted-foreground mt-1">
+                  <p className="text-xs font-medium text-card-foreground">Model evaluation</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {selectedJudgeBatch
                       ? `Ragas ${selectedJudgeBatch.framework_version || "—"} · ${judgeModel} · ${selectedJudgeBatch.completed_count}/${selectedJudgeBatch.case_count}`
                       : "Ragas 평가 배치가 없습니다."}
@@ -325,7 +325,7 @@ export default function EvaluationRunsView({
                   <select
                     value={selectedJudgeBatch?.id || ""}
                     onChange={(event) => setSelectedJudgeBatchId(event.target.value)}
-                    className="h-control-md max-w-64 px-3 border border-border rounded-lg bg-surface text-2xs text-card-foreground focus-ring"
+                    className="h-control-md max-w-64 px-3 border border-control rounded-lg bg-surface text-xs text-card-foreground focus-ring"
                   >
                     {selectedRunJudgeBatches.map((batch) => (
                       <option key={batch.id} value={batch.id}>{new Date(batch.created_at).toLocaleString()} · {batch.status}</option>
@@ -342,45 +342,45 @@ export default function EvaluationRunsView({
                     const metric = asRecord(judgeMetricAverages[key]);
                     return (
                       <div key={key} className="flex-[1_1_130px] min-w-[130px] py-3 pr-4">
-                        <p className="text-2xs uppercase tracking-wide text-muted-foreground">{label}</p>
-                        <p className="text-2xs font-semibold text-card-foreground mt-1">{numberMetric(metric.average)} <span className="font-normal text-muted-foreground">n={String(metric.sampleCount ?? 0)}</span></p>
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+                        <p className="text-xs font-semibold text-card-foreground mt-1">{numberMetric(metric.average)} <span className="font-normal text-muted-foreground">n={String(metric.sampleCount ?? 0)}</span></p>
                       </div>
                     );
                   })}
                   <div className="flex-[1_1_130px] min-w-[130px] py-3 pr-4">
-                    <p className="text-2xs uppercase tracking-wide text-muted-foreground">Judge usage</p>
-                    <p className="text-2xs font-semibold text-card-foreground mt-1">{Number(judgeUsage.totalTokens || 0).toLocaleString()} <span className="font-normal text-muted-foreground">tokens</span></p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Judge usage</p>
+                    <p className="text-xs font-semibold text-card-foreground mt-1">{Number(judgeUsage.totalTokens || 0).toLocaleString()} <span className="font-normal text-muted-foreground">tokens</span></p>
                   </div>
                   <div className="flex-[1_1_130px] min-w-[130px] py-3 pr-4">
-                    <p className="text-2xs uppercase tracking-wide text-muted-foreground">Retrieval cost</p>
-                    <p className="text-2xs font-semibold text-card-foreground mt-1" title="Estimated embedding and answer cost for this run">{formatUsd(runCostUsd)} <span className="font-normal text-muted-foreground">est.</span></p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Retrieval cost</p>
+                    <p className="text-xs font-semibold text-card-foreground mt-1" title="Estimated embedding and answer cost for this run">{formatUsd(runCostUsd)} <span className="font-normal text-muted-foreground">est.</span></p>
                   </div>
                 </div>
               )}
             </div>
             <details className="mt-4 pt-4 border-t border-border group">
-              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-2xs font-medium text-card-foreground">
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-xs font-medium text-card-foreground">
                 <span>Parser impact on retrieval</span>
-                <span className="text-2xs font-normal text-muted-foreground group-open:hidden">파서별 검색 품질 비교</span>
+                <span className="text-xs font-normal text-muted-foreground group-open:hidden">파서별 검색 품질 비교</span>
               </summary>
               <div className="mt-4">
                 <ParserImpactView parserBreakdown={parserBreakdownRows} />
               </div>
             </details>
             <details className="mt-4 pt-4 border-t border-border group">
-              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-2xs font-medium text-card-foreground">
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 text-xs font-medium text-card-foreground">
                 <span>Metric breakdown</span>
-                <span className="text-2xs font-normal text-muted-foreground group-open:hidden">문서·파서·모델별 결과 보기</span>
+                <span className="text-xs font-normal text-muted-foreground group-open:hidden">문서·파서·모델별 결과 보기</span>
               </summary>
               <div className="mt-4">
                 <div className="flex items-center justify-between gap-4 mb-3">
-                  <select value={breakdownDimension} onChange={(event) => setBreakdownDimension(event.target.value as BreakdownDimension)} className="h-control-md min-w-44 px-3 border border-border rounded-lg bg-surface text-2xs text-card-foreground focus-ring">
+                  <select value={breakdownDimension} onChange={(event) => setBreakdownDimension(event.target.value as BreakdownDimension)} className="h-control-md min-w-44 px-3 border border-control rounded-lg bg-surface text-xs text-card-foreground focus-ring">
                     {Object.entries(BREAKDOWN_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
                   </select>
-                  <span className="text-2xs text-muted-foreground">점수 없는 케이스는 평균에서 제외됩니다.</span>
+                  <span className="text-xs text-muted-foreground">점수 없는 케이스는 평균에서 제외됩니다.</span>
                 </div>
                 <div className="overflow-x-auto border border-border rounded-lg">
-                  <table className="w-full min-w-[680px] text-2xs">
+                  <table className="w-full min-w-[680px] text-xs">
                     <thead className="bg-upload-zone text-muted-foreground">
                       <tr><th className="px-3 py-2 text-left font-medium">{BREAKDOWN_LABELS[breakdownDimension]}</th><th className="px-3 py-2 text-right font-medium">케이스</th><th className="px-3 py-2 text-right font-medium">성공</th><th className="px-3 py-2 text-right font-medium">Recall@K</th><th className="px-3 py-2 text-right font-medium">MRR</th><th className="px-3 py-2 text-right font-medium">nDCG@K</th><th className="px-3 py-2 text-right font-medium">인용 재현율</th></tr>
                     </thead>
@@ -417,18 +417,18 @@ export default function EvaluationRunsView({
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <span className="w-6 h-6 flex-shrink-0 rounded-full bg-muted text-2xs text-muted-foreground flex items-center justify-center">{index + 1}</span>
+                  <span className="w-6 h-6 flex-shrink-0 rounded-full bg-muted text-xs text-muted-foreground flex items-center justify-center">{index + 1}</span>
                   <div className="min-w-0">
-                    <p className="text-2xs leading-5 text-card-foreground line-clamp-3">{caseRun.question_snapshot}</p>
+                    <p className="text-xs leading-5 text-card-foreground line-clamp-3">{caseRun.question_snapshot}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className={`px-2 py-1 rounded-sm text-2xs ${statusClass(caseRun.status)}`}>{caseRun.status}</span>
+                      <span className={`px-2 py-1 rounded-sm text-xs ${statusClass(caseRun.status)}`}>{caseRun.status}</span>
                       {caseRun.reviewer_decision !== "pending" && (
-                        <span className={`px-2 py-1 rounded-sm text-2xs ${statusClass(caseRun.reviewer_decision)}`}>{caseRun.reviewer_decision}</span>
+                        <span className={`px-2 py-1 rounded-sm text-xs ${statusClass(caseRun.reviewer_decision)}`}>{caseRun.reviewer_decision}</span>
                       )}
                       {selectedJudgeBatch && (() => {
                         const judgeCase = judgeCaseRuns.find((item) => item.judge_batch_id === selectedJudgeBatch.id && item.evaluation_case_run_id === caseRun.id);
                         return judgeCase
-                          ? <span className={`px-2 py-1 rounded-sm text-2xs ${statusClass(judgeCase.status)}`}>Ragas {judgeCase.status}</span>
+                          ? <span className={`px-2 py-1 rounded-sm text-xs ${statusClass(judgeCase.status)}`}>Ragas {judgeCase.status}</span>
                           : null;
                       })()}
                     </div>
@@ -445,23 +445,23 @@ export default function EvaluationRunsView({
               <div className="max-w-5xl mx-auto px-8 py-8 space-y-8">
                 <section>
                   <div className="flex items-center justify-between gap-4 mb-3">
-                    <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">Question</h4>
-                    <span className={`px-2 py-1 rounded-full text-2xs font-medium ${statusClass(selectedCaseRun.status)}`}>{selectedCaseRun.status}</span>
+                    <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Question</h4>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass(selectedCaseRun.status)}`}>{selectedCaseRun.status}</span>
                   </div>
                   <p className="text-xs leading-7 text-card-foreground">{selectedCaseRun.question_snapshot}</p>
                   {selectedCaseRun.error && (
-                    <pre className="mt-4 p-3 border border-danger-border bg-danger-surface rounded-lg text-2xs text-danger whitespace-pre-wrap">{JSON.stringify(selectedCaseRun.error, null, 2)}</pre>
+                    <pre className="mt-4 p-3 border border-danger-border bg-danger-surface rounded-lg text-xs text-danger whitespace-pre-wrap">{JSON.stringify(selectedCaseRun.error, null, 2)}</pre>
                   )}
                 </section>
 
                 <section className="grid grid-cols-1 2xl:grid-cols-2 gap-8 border-t border-border pt-8">
                   <div>
-                    <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground mb-3">기준 답변</h4>
+                    <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-3">기준 답변</h4>
                     <p className="text-xs leading-6 text-card-foreground whitespace-pre-wrap">{selectedCaseRun.reference_answer_snapshot || "기준 답변 없음"}</p>
                     {!!selectedCaseRun.reference_facts_snapshot.length && (
                       <ul className="mt-4 space-y-2">
                         {selectedCaseRun.reference_facts_snapshot.map((fact, index) => (
-                          <li key={`${index}-${fact}`} className="flex gap-2 text-2xs leading-5 text-muted-foreground">
+                          <li key={`${index}-${fact}`} className="flex gap-2 text-xs leading-5 text-muted-foreground">
                             <span className="text-card-foreground">•</span><span>{fact}</span>
                           </li>
                         ))}
@@ -469,7 +469,7 @@ export default function EvaluationRunsView({
                     )}
                   </div>
                   <div>
-                    <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground mb-3">Actual answer</h4>
+                    <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-3">Actual answer</h4>
                     <p className="text-xs leading-6 text-card-foreground whitespace-pre-wrap">{selectedCaseRun.actual_answer || "생성된 답변 없음"}</p>
                   </div>
                 </section>
@@ -478,24 +478,24 @@ export default function EvaluationRunsView({
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h4 className="text-xs font-medium text-card-foreground">Evidence review</h4>
-                      <p className="text-2xs text-muted-foreground mt-1">기대 근거와 실제 검색 근거를 나란히 검토합니다.</p>
+                      <p className="text-xs text-muted-foreground mt-1">기대 근거와 실제 검색 근거를 나란히 검토합니다.</p>
                     </div>
-                    <span className="text-2xs text-muted-foreground">{selectedCaseRun.retrieved_contexts?.length || 0} retrieved</span>
+                    <span className="text-xs text-muted-foreground">{selectedCaseRun.retrieved_contexts?.length || 0} retrieved</span>
                   </div>
                   <div className="flex flex-wrap mb-4 border border-border rounded-lg overflow-hidden">
                     {METRIC_COLUMNS.map(([key, label]) => (
                       <div key={key} className="flex-[1_1_120px] min-w-[120px] px-3 py-3 border-r border-b border-border last:border-r-0">
-                        <p className="text-2xs uppercase tracking-wide text-muted-foreground">{label}</p>
-                        <p className="text-2xs font-semibold text-card-foreground mt-1">{key === "mrr" || key === "ndcgAtK" ? numberMetric(selectedCaseMetrics[key]) : percent(selectedCaseMetrics[key])}</p>
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+                        <p className="text-xs font-semibold text-card-foreground mt-1">{key === "mrr" || key === "ndcgAtK" ? numberMetric(selectedCaseMetrics[key]) : percent(selectedCaseMetrics[key])}</p>
                       </div>
                     ))}
                   </div>
                   {!!selectedCaseRun.expected_evidence_snapshot.length && (
                     <div className="mb-4">
-                      <p className="text-2xs font-medium text-muted-foreground mb-2">Expected</p>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Expected</p>
                       <div className="space-y-2">
                         {selectedCaseRun.expected_evidence_snapshot.map((evidence, index) => (
-                          <div key={index} className="px-3 py-2 border-l-2 border-surface-foreground bg-upload-zone text-2xs text-card-foreground font-mono break-all">
+                          <div key={index} className="px-3 py-2 border-l-2 border-surface-foreground bg-upload-zone text-xs text-card-foreground font-mono break-all">
                             {JSON.stringify(evidence)}
                           </div>
                         ))}
@@ -507,12 +507,12 @@ export default function EvaluationRunsView({
                       const relevance = relevanceByRank.find((item) => Number(item.rank) === context.rank);
                       return (
                         <details key={`${context.rank}-${context.chunkId}`} className={`border-b pb-3 ${relevance?.relevant ? "border-success-border" : "border-border"}`}>
-                          <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-2xs">
+                          <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-xs">
                             <span className="text-card-foreground"><strong className="text-card-foreground mr-2">[{context.rank}]</strong>chunk {context.chunkId}</span>
                             <span className="flex items-center gap-2 text-muted-foreground">{Boolean(relevance?.relevant) && <span className="text-success">matched</span>}{Boolean(relevance?.cited) && <span className="text-card-foreground">cited</span>}<span>cosine {context.similarity.toFixed(4)}</span></span>
                           </summary>
-                          <p className="mt-3 text-2xs leading-5 text-card-foreground whitespace-pre-wrap max-h-56 overflow-y-auto">{context.content}</p>
-                          <pre className="mt-3 text-2xs text-muted-foreground whitespace-pre-wrap break-all">{JSON.stringify(context.metadata, null, 2)}</pre>
+                          <p className="mt-3 text-xs leading-5 text-card-foreground whitespace-pre-wrap max-h-56 overflow-y-auto">{context.content}</p>
+                          <pre className="mt-3 text-xs text-muted-foreground whitespace-pre-wrap break-all">{JSON.stringify(context.metadata, null, 2)}</pre>
                         </details>
                       );
                     })}
@@ -524,22 +524,22 @@ export default function EvaluationRunsView({
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                       <div>
                         <h4 className="text-xs font-medium text-card-foreground">Ragas model evaluation</h4>
-                        <p className="text-2xs text-muted-foreground mt-1">{judgeModel} 판정 점수와 지표별 근거입니다.</p>
+                        <p className="text-xs text-muted-foreground mt-1">{judgeModel} 판정 점수와 지표별 근거입니다.</p>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-2xs font-medium ${statusClass(selectedJudgeCaseRun?.status || "pending")}`}>{selectedJudgeCaseRun?.status || "not evaluated"}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass(selectedJudgeCaseRun?.status || "pending")}`}>{selectedJudgeCaseRun?.status || "not evaluated"}</span>
                     </div>
                     {selectedJudgeCaseRun?.status === "failed" && (
-                      <pre className="mb-4 p-3 border border-danger-border bg-danger-surface rounded-lg text-2xs text-danger whitespace-pre-wrap">{JSON.stringify(selectedJudgeCaseRun.error, null, 2)}</pre>
+                      <pre className="mb-4 p-3 border border-danger-border bg-danger-surface rounded-lg text-xs text-danger whitespace-pre-wrap">{JSON.stringify(selectedJudgeCaseRun.error, null, 2)}</pre>
                     )}
                     <div className="border-t border-border">
                       {RAGAS_METRIC_COLUMNS.map(([key, label]) => {
                         const detail = selectedJudgeCaseRun?.metric_details[key];
                         const score = selectedJudgeCaseRun?.scores[key];
                         return (
-                          <div key={key} className="grid grid-cols-1 sm:grid-cols-[140px_70px_minmax(0,1fr)] gap-2 sm:gap-4 py-3 border-b border-border text-2xs">
+                          <div key={key} className="grid grid-cols-1 sm:grid-cols-[140px_70px_minmax(0,1fr)] gap-2 sm:gap-4 py-3 border-b border-border text-xs">
                             <div>
                               <p className="font-medium text-card-foreground">{label}</p>
-                              <p className={`text-2xs mt-1 ${detail?.status === "failed" ? "text-danger" : "text-muted-foreground"}`}>{detail?.status || "not selected"}</p>
+                              <p className={`text-xs mt-1 ${detail?.status === "failed" ? "text-danger" : "text-muted-foreground"}`}>{detail?.status || "not selected"}</p>
                             </div>
                             <p className="font-semibold text-card-foreground tabular-nums">{numberMetric(score)}</p>
                             <p className="leading-5 text-muted-foreground whitespace-pre-wrap">{detail?.reason || detail?.error || "판정 근거가 없습니다."}</p>
@@ -554,9 +554,9 @@ export default function EvaluationRunsView({
                   <div className="flex items-center justify-between gap-4 mb-4">
                     <div>
                       <h4 className="text-xs font-medium text-card-foreground">Human review</h4>
-                      <p className="text-2xs text-muted-foreground mt-1">각 항목은 1점부터 5점까지 독립적으로 기록합니다.</p>
+                      <p className="text-xs text-muted-foreground mt-1">각 항목은 1점부터 5점까지 독립적으로 기록합니다.</p>
                     </div>
-                    {selectedCaseRun.reviewed_at && <span className="text-2xs text-muted-foreground">Reviewed {new Date(selectedCaseRun.reviewed_at).toLocaleString()}</span>}
+                    {selectedCaseRun.reviewed_at && <span className="text-xs text-muted-foreground">Reviewed {new Date(selectedCaseRun.reviewed_at).toLocaleString()}</span>}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <ScoreSelect label="Correctness" value={correctness} onChange={setCorrectness} />
@@ -565,7 +565,7 @@ export default function EvaluationRunsView({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-[180px_minmax(0,1fr)] gap-4 mt-4">
                     <label className="block">
-                      <span className="block text-2xs font-medium text-muted-foreground mb-2">Decision</span>
+                      <span className="block text-xs font-medium text-muted-foreground mb-2">Decision</span>
                       <Select value={decision} onChange={(event) => setDecision(event.target.value as ReviewerDecision)}>
                         <option value="pending">Pending</option>
                         <option value="pass">Pass</option>
@@ -573,8 +573,8 @@ export default function EvaluationRunsView({
                       </Select>
                     </label>
                     <label className="block">
-                      <span className="block text-2xs font-medium text-muted-foreground mb-2">Notes</span>
-                      <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} className="w-full px-3 py-3 border border-border rounded-lg bg-surface text-xs text-card-foreground" placeholder="판정 근거와 발견한 오류를 기록하세요." />
+                      <span className="block text-xs font-medium text-muted-foreground mb-2">Notes</span>
+                      <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} className="w-full px-3 py-3 border border-control rounded-lg bg-surface text-xs text-card-foreground" placeholder="판정 근거와 발견한 오류를 기록하세요." />
                     </label>
                   </div>
                   <div className="flex justify-end mt-4">

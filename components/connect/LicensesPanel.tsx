@@ -183,7 +183,7 @@ function CredentialCard({
               type="button"
               onClick={onTest}
               disabled={testDisabled || result.status === "testing"}
-              className="flex items-center gap-1 text-2xs font-medium text-card-foreground transition-smooth hover:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
+              className="flex items-center gap-1 text-xs font-medium text-card-foreground transition-smooth hover:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
             >
               {result.status === "testing" && (
                 <LoaderCircle className="h-3 w-3 animate-spin" strokeWidth={1.5} aria-hidden="true" />
@@ -191,11 +191,11 @@ function CredentialCard({
               {result.status === "testing" ? "Testing..." : "Test"}
             </button>
           </div>
-          <p className="mb-4 text-2xs text-muted-foreground">{description}</p>
+          <p className="mb-4 text-xs text-muted-foreground">{description}</p>
           <div className="space-y-4">
             {fields.map((field) => (
               <label key={field.key} className="block">
-                <span className="mb-2 block text-2xs font-medium text-muted-foreground">
+                <span className="mb-2 block text-xs font-medium text-muted-foreground">
                   {field.label}
                 </span>
                 <input
@@ -203,13 +203,13 @@ function CredentialCard({
                   value={values[field.key]}
                   onChange={(event) => onChange(field.key, event.target.value)}
                   placeholder={field.placeholder}
-                  className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-xs text-card-foreground placeholder-light focus-ring"
+                  className="h-10 w-full rounded-lg border border-control bg-surface px-3 text-xs text-card-foreground placeholder-light focus-ring"
                 />
               </label>
             ))}
           </div>
           {result.status !== "idle" && result.status !== "testing" && (
-            <p className={`mt-3 flex items-center gap-1 text-2xs ${result.status === "success" ? "text-success" : "text-danger"}`}>
+            <p className={`mt-3 flex items-center gap-1 text-xs ${result.status === "success" ? "text-success" : "text-danger"}`}>
               {result.status === "success" ? (
                 <CheckCircle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               ) : (
@@ -425,7 +425,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
               <div className="inline-flex gap-1 bg-muted rounded-lg p-1">
               <button
                 onClick={() => setActiveTab("embedding")}
-                className={`px-3 py-1 text-2xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
                   activeTab === "embedding"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-surface-foreground"
@@ -435,7 +435,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
               </button>
               <button
                 onClick={() => setActiveTab("vision")}
-                className={`px-3 py-1 text-2xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
                   activeTab === "vision"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-surface-foreground"
@@ -445,7 +445,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
               </button>
               <button
                 onClick={() => setActiveTab("parser")}
-                className={`px-3 py-1 text-2xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
                   activeTab === "parser"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-surface-foreground"
@@ -455,7 +455,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
               </button>
               <button
                 onClick={() => setActiveTab("database")}
-                className={`px-3 py-1 text-2xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
+                className={`px-3 py-1 text-xs font-medium rounded-sm transition-smooth whitespace-nowrap ${
                   activeTab === "database"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-surface-foreground"
@@ -528,7 +528,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
             {activeTab === "vision" && (
               <div>
                 <div className="rounded-lg border border-border bg-muted px-4 py-3">
-                  <p className="text-2xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     PDF는 OpenAI, Gemini, Claude에 원본으로 전달합니다. Qwen의 PDF와 Office/HWP 문서는 아래 네이티브 렌더러가 만든 페이지 이미지를 사용합니다.
                   </p>
                 </div>
@@ -649,7 +649,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                         <button
                           onClick={() => handleTestConnection('google')}
                           disabled={testResults.google.status === 'testing' || !keys.googleParserServiceAccountEmail || !keys.googleParserPrivateKey || !keys.googleParserProjectId || !keys.googleParserLocation || !keys.googleParserProcessorId}
-                          className="text-2xs text-card-foreground hover:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                          className="text-xs text-card-foreground hover:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                         >
                           {testResults.google.status === 'testing' ? (
                             <>
@@ -669,21 +669,21 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                           )}
                         </button>
                       </div>
-                      <p className="text-2xs text-muted-foreground mb-4">
+                      <p className="text-xs text-muted-foreground mb-4">
                         Parse documents with Google Cloud Document AI
                       </p>
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-2xs font-medium text-muted-foreground mb-2">
+                          <label className="block text-xs font-medium text-muted-foreground mb-2">
                             Service Account Email <span className="text-danger">*</span>
                           </label>
                           <Input type="password" value={keys.googleParserServiceAccountEmail} onChange={(e) => handleChange("googleParserServiceAccountEmail", e.target.value)} placeholder="your-service-account@project.iam.gserviceaccount.com"/>
-                          <p className="text-2xs text-muted-foreground mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             From JSON key file: <code className="text-card-foreground">client_email</code> field
                           </p>
                         </div>
                         <div>
-                          <label className="block text-2xs font-medium text-muted-foreground mb-2">
+                          <label className="block text-xs font-medium text-muted-foreground mb-2">
                             Private Key <span className="text-danger">*</span>
                           </label>
                           <textarea
@@ -701,42 +701,42 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                                      bg-surface text-card-foreground text-xs
                                      placeholder-light font-mono resize-none"
                           />
-                          <p className="text-2xs text-muted-foreground mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Paste the entire <code className="text-card-foreground">private_key</code> value from JSON file (literal <code>\n</code> will be auto-converted to line breaks)
                           </p>
                         </div>
                         <div>
-                          <label className="block text-2xs font-medium text-muted-foreground mb-2">
+                          <label className="block text-xs font-medium text-muted-foreground mb-2">
                             Project ID <span className="text-danger">*</span>
                           </label>
                           <Input type="password" value={keys.googleParserProjectId} onChange={(e) => handleChange("googleParserProjectId", e.target.value)} placeholder="your-project-id or 123456789"/>
-                          <p className="text-2xs text-muted-foreground mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             From JSON key file: <code className="text-card-foreground">project_id</code> field, or from processor URL
                           </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-2xs font-medium text-muted-foreground mb-2">
+                            <label className="block text-xs font-medium text-muted-foreground mb-2">
                               Location <span className="text-danger">*</span>
                             </label>
                             <Input type="password" value={keys.googleParserLocation} onChange={(e) => handleChange("googleParserLocation", e.target.value)} placeholder="us, eu, or us-central1"/>
-                            <p className="text-2xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               From processor URL: <code className="text-card-foreground">/locations/[location]/</code>
                             </p>
                           </div>
                           <div>
-                            <label className="block text-2xs font-medium text-muted-foreground mb-2">
+                            <label className="block text-xs font-medium text-muted-foreground mb-2">
                               Processor ID <span className="text-danger">*</span>
                             </label>
                             <Input type="password" value={keys.googleParserProcessorId} onChange={(e) => handleChange("googleParserProcessorId", e.target.value)} placeholder="9f9bd205a57448a5"/>
-                            <p className="text-2xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               From processor URL: <code className="text-card-foreground">/processors/[processor-id]:</code>
                             </p>
                           </div>
                         </div>
                       </div>
                       {testResults.google.status !== 'idle' && testResults.google.status !== 'testing' && (
-                        <div className={`mt-2 text-2xs flex items-center gap-1 ${
+                        <div className={`mt-2 text-xs flex items-center gap-1 ${
                           testResults.google.status === 'success' ? 'text-success' : 'text-danger'
                         }`}>
                           {testResults.google.status === 'success' ? (
@@ -789,21 +789,21 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <h4 className="text-xs font-medium text-card-foreground">Managed Supabase Vector Store</h4>
-                      <span className="px-3 py-1 rounded-full bg-success-surface text-2xs font-medium text-success">
+                      <span className="px-3 py-1 rounded-full bg-success-surface text-xs font-medium text-success">
                         Connected
                       </span>
                     </div>
-                    <p className="text-2xs text-muted-foreground mb-4">
+                    <p className="text-xs text-muted-foreground mb-4">
                       앱 Supabase의 pgvector를 사용하며 로그인 사용자별 컬렉션으로 격리됩니다.
                     </p>
                     <div className="rounded-lg border border-border bg-upload-zone p-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-2xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                         <div><span className="block text-muted-foreground">보관함</span><strong className="block mt-1 text-card-foreground">Application Supabase</strong></div>
                         <div><span className="block text-muted-foreground">Search</span><strong className="block mt-1 text-card-foreground">pgvector · cosine</strong></div>
                         <div><span className="block text-muted-foreground">Isolation</span><strong className="block mt-1 text-card-foreground">Owner scoped</strong></div>
                       </div>
                     </div>
-                    <p className="text-2xs text-muted-foreground mt-3">
+                    <p className="text-xs text-muted-foreground mt-3">
                       Supabase URL이나 service-role 키를 별도로 입력할 필요가 없습니다. 임베딩 생성에는 AI Models의 OpenAI 키를 사용합니다.
                     </p>
                   </div>

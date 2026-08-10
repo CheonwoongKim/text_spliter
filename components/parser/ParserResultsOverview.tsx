@@ -70,7 +70,7 @@ function ParserResultsOverview({
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-xs font-medium text-card-foreground">Areas that need review</h3>
-          <p className="mt-1 text-2xs text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground">
             Start with document areas where engines omitted content or returned different results.
           </p>
         </div>
@@ -102,11 +102,11 @@ function ParserResultsOverview({
               <span className="block truncate text-xs font-medium text-card-foreground">
                 Page {area.pageNumber} · {area.label}
               </span>
-              <span className="mt-1 block truncate text-2xs text-muted-foreground">
+              <span className="mt-1 block truncate text-xs text-muted-foreground">
                 {area.reasons.join(" · ")} · {area.agreementCount}/{area.engineCount} normalized agreement
               </span>
             </span>
-            <span className="text-2xs font-medium text-card-foreground">Review</span>
+            <span className="text-xs font-medium text-card-foreground">Review</span>
             <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
           </button>
         )) : (
@@ -114,7 +114,7 @@ function ParserResultsOverview({
             <Check className="h-4 w-4 shrink-0 text-success" strokeWidth={1.5} aria-hidden="true" />
             <div>
               <p className="text-xs font-medium text-card-foreground">No exact block-level differences found</p>
-              <p className="mt-1 text-2xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 You can still open Focus review and inspect any page or document area manually.
               </p>
             </div>
@@ -125,7 +125,7 @@ function ParserResultsOverview({
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <h3 className="text-xs font-medium text-card-foreground">Engine results</h3>
-          <p className="mt-1 text-2xs text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground">
             Open a complete result only when you need to inspect one engine in full.
           </p>
         </div>
@@ -140,13 +140,13 @@ function ParserResultsOverview({
       <div className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-[892px]">
           <div className="grid grid-cols-[minmax(200px,1.5fr)_minmax(92px,0.6fr)_minmax(180px,1.2fr)_80px_100px_96px_132px] bg-upload-zone">
-            <div className="px-3 py-2 text-2xs font-medium text-muted-foreground">엔진</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Role</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">출력</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">페이지</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">처리 중</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">결과</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Next step</div>
+            <div className="px-3 py-2 text-xs font-medium text-muted-foreground">엔진</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-xs font-medium text-muted-foreground">Role</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-xs font-medium text-muted-foreground">출력</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-xs font-medium text-muted-foreground">페이지</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-xs font-medium text-muted-foreground">처리 중</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-xs font-medium text-muted-foreground">결과</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-xs font-medium text-muted-foreground">Next step</div>
           </div>
 
           {runs.map((run, index) => {
@@ -167,32 +167,32 @@ function ParserResultsOverview({
               >
                 <div className="min-w-0 px-3 py-3">
                   <p className="truncate text-xs font-medium text-card-foreground">{engine}</p>
-                  <p className="mt-1 truncate text-2xs text-muted-foreground">
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
                     {model || (id === fastestRunId ? "Fastest completed result" : "Completed")}
                     {model && id === fastestRunId ? " · Fastest" : ""}
                   </p>
                 </div>
                 <div className="flex items-center border-l border-border-subtle px-3 py-3">
-                  <span className="rounded-sm bg-muted px-2 py-1 text-2xs text-muted-foreground">
+                  <span className="rounded-sm bg-muted px-2 py-1 text-xs text-muted-foreground">
                     {role}
                   </span>
                 </div>
                 <div className="flex min-w-0 items-center border-l border-border-subtle px-3 py-3">
-                  <p className="truncate text-2xs text-card-foreground">
+                  <p className="truncate text-xs text-card-foreground">
                     {formats.length > 0 ? formats.join(" · ") : "No supported output"}
                   </p>
                 </div>
-                <div className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-card-foreground">
+                <div className="flex items-center border-l border-border-subtle px-3 py-3 text-xs text-card-foreground">
                   {pageCount || "-"}
                 </div>
-                <div className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-card-foreground">
+                <div className="flex items-center border-l border-border-subtle px-3 py-3 text-xs text-card-foreground">
                   {formatProcessingTime(run.metadata?.processingTime)}
                 </div>
                 <div className="flex items-center border-l border-border-subtle px-3 py-3">
                   <button
                     type="button"
                     onClick={() => onOpenRun(id)}
-                    className="flex items-center gap-1 text-2xs font-medium text-card-foreground transition-smooth
+                    className="flex items-center gap-1 text-xs font-medium text-card-foreground transition-smooth
                              hover:opacity-hover"
                   >
                     상세
@@ -207,7 +207,7 @@ function ParserResultsOverview({
                     title={chunkable
                       ? `Chunk the ${engine} result in the splitter`
                       : "This engine returned no text to chunk"}
-                    className="flex items-center gap-1 text-2xs font-medium text-card-foreground transition-smooth
+                    className="flex items-center gap-1 text-xs font-medium text-card-foreground transition-smooth
                              hover:opacity-hover disabled:cursor-not-allowed disabled:opacity-disabled"
                   >
                     <ListTree className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
@@ -220,7 +220,7 @@ function ParserResultsOverview({
 
           {loading && (
             <div className="border-t border-border-subtle bg-card px-3 py-3">
-              <p className="text-2xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Other selected engines are still processing. Completed results appear here automatically.
               </p>
             </div>

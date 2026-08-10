@@ -59,6 +59,32 @@ test("measurement names were not translated away", () => {
   }
 });
 
+/**
+ * The authentication screens are the first thing a person sees, and they were
+ * the last place English survived: the sign-in title read "Welcom, Back!" —
+ * misspelt, and in a language the rest of the product does not use.
+ *
+ * Nothing on these screens names a provider option, a metric, or a model, so
+ * unlike the workbench they have no reason to carry a Latin word at all.
+ */
+test("the authentication screens speak Korean, titles included", () => {
+  const form = readFileSync("components/auth/AuthForm.tsx", "utf8");
+  const content = form.slice(
+    form.indexOf("const AUTH_CONTENT"),
+    form.indexOf("const FIELD_CLASS"),
+  );
+
+  for (const key of ["title", "submit", "pending", "link"]) {
+    const values = [...content.matchAll(new RegExp(`${key}: "([^"]+)"`, "g"))].map((m) => m[1]);
+
+    assert.equal(values.length, 2, `${key} must be set for both sign-in and sign-up`);
+    for (const value of values) {
+      assert.match(value, /[가-힣]/, `${key} "${value}" is read by a Korean speaker`);
+      assert.doesNotMatch(value, /[A-Za-z]/, `${key} "${value}" has no term that must stay English`);
+    }
+  }
+});
+
 test("the common actions read the same way on every screen", () => {
   const strays = new Map<string, string[]>();
   // Words the glossary already settles; finding them in English means a screen

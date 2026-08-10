@@ -47,7 +47,7 @@ function StatusMessage({ tone, children, details, className = "" }: StatusMessag
   return (
     <div
       role={tone === "danger" ? "alert" : "status"}
-      className={`flex items-start gap-2 rounded-lg border p-3 text-2xs ${toneClass} ${className}`}
+      className={`flex items-start gap-2 rounded-lg border p-3 text-xs ${toneClass} ${className}`}
     >
       <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
       <div className="min-w-0">

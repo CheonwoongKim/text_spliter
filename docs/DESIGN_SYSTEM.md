@@ -18,11 +18,11 @@ BGK는 디자인을 보여주기 위한 서비스가 아니라 문서를 처리�
 
 ### 4. Neutral by default
 
-기본 UI와 주요 액션은 검정과 중립색으로 구성합니다. 색상은 성공, 경고, 오류처럼 실제 상태를 구분할 때만 사용합니다.
+기본 UI와 주요 액션은 무채색 대비와 중립색으로 구성합니다. 색상은 성공, 경고, 오류처럼 실제 상태를 구분할 때만 사용합니다.
 
 ### 5. One theme for the MVP
 
-MVP는 라이트 테마 하나만 제공합니다. 테마 상태, 토글, 다크 전용 토큰과 컴포넌트의 `dark:` 분기를 추가하지 않습니다.
+MVP는 다크 테마 하나만 제공합니다. 테마 상태, 토글, 별도 테마 토큰과 컴포넌트의 `dark:` 분기를 추가하지 않습니다.
 
 ### 6. Accessible by default
 
@@ -73,17 +73,22 @@ COMPONENT_BUDGETS = [ hand-rolled button, text input, select, overlay, parallel 
 
 UI에는 IBM Plex Sans KR 하나만 사용합니다. `next/font/google`이 빌드 시점에 폰트를 받아 프로젝트에서 자체 호스팅하므로 런타임에 폰트 CDN으로 나가는 요청이 없습니다. next/font는 이 CJK 페이스의 메트릭을 보유하지 않아 보정된 fallback face를 만들지 않으므로, swap 시점에 Arial과의 메트릭 차이만큼 레이아웃이 움직입니다. 한글은 별도 subset 이름이 아니라 unicode-range 조각으로 분할되어 제공되므로, 브라우저는 각 화면이 실제로 렌더링하는 글리프 조각과 굵기만 요청합니다. 400/500/600/700 네 굵기를 모두 로드해 semibold를 합성 없이 표시합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
 
-업무 화면의 기본 본문과 입력값은 `13px`, section heading은 `15px`, page heading은 `17px`을 사용합니다. `11px`은 eyebrow, label, metadata, table heading, compact tab·helper text, Top bar breadcrumb, GNB 메뉴명에 사용하는 최소 크기입니다. IBM Plex Sans KR의 x-height가 이전 페이스보다 3.9% 작아, 10px 예외 토큰은 가독성 하한을 밑돌아 폐지했습니다. `20px`과 `24px`은 인증 화면처럼 독립된 진입 화면의 제목에만 허용합니다.
+본문 크기는 화면의 성격에 따라 둘로 나뉩니다. 업무 화면은 한 화면에 데이터를 많이 담아야 하므로 본문·입력값·표 셀이 `13px`이고, 로그인처럼 한 번에 한 가지만 하는 독립 진입 화면은 본문·상태 메시지·주 CTA가 `15px`입니다. `15px`은 `body`의 기본값이기도 합니다.
+
+어느 쪽이든 사람이 읽는 모든 텍스트의 하한은 `13px`입니다. 하한은 주석이 아니라 스케일로 강제합니다 — `13px` 아래 단계가 아예 없고, `text-2xs`는 `scripts/check-design-system.mjs`가 차단합니다.
+
+이전에는 `11px`이 "compact label 예외"로 열려 있었고, 그 예외가 제품 전체 타이포의 69%(527곳)를 차지했습니다. 표 셀·보조 설명·본문까지 시스템이 제공하는 가장 작은 크기로 조판되어 있었습니다. 한글은 라틴 문자 한 글자가 쓰는 공간에 자소 두세 개를 담기 때문에, 라틴이 버티는 크기에서 먼저 판독이 무너집니다. 한국어로 읽는 제품이므로 단계 자체를 제거했습니다.
+
+`11px`은 `text-nav` 하나로만 남습니다. GNB 메뉴명은 자기 아이콘 아래에 붙어 있고 고정된 집합으로 외워 읽히므로, 흐르는 문장과 같은 기준을 적용하지 않습니다. `20px`과 `24px`은 인증 화면처럼 독립된 진입 화면의 제목에만 허용합니다.
 
 | Utility | Size / line-height | Role |
 | --- | --- | --- |
-| `text-nav` | 10 / 16px | GNB menu label only |
-| `text-2xs` | 11 / 16px | eyebrow, label, metadata, compact tab/helper, table heading, breadcrumb |
-| `text-xs` | 13 / 20px | workspace body, input, button, table cell |
-| `text-base` | 15 / 24px | workspace section heading, modal heading |
-| `text-lg` | 17 / 26px | workspace page heading |
-| `text-xl` | 20 / 30px | standalone entry heading only |
-| `text-2xl` | 24 / 36px | product name, authentication title only |
+| `text-nav` | 11 / 18px | GNB menu label only |
+| `text-xs` | 13 / 22px | floor: workspace body, input, button, table cell, label, eyebrow, metadata, helper |
+| `text-base` | 15 / 24px | page heading, section heading, modal heading; body, status message and primary CTA on a standalone entry screen |
+| `text-lg` | 17 / 28px | workspace page heading |
+| `text-xl` | 20 / 32px | standalone entry heading only |
+| `text-2xl` | 24 / 38px | product name, authentication title only |
 
 허용 font weight는 `400`, `500`, `600`, `700`입니다. 일반 본문은 `400`, 컨트롤은 `500`, 제목은 `600`, 제품명만 `700`을 사용합니다.
 
@@ -93,7 +98,7 @@ UI에는 IBM Plex Sans KR 하나만 사용합니다. `next/font/google`이 빌�
 
 Label은 필드의 의미를 명확하게 설명합니다. Placeholder는 label이나 입력 지시를 반복하지 않고, 사용자가 입력 형식을 바로 이해할 수 있는 실제 예시만 제공합니다.
 
-모든 입력필드 label은 `text-2xs`(11px), 입력값과 Placeholder는 `text-xs`(13px)를 사용합니다. Label weight는 기본 `400`, compact control에서만 `500`을 허용합니다. Placeholder는 `fg-placeholder` 토큰으로 본문과 명확히 구분하고, 입력값보다 시각적으로 강조하지 않습니다.
+모든 입력필드 label과 입력값, Placeholder는 `text-xs`(13px)를 사용합니다. Placeholder는 크기를 따로 갖지 않고 필드의 크기를 물려받습니다 — 힌트와 그 자리를 대신할 입력값이 타이핑 도중 크기가 달라지면 안 되기 때문입니다. 따라서 크기를 정하는 것은 필드 쪽이고, 크기 클래스를 쓰지 않은 필드는 `app/globals.css`의 `input, select, textarea` 기본값인 13px로 떨어집니다. 하한을 13px로 올리면서 label을 입력값보다 작게 두던 위계는 사라졌고, 이제 weight와 color가 그 역할을 합니다 — label은 `font-medium`에 `muted-foreground`, 입력값은 `card-foreground`입니다. Placeholder는 `fg-placeholder` 토큰으로 본문과 명확히 구분하고, 입력값보다 시각적으로 강조하지 않습니다.
 
 로그인과 회원가입은 각각 `/login`, `/signup` 경로를 사용합니다. 회원가입 비밀번호는 8자 이상이며 영문 대문자·소문자, 숫자, 특수문자를 모두 포함해야 하고 비밀번호 확인 값과 일치해야 합니다. 이 규칙은 클라이언트 검증과 로컬 `supabase/config.toml`에 동일하게 적용합니다. 운영 Supabase 프로젝트도 Auth 설정의 password strength를 같은 값으로 유지해야 합니다.
 
@@ -164,10 +169,11 @@ UI에서 사용할 수 있는 색상 역할은 아래가 전부입니다.
 - `surface`: 전체 작업면
 - `card`: 떠 있는 표면과 실제 상호작용 영역
 - `muted`: 보조 표면과 비활성 영역
-- `upload-zone`: 파일 드래그앤드롭 영역 전용 `#f8f9fa` 표면
+- `upload-zone`: 파일 드래그앤드롭 영역과 강조된 보조 영역
 - `surface-foreground`, `card-foreground`: 기본 텍스트
 - `muted-foreground`: 보조 텍스트
 - `border`, `border-darkest`: 구획
+- `border-control`: 입력·선택 컨트롤의 식별 가능한 기본 경계
 
 ### Accent
 
@@ -187,7 +193,7 @@ UI에서 사용할 수 있는 색상 역할은 아래가 전부입니다.
 - `brand`: 외부 공급자 로고의 흰색 캔버스
 - `overlay`: modal backdrop
 
-`red-500`, `blue-50`, `white`, `black` 같은 Tailwind palette 직접 사용은 금지합니다. MVP에는 다크 테마와 `dark:` 분기를 추가하지 않습니다.
+`red-500`, `blue-50`, `white`, `black` 같은 Tailwind palette 직접 사용은 금지합니다. MVP에는 테마 분기와 `dark:` 유틸리티를 추가하지 않습니다.
 
 ## Motion and elevation
 
@@ -219,7 +225,7 @@ UI에서 사용할 수 있는 색상 역할은 아래가 전부입니다.
 
 ## Change rule
 
-새 값을 추가하기 전에 기존 조합으로 해결할 수 없는 기능적 이유가 있어야 합니다. 두 곳 이상에서 반복되고 제품 의미가 명확할 때만 토큰을 확장하며, 라이트/다크 값과 이 문서, 계약 테스트를 함께 수정합니다.
+새 값을 추가하기 전에 기존 조합으로 해결할 수 없는 기능적 이유가 있어야 합니다. 두 곳 이상에서 반복되고 제품 의미가 명확할 때만 토큰을 확장하며, 전역 다크 팔레트와 이 문서, 계약 테스트를 함께 수정합니다.
 
 모든 UI 변경은 아래 검사를 통과해야 합니다.
 

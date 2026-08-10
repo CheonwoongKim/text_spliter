@@ -24,7 +24,7 @@ function contrastRatio(foreground: string, background: string): number {
   return (high + 0.05) / (low + 0.05);
 }
 
-/** WCAG AA for text below 18px, which the 10px navigation label certainly is. */
+/** WCAG AA for text below 18px, which the compact navigation label is. */
 const AA_NORMAL_TEXT = 4.5;
 
 test("the navigation rest state is readable, not placeholder grey", () => {
@@ -36,9 +36,10 @@ test("the navigation rest state is readable, not placeholder grey", () => {
     contrastRatio(muted, background) >= AA_NORMAL_TEXT,
     `the resting colour must clear ${AA_NORMAL_TEXT}:1`,
   );
+  assert.ok(contrastRatio(placeholder, background) >= AA_NORMAL_TEXT);
   assert.ok(
-    contrastRatio(placeholder, background) < AA_NORMAL_TEXT,
-    "placeholder grey is documented here as the tone that fails, so the guard stays meaningful",
+    contrastRatio(muted, background) > contrastRatio(placeholder, background),
+    "navigation labels need stronger contrast than supplementary placeholders",
   );
 
   assert.match(sidebar, /text-muted-foreground/);
@@ -46,6 +47,16 @@ test("the navigation rest state is readable, not placeholder grey", () => {
     sidebar,
     /text-subdued/,
     "placeholder grey is for input placeholders, not navigation",
+  );
+});
+
+test("dark form controls keep a visible boundary", () => {
+  const background = tokenValue("ds-color-bg-raised");
+  const controlBorder = tokenValue("ds-color-border-control");
+
+  assert.ok(
+    contrastRatio(controlBorder, background) >= 3,
+    "control boundaries must clear the 3:1 non-text contrast floor",
   );
 });
 

@@ -83,13 +83,13 @@ export function ParseResultsTable({
         <table className="w-full">
           <thead className="sticky top-0 border-b border-border bg-muted">
             <tr>
-              <th className="w-32 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">유형</th>
-              <th className="w-64 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">File Name</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">크기</th>
-              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">MIME Type</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">시간</th>
-              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">생성일</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-center text-2xs font-semibold uppercase tracking-wide text-muted-foreground">동작</th>
+              <th className="w-32 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">유형</th>
+              <th className="w-64 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">File Name</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">크기</th>
+              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">MIME Type</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">시간</th>
+              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">생성일</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">동작</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -105,7 +105,7 @@ export function ParseResultsTable({
               results.map((result) => (
                 <tr key={result.id} className="transition-smooth hover:bg-muted">
                   <td className="w-32 whitespace-nowrap px-4 py-3">
-                    <span className="inline-block whitespace-nowrap rounded-sm bg-upload-zone px-2 py-1 text-2xs font-medium text-card-foreground">
+                    <span className="inline-block whitespace-nowrap rounded-sm bg-upload-zone px-2 py-1 text-xs font-medium text-card-foreground">
                       {result.parser_type}
                     </span>
                   </td>
@@ -166,14 +166,14 @@ export function SplitResultsTable({
         <table className="w-full">
           <thead className="sticky top-0 border-b border-border bg-muted">
             <tr>
-              <th className="w-40 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">유형</th>
-              <th className="w-64 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">미리보기</th>
-              <th className="w-24 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Chunks</th>
-              <th className="w-24 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">크기</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Overlap</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">시간</th>
-              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">생성일</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-center text-2xs font-semibold uppercase tracking-wide text-muted-foreground">동작</th>
+              <th className="w-40 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">유형</th>
+              <th className="w-64 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">미리보기</th>
+              <th className="w-24 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Chunks</th>
+              <th className="w-24 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">크기</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Overlap</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">시간</th>
+              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">생성일</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">동작</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -189,7 +189,7 @@ export function SplitResultsTable({
               results.map((result) => (
                 <tr key={result.id} className="transition-smooth hover:bg-muted">
                   <td className="w-40 whitespace-nowrap px-4 py-3">
-                    <span className="inline-block whitespace-nowrap rounded-sm bg-upload-zone px-2 py-1 text-2xs font-medium text-card-foreground">
+                    <span className="inline-block whitespace-nowrap rounded-sm bg-upload-zone px-2 py-1 text-xs font-medium text-card-foreground">
                       {result.splitter_type}
                     </span>
                   </td>

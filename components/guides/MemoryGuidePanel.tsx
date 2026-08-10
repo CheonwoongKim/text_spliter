@@ -311,7 +311,7 @@ function SectionHeading({
 }) {
   return (
     <header className="max-w-3xl">
-      <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {eyebrow}
       </p>
       <h2 className="mt-1 text-lg font-semibold text-card-foreground">{title}</h2>
@@ -343,7 +343,7 @@ export default function MemoryGuidePanel() {
               <BrainCircuit className="h-6 w-6" strokeWidth={1} aria-hidden="true" />
             </div>
             <div>
-              <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Memory guide
               </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-card-foreground">
@@ -358,7 +358,7 @@ export default function MemoryGuidePanel() {
           </div>
 
           <div className="mt-8 rounded-xl border border-border bg-upload-zone p-4">
-            <p className="text-2xs font-medium text-card-foreground">한 문장으로 이해하기</p>
+            <p className="text-xs font-medium text-card-foreground">한 문장으로 이해하기</p>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
               Memory = 기록하기 · 선별하기 · 구조화하기 · 다시 찾기 · 갱신하고 잊기
             </p>
@@ -366,7 +366,7 @@ export default function MemoryGuidePanel() {
         </header>
 
         <nav className="border-b border-border-subtle py-4" aria-label="Memory guide sections">
-          <ul className="flex flex-wrap gap-2 text-2xs">
+          <ul className="flex flex-wrap gap-2 text-xs">
             {[
               ["#memory-architecture", "작동 구조"],
               ["#memory-types", "기억의 종류"],
@@ -406,11 +406,11 @@ export default function MemoryGuidePanel() {
               return (
                 <li key={step as string} className="rounded-xl border border-border p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-2xs font-medium text-muted-foreground">{step as string}</span>
+                    <span className="text-xs font-medium text-muted-foreground">{step as string}</span>
                     <StepIcon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   </div>
                   <h3 className="mt-4 text-xs font-medium text-card-foreground">{title as string}</h3>
-                  <p className="mt-2 text-2xs leading-5 text-muted-foreground">{description as string}</p>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{description as string}</p>
                 </li>
               );
             })}
@@ -418,7 +418,7 @@ export default function MemoryGuidePanel() {
 
           <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-border p-6">
-              <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Read path
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-card-foreground">
@@ -432,7 +432,7 @@ export default function MemoryGuidePanel() {
               </div>
             </div>
             <div className="rounded-xl border border-border p-6">
-              <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Write path
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-card-foreground">
@@ -463,12 +463,12 @@ export default function MemoryGuidePanel() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-xs font-medium text-card-foreground">{layer.name}</h3>
-                      <p className="mt-1 text-2xs text-muted-foreground">{layer.englishName}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{layer.englishName}</p>
                     </div>
                     <Icon className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   </div>
                   <p className="mt-4 text-xs leading-6 text-muted-foreground">{layer.description}</p>
-                  <dl className="mt-4 space-y-3 border-t border-border-subtle pt-4 text-2xs">
+                  <dl className="mt-4 space-y-3 border-t border-border-subtle pt-4 text-xs">
                     <div>
                       <dt className="text-muted-foreground">예시</dt>
                       <dd className="mt-1 leading-5 text-card-foreground">{layer.example}</dd>
@@ -507,25 +507,25 @@ export default function MemoryGuidePanel() {
                   </div>
 
                   <div className="mt-4 rounded-lg bg-upload-zone p-3">
-                    <p className="text-2xs text-muted-foreground">작동 구조</p>
-                    <p className="mt-1 font-mono text-2xs leading-5 text-card-foreground">
+                    <p className="text-xs text-muted-foreground">작동 구조</p>
+                    <p className="mt-1 font-mono text-xs leading-5 text-card-foreground">
                       {method.architecture}
                     </p>
                   </div>
 
                   <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <p className="mb-2 text-2xs font-medium text-card-foreground">강점</p>
+                      <p className="mb-2 text-xs font-medium text-card-foreground">강점</p>
                       <BulletList items={method.strengths} />
                     </div>
                     <div>
-                      <p className="mb-2 text-2xs font-medium text-card-foreground">주의할 점</p>
+                      <p className="mb-2 text-xs font-medium text-card-foreground">주의할 점</p>
                       <BulletList items={method.cautions} />
                     </div>
                   </div>
 
                   <div className="mt-4 border-t border-border-subtle pt-4">
-                    <p className="text-2xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       적합한 경우 <span className="ml-2 font-medium text-card-foreground">{method.bestFor}</span>
                     </p>
                   </div>
@@ -543,7 +543,7 @@ export default function MemoryGuidePanel() {
           />
 
           <div className="mt-6 overflow-x-auto rounded-xl border border-border">
-            <table className="min-w-full border-collapse text-left text-2xs">
+            <table className="min-w-full border-collapse text-left text-xs">
               <caption className="sr-only">메모리 구현 방식별 특성 비교</caption>
               <thead className="bg-upload-zone text-muted-foreground">
                 <tr>
@@ -587,7 +587,7 @@ export default function MemoryGuidePanel() {
           />
 
           <div className="mt-6 rounded-xl border border-border bg-upload-zone p-4">
-            <p className="text-2xs font-medium text-card-foreground">읽기 전에 알아두기</p>
+            <p className="text-xs font-medium text-card-foreground">읽기 전에 알아두기</p>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
               아래의 아키텍처는 핵심 흐름을 이해하기 위한 개념도입니다. 실제 저장 방식과 지원
               범위는 버전과 배포 구성에 따라 달라질 수 있습니다.
@@ -606,10 +606,10 @@ export default function MemoryGuidePanel() {
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-base font-semibold text-card-foreground">{provider.name}</h3>
-                        <p className="mt-1 text-2xs font-medium text-muted-foreground">{provider.technique}</p>
+                        <p className="mt-1 text-xs font-medium text-muted-foreground">{provider.technique}</p>
                       </div>
                     </div>
-                    <span className="shrink-0 rounded-full border border-border px-3 py-1 text-2xs text-muted-foreground">
+                    <span className="shrink-0 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
                       {provider.deployment}
                     </span>
                   </div>
@@ -617,18 +617,18 @@ export default function MemoryGuidePanel() {
                   <p className="mt-4 text-xs leading-6 text-muted-foreground">{provider.definition}</p>
 
                   <div className="mt-4 rounded-lg bg-upload-zone p-3">
-                    <p className="text-2xs text-muted-foreground">핵심 아키텍처</p>
-                    <p className="mt-1 font-mono text-2xs leading-5 text-card-foreground">
+                    <p className="text-xs text-muted-foreground">핵심 아키텍처</p>
+                    <p className="mt-1 font-mono text-xs leading-5 text-card-foreground">
                       {provider.architecture}
                     </p>
                   </div>
 
                   <div className="mt-4">
-                    <p className="mb-2 text-2xs font-medium text-card-foreground">주요 특징</p>
+                    <p className="mb-2 text-xs font-medium text-card-foreground">주요 특징</p>
                     <BulletList items={provider.features} />
                   </div>
 
-                  <dl className="mt-4 space-y-3 border-t border-border-subtle pt-4 text-2xs">
+                  <dl className="mt-4 space-y-3 border-t border-border-subtle pt-4 text-xs">
                     <div>
                       <dt className="text-muted-foreground">주의할 점</dt>
                       <dd className="mt-1 leading-5 text-card-foreground">{provider.limitation}</dd>
@@ -644,7 +644,7 @@ export default function MemoryGuidePanel() {
                       href={provider.docsUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 text-2xs font-medium text-card-foreground transition-smooth hover:text-muted-foreground focus-ring"
+                      className="inline-flex items-center gap-2 text-xs font-medium text-card-foreground transition-smooth hover:text-muted-foreground focus-ring"
                       aria-label={`${provider.name} 공식 문서 새 창에서 열기`}
                     >
                       공식 문서
@@ -657,7 +657,7 @@ export default function MemoryGuidePanel() {
           </div>
 
           <div className="mt-6 overflow-x-auto rounded-xl border border-border">
-            <table className="min-w-full border-collapse text-left text-2xs">
+            <table className="min-w-full border-collapse text-left text-xs">
               <caption className="sr-only">공유 글에 소개된 8개 메모리 제공자 비교</caption>
               <thead className="bg-upload-zone text-muted-foreground">
                 <tr>
@@ -682,7 +682,7 @@ export default function MemoryGuidePanel() {
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-2xs leading-5 text-muted-foreground">
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
             완전한 로컬 실행을 원한다면 메모리 저장소뿐 아니라 LLM과 임베딩 모델의 실행 위치도 함께 확인해야 합니다.
           </p>
         </section>
@@ -713,7 +713,7 @@ export default function MemoryGuidePanel() {
               },
             ].map((item) => (
               <article key={item.step} className="rounded-xl border border-border p-6">
-                <p className="text-2xs font-medium text-muted-foreground">{item.step}</p>
+                <p className="text-xs font-medium text-muted-foreground">{item.step}</p>
                 <h3 className="mt-2 text-xs font-medium text-card-foreground">{item.title}</h3>
                 <p className="mt-2 text-xs leading-6 text-muted-foreground">{item.description}</p>
               </article>
@@ -754,7 +754,7 @@ export default function MemoryGuidePanel() {
                 기준선으로 삼는 것이 적합합니다. 벡터나 그래프 메모리는 실제 비교 테스트에서
                 기준선의 한계가 확인될 때 추가합니다.
               </p>
-              <div className="mt-4 inline-flex rounded-full border border-border bg-card px-3 py-1 text-2xs text-card-foreground">
+              <div className="mt-4 inline-flex rounded-full border border-border bg-card px-3 py-1 text-xs text-card-foreground">
                 현재 상태 · Guide only
               </div>
             </article>

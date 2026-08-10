@@ -447,7 +447,7 @@ function ParserRightPanel({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold text-card-foreground">Multi-engine analysis</h2>
-              <p className="mt-1 text-2xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {isPreview ? "Sample experiment" : `${workspaceRuns.length} engine result${workspaceRuns.length === 1 ? "" : "s"} completed`}
                 {isPreview
                   ? " · Explore the comparison workflow before processing"
@@ -461,7 +461,7 @@ function ParserRightPanel({
                 <button
                   type="button"
                   onClick={() => setWorkspaceMode("overview")}
-                  className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                  className={`rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                     showOverview
                       ? "bg-card text-card-foreground shadow-sm"
                       : "text-muted-foreground"
@@ -473,7 +473,7 @@ function ParserRightPanel({
                   type="button"
                   onClick={() => handleOpenFocus()}
                   disabled={workspaceRuns.length < 2}
-                  className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                  className={`rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                     showFocus
                       ? "bg-card text-card-foreground shadow-sm"
                       : "text-muted-foreground"
@@ -485,7 +485,7 @@ function ParserRightPanel({
                   type="button"
                   onClick={() => setWorkspaceMode("detail")}
                   disabled={!displayResult}
-                  className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                  className={`rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                     showDetail
                       ? "bg-card text-card-foreground shadow-sm"
                       : "text-muted-foreground"
@@ -497,7 +497,7 @@ function ParserRightPanel({
                   type="button"
                   onClick={() => workspaceRuns.length >= 2 && setWorkspaceMode("compare")}
                   disabled={workspaceRuns.length < 2}
-                  className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                  className={`rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                     showComparison
                       ? "bg-card text-card-foreground shadow-sm"
                       : "text-muted-foreground"
@@ -513,7 +513,7 @@ function ParserRightPanel({
                     setWorkspaceMode("overview");
                     onClearRuns?.();
                   }}
-                  className="px-2 py-2 text-2xs text-muted-foreground transition-smooth hover:text-card-foreground"
+                  className="px-2 py-2 text-xs text-muted-foreground transition-smooth hover:text-card-foreground"
                 >
                   지우기
                 </button>
@@ -525,31 +525,31 @@ function ParserRightPanel({
 
       {showDetail && displayResult?.metadata && (
         <section className="shrink-0 border-b border-border-subtle pb-6">
-          <h3 className="mb-3 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+          <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {isPreview ? "Example result" : "Result summary"}
           </h3>
           <dl className="grid grid-cols-2 gap-4 xl:grid-cols-4">
             <div className="min-w-0">
-              <dt className="text-2xs text-muted-foreground">File</dt>
+              <dt className="text-xs text-muted-foreground">File</dt>
               <dd className="mt-1 truncate text-xs font-medium text-card-foreground">
                 {displayResult.metadata.fileName}
               </dd>
             </div>
             <div className="min-w-0">
-              <dt className="text-2xs text-muted-foreground">엔진</dt>
+              <dt className="text-xs text-muted-foreground">엔진</dt>
               <dd className="mt-1 truncate text-xs font-medium text-card-foreground">
                 {displayResult.run?.engineId || displayResult.metadata.parserType}
                 {displayResult.run?.model ? ` · ${displayResult.run.model}` : ""}
               </dd>
             </div>
             <div>
-              <dt className="text-2xs text-muted-foreground">처리 중</dt>
+              <dt className="text-xs text-muted-foreground">처리 중</dt>
               <dd className="mt-1 text-xs font-medium text-card-foreground">
                 {displayResult.metadata.processingTime} ms
               </dd>
             </div>
             <div>
-              <dt className="text-2xs text-muted-foreground">Document</dt>
+              <dt className="text-xs text-muted-foreground">Document</dt>
               <dd className="mt-1 text-xs font-medium text-card-foreground">
                 {displayResult.metadata.pageCount ? `${displayResult.metadata.pageCount} pages · ` : ""}
                 {(displayResult.metadata.fileSize / 1024).toFixed(1)} KB
@@ -563,11 +563,11 @@ function ParserRightPanel({
         {!showOverview && (
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {showFocus ? "Focused comparison" : showComparison ? "Full pairwise comparison" : "Engine output"}
               </h3>
               {isPreview && !showComparison && (
-                <span className="rounded-sm bg-muted px-2 py-1 text-2xs text-muted-foreground">
+                <span className="rounded-sm bg-muted px-2 py-1 text-xs text-muted-foreground">
                   미리보기
                 </span>
               )}
@@ -606,7 +606,7 @@ function ParserRightPanel({
                   key={tab.key}
                   type="button"
                   onClick={() => setViewMode(tab.key)}
-                  className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                  className={`rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                     activeViewMode === tab.key
                       ? "bg-card text-card-foreground shadow-sm"
                       : "text-muted-foreground hover:text-surface-foreground"

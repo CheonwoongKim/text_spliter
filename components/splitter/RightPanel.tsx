@@ -129,7 +129,7 @@ const RightPanel = memo(function RightPanel({
     <div className="flex h-full flex-col py-6">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             출력
           </h3>
 
@@ -138,7 +138,7 @@ const RightPanel = memo(function RightPanel({
               <button
                 type="button"
                 onClick={() => setWorkspaceMode("overview")}
-                className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                className={`rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                   workspaceMode === "overview"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-surface-foreground"
@@ -149,7 +149,7 @@ const RightPanel = memo(function RightPanel({
               <button
                 type="button"
                 onClick={() => setWorkspaceMode("detail")}
-                className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
+                className={`rounded-sm px-3 py-1 text-xs font-medium transition-smooth ${
                   workspaceMode === "detail"
                     ? "bg-card text-card-foreground shadow-sm"
                     : "text-muted-foreground hover:text-surface-foreground"

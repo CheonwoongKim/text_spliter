@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 
 /**
  * Shared JSON syntax theme. It intentionally uses only the product's neutral,
- * accent, and status roles from the product's single light palette.
+ * accent, and status roles from the product's single dark palette.
  */
 export const JSON_VIEW_THEME = {
   backgroundColor: "transparent",

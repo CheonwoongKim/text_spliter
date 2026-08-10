@@ -164,7 +164,7 @@ function VectorStoreRightPanel({
                   {tableData.columns.map((column, index) => (
                     <th
                       key={column.name}
-                      className={`px-4 py-3 text-left text-2xs font-medium text-muted-foreground uppercase tracking-wide ${
+                      className={`px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide ${
                         index < tableData.columns.length - 1 ? 'border-r border-border' : ''
                       }`}
                     >

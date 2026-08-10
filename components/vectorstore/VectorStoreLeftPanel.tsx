@@ -178,7 +178,7 @@ function VectorStoreLeftPanel({
       {/* Header */}
       <div className="border-b border-border-subtle bg-card px-6 py-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Collections
           </h3>
           <div className="flex items-center gap-2">
@@ -221,14 +221,14 @@ function VectorStoreLeftPanel({
 
         {/* Schema Dropdown */}
         <div className="mb-4 mt-2">
-          <label className="block text-2xs font-medium text-muted-foreground mb-2">
+          <label className="block text-xs font-medium text-muted-foreground mb-2">
             스키마
           </label>
           <select
             value={selectedSchemaName}
             onChange={(e) => handleSchemaChange(e.target.value)}
             disabled={loading || schemas.length === 0}
-            className="w-full h-control-md px-3 text-xs border border-border rounded-lg
+            className="w-full h-control-md px-3 text-xs border border-control rounded-lg
                      focus-ring
                      bg-surface text-card-foreground disabled:opacity-50"
           >
@@ -247,7 +247,7 @@ function VectorStoreLeftPanel({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search collections..."
-            className="w-full h-control-md pl-10 pr-3 text-xs border border-border rounded-lg
+            className="w-full h-control-md pl-10 pr-3 text-xs border border-control rounded-lg
                      focus-ring
                      bg-surface text-card-foreground placeholder-light"
           />
@@ -319,7 +319,7 @@ function VectorStoreLeftPanel({
                     }`}>
                       {table.name}
                     </span>
-                    <span className="text-2xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {table.rowCount.toLocaleString()} rows
                     </span>
                   </div>
@@ -358,7 +358,7 @@ function VectorStoreLeftPanel({
         )}
             <div className="space-y-4">
               <div>
-                <label className="block text-2xs font-medium text-card-foreground mb-2">
+                <label className="block text-xs font-medium text-card-foreground mb-2">
                   Collection Name *
                 </label>
                 <input
@@ -366,12 +366,12 @@ function VectorStoreLeftPanel({
                   value={newTableName}
                   onChange={(e) => setNewTableName(e.target.value)}
                   placeholder="e.g., my_documents"
-                  className="w-full px-3 py-2 border border-border rounded-lg
+                  className="w-full px-3 py-2 border border-control rounded-lg
                            focus-ring
                            bg-surface text-card-foreground"
                   disabled={creating}
                 />
-                <p className="mt-1 text-2xs text-muted-foreground">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Must start with a letter and contain only letters, numbers, and underscores.
                 </p>
               </div>
@@ -379,7 +379,7 @@ function VectorStoreLeftPanel({
               <div>
                 <label
                   htmlFor="new-collection-embedding-model"
-                  className="block text-2xs font-medium text-card-foreground mb-2"
+                  className="block text-xs font-medium text-card-foreground mb-2"
                 >
                   Embedding Model
                 </label>
@@ -389,7 +389,7 @@ function VectorStoreLeftPanel({
                   onChange={(event) =>
                     setNewEmbeddingKey(event.target.value as SupportedEmbeddingModelKey)}
                   disabled={creating}
-                  className="w-full px-3 py-2 border border-border rounded-lg
+                  className="w-full px-3 py-2 border border-control rounded-lg
                            focus-ring bg-surface text-card-foreground"
                 >
                   {SUPPORTED_EMBEDDING_MODELS.map((model) => (
@@ -398,13 +398,13 @@ function VectorStoreLeftPanel({
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-2xs text-muted-foreground">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {newEmbedding.description}
                 </p>
               </div>
 
               <div className="bg-upload-zone p-3 rounded-lg">
-                <p className="text-2xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   앱 Supabase에 사용자 전용 컬렉션으로 생성됩니다. 임베딩 모델과 차원은 생성 후 변경할 수 없으며,
                   검색은 항상 이 설정을 사용합니다 ({newEmbedding.dimensions} dimensions,
                   {newEmbedding.searchMode === "exact" ? " 정확 검색" : " HNSW 인덱스 검색"}).

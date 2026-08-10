@@ -29,6 +29,7 @@ const config: Config = {
         DEFAULT: "var(--ds-color-border-default)",
         subtle: "var(--ds-color-bg-secondary)",
         darkest: "var(--ds-color-border-strong)",
+        control: "var(--ds-color-border-control)",
       },
       accent: {
         DEFAULT: "var(--ds-color-accent)",
@@ -70,8 +71,7 @@ const config: Config = {
       mono: ["var(--ds-font-family-mono)"],
     },
     fontSize: {
-      nav: ["var(--ds-navigation-font-size)", { lineHeight: "var(--ds-line-height-2xs)" }],
-      "2xs": ["var(--ds-font-size-2xs)", { lineHeight: "var(--ds-line-height-2xs)" }],
+      nav: ["var(--ds-navigation-font-size)", { lineHeight: "var(--ds-line-height-nav)" }],
       xs: ["var(--ds-font-size-xs)", { lineHeight: "var(--ds-line-height-xs)" }],
       base: ["var(--ds-font-size-base)", { lineHeight: "var(--ds-line-height-base)" }],
       lg: ["var(--ds-font-size-lg)", { lineHeight: "var(--ds-line-height-lg)" }],

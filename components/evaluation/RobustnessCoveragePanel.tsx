@@ -16,11 +16,11 @@ function RobustnessCoveragePanel({ cases }: RobustnessCoveragePanelProps) {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-2xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           A score averaged over clean, answerable questions cannot show how the pipeline behaves on
           the inputs that actually fail. Tag cases to close a gap.
         </p>
-        <span className="text-2xs font-medium text-card-foreground">
+        <span className="text-xs font-medium text-card-foreground">
           {report.coveredCount}/{report.scenarios.length} scenarios covered
         </span>
       </div>
@@ -38,9 +38,9 @@ function RobustnessCoveragePanel({ cases }: RobustnessCoveragePanelProps) {
             )}
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-card-foreground">{entry.scenario.label}</p>
-              <p className="mt-1 text-2xs text-muted-foreground">{entry.scenario.rationale}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{entry.scenario.rationale}</p>
               {!entry.covered && (
-                <p className="mt-1 text-2xs text-muted-foreground">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Tag a case with
                   {" "}
                   <span className="rounded-sm bg-muted px-1 font-mono">
@@ -52,7 +52,7 @@ function RobustnessCoveragePanel({ cases }: RobustnessCoveragePanelProps) {
                 </p>
               )}
             </div>
-            <span className="shrink-0 text-2xs text-muted-foreground">
+            <span className="shrink-0 text-xs text-muted-foreground">
               {entry.caseCount}/{entry.scenario.minimumCases}
             </span>
           </div>

@@ -336,7 +336,7 @@ const FilesPanel = memo(function FilesPanel() {
             </Button>
             {currentPath.map((folder, idx) => (
               <div key={idx} className="flex min-w-0 items-center gap-1">
-                <span className="shrink-0 font-mono text-2xs text-muted-foreground" aria-hidden="true">/</span>
+                <span className="shrink-0 font-mono text-xs text-muted-foreground" aria-hidden="true">/</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -357,7 +357,7 @@ const FilesPanel = memo(function FilesPanel() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search files..."
-              className="w-full h-control-md pl-10 pr-10 text-xs bg-surface border border-border rounded-lg
+              className="w-full h-control-md pl-10 pr-10 text-xs bg-surface border border-control rounded-lg
                        focus-ring
                        placeholder-light text-card-foreground transition-smooth"
             />
@@ -484,7 +484,7 @@ const FilesPanel = memo(function FilesPanel() {
               <div className="flex-1">
                 <p className="text-xs text-danger font-medium">{error}</p>
                 {error.includes("Storage service error") && (
-                  <p className="text-2xs text-danger mt-1">
+                  <p className="text-xs text-danger mt-1">
                     The storage service is experiencing issues. Please contact the administrator or try again later.
                   </p>
                 )}
@@ -496,7 +496,7 @@ const FilesPanel = memo(function FilesPanel() {
                   setError(null);
                   fetchFiles();
                 }}
-                className="px-3 py-2 text-2xs font-medium text-danger hover:bg-danger-surface rounded-sm transition-smooth"
+                className="px-3 py-2 text-xs font-medium text-danger hover:bg-danger-surface rounded-sm transition-smooth"
               >
                 다시 시도
               </button>
@@ -527,19 +527,19 @@ const FilesPanel = memo(function FilesPanel() {
             <table className="w-full table-fixed">
               <thead className="sticky top-0 z-navigation border-b border-border bg-muted">
                 <tr>
-                  <th className="w-auto px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <th className="w-auto px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     이름
                   </th>
-                  <th className="w-28 px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <th className="w-28 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     유형
                   </th>
-                  <th className="w-28 px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <th className="w-28 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     크기
                   </th>
-                  <th className="w-48 px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <th className="w-48 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     업로드 일시
                   </th>
-                  <th className="w-28 px-4 py-3 text-center text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <th className="w-28 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     동작
                   </th>
                 </tr>
@@ -556,7 +556,7 @@ const FilesPanel = memo(function FilesPanel() {
                       <p className="text-xs font-medium text-card-foreground">
                         {files.length === 0 ? "아직 올린 문서가 없습니다" : "검색 결과가 없습니다"}
                       </p>
-                      <p className="mt-1 text-2xs text-muted-foreground">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {files.length === 0
                           ? "문서를 올리면 파싱·청킹 실험의 원본으로 사용할 수 있습니다."
                           : "검색어를 바꾸거나 상위 폴더로 이동해 보세요."}

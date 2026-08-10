@@ -38,7 +38,7 @@ test("signin renders its own route copy and toggles password visibility", async 
   const passwordInput = view.getByLabelText("비밀번호") as HTMLInputElement;
   const signupLink = view.getByRole("link", { name: /회원가입/ }) as HTMLAnchorElement;
 
-  assert.equal(view.getByRole("heading").textContent, "Welcom, Back!");
+  assert.equal(view.getByRole("heading").textContent, "다시 만나 반갑습니다");
   assert.equal(new URL(signupLink.href).pathname, "/signup");
   assert.equal(passwordInput.type, "password");
 
@@ -64,7 +64,7 @@ test("signin restores, updates, and removes the remembered email", async () => {
 
   assert.match(rememberCheckbox.className, /appearance-none/);
   assert.match(rememberCheckbox.className, /rounded-lg/);
-  assert.match(rememberCheckbox.className, /border-border/);
+  assert.match(rememberCheckbox.className, /border-control/);
   assert.doesNotMatch(rememberCheckbox.className, /focus-ring/);
   assert.match(rememberCheckbox.className, /focus-visible:border-surface-foreground/);
 
@@ -86,7 +86,7 @@ test("signup renders confirmation and blocks passwords outside the policy", asyn
   const view = render(<AuthForm mode="signup" />);
   const loginLink = view.getByRole("link", { name: /로그인/ }) as HTMLAnchorElement;
 
-  assert.equal(view.getByRole("heading").textContent, "Sign Up");
+  assert.equal(view.getByRole("heading").textContent, "만나서 반갑습니다");
   assert.equal(new URL(loginLink.href).pathname, "/login");
   assert.equal(view.queryByRole("checkbox", { name: "이메일 저장" }), null);
 

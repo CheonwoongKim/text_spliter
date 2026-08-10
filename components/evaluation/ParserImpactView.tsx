@@ -36,7 +36,7 @@ function ParserImpactView({ parserBreakdown }: ParserImpactViewProps) {
 
   if (comparison.parsers.length === 0) {
     return (
-      <p className="text-2xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         No chunk in this run records the parser that produced it, so retrieval quality cannot be
         attributed to a parser yet.
       </p>
@@ -46,22 +46,22 @@ function ParserImpactView({ parserBreakdown }: ParserImpactViewProps) {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-2xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Retrieval quality grouped by the parser that produced the chunks. A delta is the change
           against the baseline parser, not a verdict.
         </p>
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2">
-            <span className="text-2xs text-muted-foreground">지표</span>
-            <Select fieldSize="sm" className="text-2xs" value={metricKey} onChange={(event) => setMetricKey(event.target.value as DeterministicMetricKey)}>
+            <span className="text-xs text-muted-foreground">지표</span>
+            <Select fieldSize="sm" className="text-xs" value={metricKey} onChange={(event) => setMetricKey(event.target.value as DeterministicMetricKey)}>
               {COMPARABLE_METRICS.map((metric) => (
                 <option key={metric.key} value={metric.key}>{metric.label}</option>
               ))}
             </Select>
           </label>
           <label className="flex items-center gap-2">
-            <span className="text-2xs text-muted-foreground">Baseline</span>
-            <Select fieldSize="sm" className="text-2xs" value={comparison.baselineParser || ""} onChange={(event) => setBaseline(event.target.value || null)}>
+            <span className="text-xs text-muted-foreground">Baseline</span>
+            <Select fieldSize="sm" className="text-xs" value={comparison.baselineParser || ""} onChange={(event) => setBaseline(event.target.value || null)}>
               {comparison.parsers.map((entry) => (
                 <option key={entry.parser} value={entry.parser}>{entry.parser}</option>
               ))}
@@ -136,7 +136,7 @@ function ParserImpactView({ parserBreakdown }: ParserImpactViewProps) {
       />
 
       {comparison.unscoredParsers.length > 0 && (
-        <p className="mt-2 text-2xs text-muted-foreground">
+        <p className="mt-2 text-xs text-muted-foreground">
           Some retrieved chunks carry no parser provenance and are excluded rather than merged into
           another parser&apos;s score.
         </p>

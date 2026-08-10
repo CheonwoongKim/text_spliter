@@ -63,7 +63,7 @@ export default function JsonViewComponent({ result }: JsonViewComponentProps) {
           </Button>
           <button
             onClick={copyToClipboard}
-            className="px-3 py-1 text-2xs hover:bg-muted text-surface-foreground rounded-lg transition-smooth"
+            className="px-3 py-1 text-xs hover:bg-muted text-surface-foreground rounded-lg transition-smooth"
           >
             {copied ? "Copied" : "Copy"}
           </button>

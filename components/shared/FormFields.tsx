@@ -50,7 +50,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   return (
     <div className={`flex flex-col space-y-1 ${className}`}>
       {label && (
-        <label htmlFor={fieldId} className="text-2xs font-medium text-muted-foreground flex items-center justify-between">
+        <label htmlFor={fieldId} className="text-xs font-medium text-muted-foreground flex items-center justify-between">
           <span>
             {label}
             {required && <span aria-hidden="true" className="text-danger ml-1">*</span>}
@@ -58,8 +58,8 @@ export const FormField: React.FC<FormFieldProps> = ({
         </label>
       )}
       {controlWithAccessibility}
-      {hint && !error && <p id={messageId} className="text-2xs text-muted-foreground">{hint}</p>}
-      {error && <p id={messageId} role="alert" className="text-2xs text-danger font-medium">{error}</p>}
+      {hint && !error && <p id={messageId} className="text-xs text-muted-foreground">{hint}</p>}
+      {error && <p id={messageId} role="alert" className="text-xs text-danger font-medium">{error}</p>}
     </div>
   );
 };
@@ -101,7 +101,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         ref={ref}
         aria-invalid={error ? true : ariaInvalid}
         className={`w-full ${controlHeights[fieldSize]} px-3 border rounded-lg bg-surface text-xs text-card-foreground placeholder-light focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
-          invalid ? "border-danger focus:border-danger" : "border-border"
+          invalid ? "border-danger focus:border-danger" : "border-control"
         } ${className}`}
         {...props}
       />
@@ -123,7 +123,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         ref={ref}
         aria-invalid={error ? true : ariaInvalid}
         className={`w-full ${controlHeights[fieldSize]} px-3 border rounded-lg bg-surface text-xs text-card-foreground focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
-          invalid ? "border-danger focus:border-danger" : "border-border"
+          invalid ? "border-danger focus:border-danger" : "border-control"
         } ${className}`}
         {...props}
       >
@@ -146,7 +146,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         ref={ref}
         aria-invalid={error ? true : ariaInvalid}
         className={`w-full px-3 py-2 border rounded-lg bg-surface text-xs text-card-foreground placeholder-light focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
-          invalid ? "border-danger focus:border-danger" : "border-border"
+          invalid ? "border-danger focus:border-danger" : "border-control"
         } ${className}`}
         {...props}
       />
