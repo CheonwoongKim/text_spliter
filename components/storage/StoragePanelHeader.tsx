@@ -112,7 +112,7 @@ export default function StoragePanelHeader({
               </>
             )}
 
-            <Button variant="ghost" size="icon" onClick={activeTab === "parse" ? onRefreshParse : onRefreshSplit} disabled={activeLoading} title="Refresh" aria-label="Refresh stored results">
+            <Button variant="ghost" size="icon" onClick={activeTab === "parse" ? onRefreshParse : onRefreshSplit} disabled={activeLoading} title="새로고침" aria-label="Refresh stored results">
               {activeLoading ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
               ) : (

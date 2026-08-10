@@ -165,7 +165,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                 : "text-muted-foreground hover:text-card-foreground"
             }`}
           >
-            Upload
+            업로드
           </button>
           <button
             onClick={() => setActiveTab("plaintext")}
@@ -185,7 +185,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                 : "text-muted-foreground hover:text-card-foreground"
             }`}
           >
-            Storage
+            보관함
           </button>
         </div>
         <span className="text-2xs text-muted-foreground">
@@ -219,7 +219,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                     onClick={handleClearFile}
                     className="text-2xs text-muted-foreground hover:text-surface-foreground transition-smooth"
                   >
-                    Clear
+                    지우기
                   </button>
                 </div>
                 <textarea
@@ -278,7 +278,7 @@ function TextInput({ value, onChange, onSourceMetadataChange, handoff }: TextInp
                   onClick={handleClearFile}
                   className="flex-shrink-0 text-2xs text-muted-foreground transition-smooth hover:text-surface-foreground"
                 >
-                  Clear
+                  지우기
                 </button>
               </div>
             )}

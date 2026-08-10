@@ -70,13 +70,13 @@ export function ParseResultsTable({
         <table className="w-full">
           <thead className="sticky top-0 border-b border-border bg-muted">
             <tr>
-              <th className="w-32 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Type</th>
+              <th className="w-32 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">유형</th>
               <th className="w-64 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">File Name</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Size</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">크기</th>
               <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">MIME Type</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Time</th>
-              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Created</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-center text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">시간</th>
+              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">생성일</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-center text-2xs font-semibold uppercase tracking-wide text-muted-foreground">동작</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -104,7 +104,7 @@ export function ParseResultsTable({
                       <Button variant="ghost" size="icon" onClick={() => onView(result.id)} aria-label={`View ${result.file_name}`} title="View">
                         <Eye className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                       </Button>
-                      <Button variant="dangerGhost" size="icon" onClick={() => onDelete(result.id)} aria-label={`Delete ${result.file_name}`} title="Delete">
+                      <Button variant="dangerGhost" size="icon" onClick={() => onDelete(result.id)} aria-label={`Delete ${result.file_name}`} title="삭제">
                         <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                       </Button>
                     </div>
@@ -149,14 +149,14 @@ export function SplitResultsTable({
         <table className="w-full">
           <thead className="sticky top-0 border-b border-border bg-muted">
             <tr>
-              <th className="w-40 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Type</th>
-              <th className="w-64 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Preview</th>
+              <th className="w-40 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">유형</th>
+              <th className="w-64 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">미리보기</th>
               <th className="w-24 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Chunks</th>
-              <th className="w-24 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Size</th>
+              <th className="w-24 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">크기</th>
               <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Overlap</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Time</th>
-              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Created</th>
-              <th className="w-28 whitespace-nowrap px-4 py-3 text-center text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">시간</th>
+              <th className="w-48 whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">생성일</th>
+              <th className="w-28 whitespace-nowrap px-4 py-3 text-center text-2xs font-semibold uppercase tracking-wide text-muted-foreground">동작</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -188,7 +188,7 @@ export function SplitResultsTable({
                       <Button variant="ghost" size="icon" onClick={() => onUpload(result.id)} aria-label={`Upload split result ${result.id} to Vector DB`} title="Upload to Vector DB">
                         <Upload className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                       </Button>
-                      <Button variant="dangerGhost" size="icon" onClick={() => onDelete(result.id)} aria-label={`Delete split result ${result.id}`} title="Delete">
+                      <Button variant="dangerGhost" size="icon" onClick={() => onDelete(result.id)} aria-label={`Delete split result ${result.id}`} title="삭제">
                         <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                       </Button>
                     </div>

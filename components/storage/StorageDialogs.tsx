@@ -166,7 +166,7 @@ export function VectorUploadDialog({
           disabled={uploading}
           className="px-4 py-2 text-xs font-medium text-muted-foreground transition-smooth hover:text-card-foreground disabled:opacity-disabled"
         >
-          Cancel
+          취소
         </button>
         <button
           type="button"

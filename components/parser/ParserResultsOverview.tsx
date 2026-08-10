@@ -140,12 +140,12 @@ function ParserResultsOverview({
       <div className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-[892px]">
           <div className="grid grid-cols-[minmax(200px,1.5fr)_minmax(92px,0.6fr)_minmax(180px,1.2fr)_80px_100px_96px_132px] bg-upload-zone">
-            <div className="px-3 py-2 text-2xs font-medium text-muted-foreground">Engine</div>
+            <div className="px-3 py-2 text-2xs font-medium text-muted-foreground">엔진</div>
             <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Role</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Output</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Pages</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Processing</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Result</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">출력</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">페이지</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">처리 중</div>
+            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">결과</div>
             <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Next step</div>
           </div>
 
@@ -195,7 +195,7 @@ function ParserResultsOverview({
                     className="flex items-center gap-1 text-2xs font-medium text-card-foreground transition-smooth
                              hover:opacity-hover"
                   >
-                    Detail
+                    상세
                     <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   </button>
                 </div>

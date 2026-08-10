@@ -366,11 +366,11 @@ export default function ParseComparisonWorkbench({
                     preserving headings, paragraphs, and tables.
                   </p>
                   <div className="mt-6 grid grid-cols-2 border border-border text-2xs">
-                    <div className="bg-upload-zone px-3 py-2 font-medium text-card-foreground">Metric</div>
-                    <div className="border-l border-border bg-upload-zone px-3 py-2 font-medium text-card-foreground">Result</div>
-                    <div className="border-t border-border px-3 py-2 text-muted-foreground">Text accuracy</div>
+                    <div className="bg-upload-zone px-3 py-2 font-medium text-card-foreground">지표</div>
+                    <div className="border-l border-border bg-upload-zone px-3 py-2 font-medium text-card-foreground">결과</div>
+                    <div className="border-t border-border px-3 py-2 text-muted-foreground">텍스트 정확도</div>
                     <div className="border-l border-t border-border px-3 py-2 text-card-foreground">98.4%</div>
-                    <div className="border-t border-border px-3 py-2 text-muted-foreground">Pages</div>
+                    <div className="border-t border-border px-3 py-2 text-muted-foreground">페이지</div>
                     <div className="border-l border-t border-border px-3 py-2 text-card-foreground">12</div>
                   </div>
                 </div>

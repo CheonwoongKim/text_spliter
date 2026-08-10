@@ -269,7 +269,7 @@ export default function EvaluationRunsView({
               </div>
               <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-3 text-center">
                 <div>
-                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">Success</p>
+                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">성공</p>
                   <p className="text-xs font-semibold text-card-foreground mt-1">{percent(metrics.successRate)}</p>
                 </div>
                 <div>
@@ -285,7 +285,7 @@ export default function EvaluationRunsView({
                   <p className="text-xs font-semibold text-card-foreground mt-1">{numberMetric(deterministic.ndcgAtK)}</p>
                 </div>
                 <div>
-                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">Citation recall</p>
+                  <p className="text-2xs uppercase tracking-wide text-muted-foreground">인용 재현율</p>
                   <p className="text-xs font-semibold text-card-foreground mt-1">{percent(deterministic.citationRecall)}</p>
                 </div>
                 <div>
@@ -382,7 +382,7 @@ export default function EvaluationRunsView({
                 <div className="overflow-x-auto border border-border rounded-lg">
                   <table className="w-full min-w-[680px] text-2xs">
                     <thead className="bg-upload-zone text-muted-foreground">
-                      <tr><th className="px-3 py-2 text-left font-medium">{BREAKDOWN_LABELS[breakdownDimension]}</th><th className="px-3 py-2 text-right font-medium">Cases</th><th className="px-3 py-2 text-right font-medium">Success</th><th className="px-3 py-2 text-right font-medium">Recall@K</th><th className="px-3 py-2 text-right font-medium">MRR</th><th className="px-3 py-2 text-right font-medium">nDCG@K</th><th className="px-3 py-2 text-right font-medium">Citation recall</th></tr>
+                      <tr><th className="px-3 py-2 text-left font-medium">{BREAKDOWN_LABELS[breakdownDimension]}</th><th className="px-3 py-2 text-right font-medium">케이스</th><th className="px-3 py-2 text-right font-medium">성공</th><th className="px-3 py-2 text-right font-medium">Recall@K</th><th className="px-3 py-2 text-right font-medium">MRR</th><th className="px-3 py-2 text-right font-medium">nDCG@K</th><th className="px-3 py-2 text-right font-medium">인용 재현율</th></tr>
                     </thead>
                     <tbody>
                       {breakdownRows.map((row) => (
@@ -456,7 +456,7 @@ export default function EvaluationRunsView({
 
                 <section className="grid grid-cols-1 2xl:grid-cols-2 gap-8 border-t border-border pt-8">
                   <div>
-                    <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground mb-3">Reference answer</h4>
+                    <h4 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground mb-3">기준 답변</h4>
                     <p className="text-xs leading-6 text-card-foreground whitespace-pre-wrap">{selectedCaseRun.reference_answer_snapshot || "기준 답변 없음"}</p>
                     {!!selectedCaseRun.reference_facts_snapshot.length && (
                       <ul className="mt-4 space-y-2">

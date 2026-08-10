@@ -236,7 +236,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           <div className="space-y-6">
             <div>
               <label htmlFor={`${fieldPrefix}-email`} className="mb-2 block text-2xs font-normal text-surface-foreground">
-                Email
+                이메일
               </label>
               <input
                 ref={emailInputRef}
@@ -253,7 +253,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             <PasswordField
               id={`${fieldPrefix}-password`}
               name="password"
-              label="Password"
+              label="비밀번호"
               visibilityLabel="비밀번호"
               placeholder={PASSWORD_REQUIREMENT_TEXT}
               autoComplete={content.passwordAutoComplete}
@@ -264,7 +264,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               <PasswordField
                 id={`${fieldPrefix}-password-confirmation`}
                 name="passwordConfirmation"
-                label="Password Confirm"
+                label="비밀번호 확인"
                 visibilityLabel="비밀번호 확인"
                 placeholder="동일한 비밀번호를 다시 입력"
                 autoComplete="new-password"

@@ -56,7 +56,7 @@ export default function MyPagePanel() {
         </header>
 
         <section className="mt-6 border-t border-border-subtle py-6">
-          <p className="text-2xs text-muted-foreground">Email</p>
+          <p className="text-2xs text-muted-foreground">이메일</p>
           <div className="mt-1 flex min-h-control-sm items-center">
             {loading && (
               <LoaderCircle

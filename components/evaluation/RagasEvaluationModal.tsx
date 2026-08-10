@@ -63,7 +63,7 @@ export default function RagasEvaluationModal({
       description="완료된 RAG 결과를 별도의 모델 판정 배치로 평가합니다. 결정적 지표·사람 리뷰와 합산되지 않습니다."
       size="lg"
       footer={<>
-        <Button variant="ghost" size="sm" onClick={onClose} disabled={executing}>Cancel</Button>
+        <Button variant="ghost" size="sm" onClick={onClose} disabled={executing}>취소</Button>
         <Button variant="primary" size="md" onClick={onRun} disabled={checking || executing || !available || !health?.allowedModels.includes(model) || !metrics.length || run.succeeded_count === 0}>
           {executing ? "Evaluating..." : `Evaluate ${run.succeeded_count} cases`}
         </Button>

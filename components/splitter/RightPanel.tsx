@@ -130,7 +130,7 @@ const RightPanel = memo(function RightPanel({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-            Output
+            출력
           </h3>
 
           {comparable && (
@@ -155,7 +155,7 @@ const RightPanel = memo(function RightPanel({
                     : "text-muted-foreground hover:text-surface-foreground"
                 }`}
               >
-                Detail
+                상세
               </button>
             </div>
           )}

@@ -100,7 +100,7 @@ function VectorStoreRightPanel({
               )}
             </h3>
           </div>
-          <Button variant="ghost" size="icon" onClick={onRefresh} disabled={loading || !selectedTable} title="Refresh">
+          <Button variant="ghost" size="icon" onClick={onRefresh} disabled={loading || !selectedTable} title="새로고침">
             {loading ? (
               <svg
                 className="animate-spin h-4 w-4"

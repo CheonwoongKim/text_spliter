@@ -197,7 +197,7 @@ function VectorStoreLeftPanel({
                 />
               </svg>
             </Button>
-            <Button variant="ghost" size="icon" onClick={onRefresh} disabled={loading} title="Refresh">
+            <Button variant="ghost" size="icon" onClick={onRefresh} disabled={loading} title="새로고침">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -222,7 +222,7 @@ function VectorStoreLeftPanel({
         {/* Schema Dropdown */}
         <div className="mb-4 mt-2">
           <label className="block text-2xs font-medium text-muted-foreground mb-2">
-            Schema
+            스키마
           </label>
           <select
             value={selectedSchemaName}
@@ -343,7 +343,7 @@ function VectorStoreLeftPanel({
         footer={<>
           <Button variant="ghost" size="md" disabled={creating}
             onClick={() => { setShowCreateModal(false); setNewTableName(""); setMessage(null); }}>
-            Cancel
+            취소
           </Button>
           <Button variant="primary" size="md" isLoading={creating}
             disabled={creating || !newTableName.trim()} onClick={handleCreateTable}>
@@ -423,7 +423,7 @@ function VectorStoreLeftPanel({
         footer={<>
           <Button variant="ghost" size="md" disabled={deleting}
             onClick={() => { setShowDeleteModal(false); setTableToDelete(null); setMessage(null); }}>
-            Cancel
+            취소
           </Button>
           <Button variant="danger" size="md" isLoading={deleting} disabled={deleting}
             onClick={handleDeleteTableConfirm}>

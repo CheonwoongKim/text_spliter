@@ -184,7 +184,7 @@ function ParserLeftPanel({
                     : "text-muted-foreground hover:text-card-foreground"
                 }`}
               >
-                Upload
+                업로드
               </button>
               <button
                 type="button"
@@ -219,8 +219,8 @@ function ParserLeftPanel({
                   <button
                     type="button"
                     onClick={clearSelectedFile}
-                    aria-label="Clear selected file"
-                    title="Clear selected file"
+                    aria-label="선택한 파일 지우기"
+                    title="선택한 파일 지우기"
                     className="absolute right-3 top-3 flex h-control-sm w-control-sm items-center justify-center
                              rounded-lg text-muted-foreground transition-smooth hover:bg-muted
                              hover:text-card-foreground focus-ring"
@@ -284,7 +284,7 @@ function ParserLeftPanel({
                       <span className="shrink-0 text-xs text-muted-foreground">from storage</span>
                     </div>
                     <button type="button" onClick={clearSelectedFile} className="text-xs text-muted-foreground transition-smooth hover:text-card-foreground">
-                      Clear
+                      지우기
                     </button>
                   </div>
                 )}
@@ -346,7 +346,7 @@ function ParserLeftPanel({
             <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
               Document processing engine
             </h3>
-            <Button variant="ghost" size="sm" onClick={() => onOpenSettings(primaryEngine)} aria-label="Engine settings" title="Engine settings">
+            <Button variant="ghost" size="sm" onClick={() => onOpenSettings(primaryEngine)} aria-label="엔진 설정" title="엔진 설정">
               <Settings className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             </Button>
           </div>
@@ -456,7 +456,7 @@ function ParserLeftPanel({
             className="flex items-center gap-2 text-xs font-medium text-muted-foreground transition-smooth hover:text-card-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
           >
             <RotateCcw className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            Reset
+            초기화
           </button>
 
           <Button variant="primary" size="md" onClick={() => onParse({ primaryEngine, engines: experimentEngines.map((parserType) => ({ parserType, config: { ...engineConfigs[parserType] }, })), })} disabled={ loading || !settingsReady || !selectedFile || !selectedFileSupported || experimentEngines.length === 0 }>

@@ -546,8 +546,8 @@ export default function EvaluationPanel() {
           <div className="flex items-center gap-2">
             {selectedDataset && (
               <>
-                <Button variant="ghost" size="sm" onClick={() => openDatasetModal(selectedDataset)}>Edit</Button>
-                <Button variant="dangerGhost" size="sm" onClick={handleDeleteDataset} disabled={saving}>Delete</Button>
+                <Button variant="ghost" size="sm" onClick={() => openDatasetModal(selectedDataset)}>수정</Button>
+                <Button variant="dangerGhost" size="sm" onClick={handleDeleteDataset} disabled={saving}>삭제</Button>
               </>
             )}
             <Button variant="primary" size="md" onClick={() => openDatasetModal()}>New dataset</Button>
@@ -557,13 +557,13 @@ export default function EvaluationPanel() {
       toolbar={<>
         <div className="flex items-center justify-between gap-4 mt-4 -mb-4">
           <nav className="flex items-center gap-4">
-            <button type="button" onClick={() => setActiveTab("golden")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "golden" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>Golden set</button>
-            <button type="button" onClick={() => setActiveTab("runs")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "runs" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>Runs <span className="ml-1 text-2xs">{datasetRuns.length}</span></button>
+            <button type="button" onClick={() => setActiveTab("golden")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "golden" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>골든셋</button>
+            <button type="button" onClick={() => setActiveTab("runs")} className={`pb-3 text-xs font-medium border-b-2 ${activeTab === "runs" ? "border-surface-foreground text-card-foreground" : "border-transparent text-muted-foreground"}`}>실행 <span className="ml-1 text-2xs">{datasetRuns.length}</span></button>
           </nav>
           {activeTab === "golden" && selectedVersion && (
             <div className="flex items-center gap-2 pb-2">
               {selectedVersion.status !== "draft" && (
-                <Button variant="outline" size="sm" onClick={handleCloneVersion} disabled={saving}>Create next version</Button>
+                <Button variant="outline" size="sm" onClick={handleCloneVersion} disabled={saving}>다음 버전 만들기</Button>
               )}
               <Button variant="primary" size="sm" onClick={openRunModal} disabled={!selectedCaseIds.size || executing}>
                 Run selected · {selectedCaseIds.size}
@@ -579,7 +579,7 @@ export default function EvaluationPanel() {
 
       {error && (
         <div className="flex items-center justify-between gap-4 border-b border-danger-border bg-danger-surface px-4 py-3 text-xs text-danger sm:px-6 lg:px-10">
-          <span>{error}</span><button type="button" onClick={() => setError(null)} className="text-2xs transition-smooth hover:text-danger/80">Dismiss</button>
+          <span>{error}</span><button type="button" onClick={() => setError(null)} className="text-2xs transition-smooth hover:text-danger/80">닫기</button>
         </div>
       )}
 
@@ -622,7 +622,7 @@ export default function EvaluationPanel() {
               <div className="sticky top-0 z-navigation bg-card px-4 py-4 border-b border-border-subtle">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-2xs font-medium text-card-foreground">Cases</p>
+                    <p className="text-2xs font-medium text-card-foreground">케이스</p>
                     <p className="text-2xs text-muted-foreground mt-1">{versionCases.length} total · {selectedCaseIds.size} selected</p>
                   </div>
                   {selectedVersion?.status === "draft" && (
@@ -694,11 +694,11 @@ export default function EvaluationPanel() {
         title={editingDataset ? "데이터셋 수정" : "새 평가 데이터셋"}
         description="골든 케이스를 같은 목적과 버전으로 묶습니다."
         size="md"
-        footer={<><Button variant="ghost" size="sm" onClick={() => setDatasetModalOpen(false)} disabled={saving}>Cancel</Button><Button variant="primary" size="md" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()}>{saving ? "Saving..." : "Save dataset"}</Button></>}
+        footer={<><Button variant="ghost" size="sm" onClick={() => setDatasetModalOpen(false)} disabled={saving}>취소</Button><Button variant="primary" size="md" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()}>{saving ? "Saving..." : "Save dataset"}</Button></>}
       >
             <div className="space-y-4 mt-6">
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Name *</span><Input fieldSize="lg" autoFocus value={datasetName} onChange={(event) => setDatasetName(event.target.value)} placeholder="Korean financial reports"/></label>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Description</span><Textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} placeholder="평가 목적과 포함 문서 범위"/></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">설명</span><Textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} placeholder="평가 목적과 포함 문서 범위"/></label>
             </div>
       </Modal>
 
@@ -708,7 +708,7 @@ export default function EvaluationPanel() {
         title="평가 실행"
         description="선택한 케이스를 하나의 검색·생성 설정으로 실행합니다. 실행을 시작하면 데이터셋 버전이 동결됩니다."
         size="xl"
-        footer={<><Button variant="ghost" size="sm" onClick={() => setRunModalOpen(false)} disabled={executing}>Cancel</Button><Button variant="primary" size="md" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20 || regressionTolerance < 0 || regressionTolerance > 100}>{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</Button></>}
+        footer={<><Button variant="ghost" size="sm" onClick={() => setRunModalOpen(false)} disabled={executing}>취소</Button><Button variant="primary" size="md" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20 || regressionTolerance < 0 || regressionTolerance > 100}>{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</Button></>}
       >
             <div className="flex items-start justify-between gap-4">
               <div><h3 className="text-base font-semibold text-card-foreground">Run evaluation</h3><p className="text-2xs text-muted-foreground mt-1">선택한 {selectedCaseIds.size}개 케이스에 동일한 파이프라인을 적용합니다.</p></div>
@@ -716,11 +716,11 @@ export default function EvaluationPanel() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <label className="block md:col-span-2"><span className="block text-2xs font-medium text-muted-foreground mb-2">Run name</span><Input fieldSize="lg" value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing}/></label>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Schema</span><Select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing}>{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</Select></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">스키마</span><Select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing}>{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</Select></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Vector collection</span><Select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing}><option value="">Select collection</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</Select></label>
-              <div className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Embedding</span><div title="Fixed by the selected collection" className="flex h-10 items-center px-3 border border-border rounded-lg bg-muted text-xs text-card-foreground">{describeEmbeddingModel(embeddingModel, embeddingDimensions)}</div></div>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Answer model</span><Select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing}><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></Select></label>
-              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Reasoning</span><Select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing}><option value="none">None</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></Select></label>
+              <div className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">임베딩</span><div title="Fixed by the selected collection" className="flex h-10 items-center px-3 border border-border rounded-lg bg-muted text-xs text-card-foreground">{describeEmbeddingModel(embeddingModel, embeddingDimensions)}</div></div>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">답변 모델</span><Select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing}><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></Select></label>
+              <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">추론 강도</span><Select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing}><option value="none">None</option><option value="low">낮음</option><option value="medium">보통</option><option value="high">높음</option></Select></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Top K</span><Input fieldSize="lg" type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing}/></label>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">

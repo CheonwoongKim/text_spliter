@@ -52,7 +52,7 @@ function ParserImpactView({ parserBreakdown }: ParserImpactViewProps) {
         </p>
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2">
-            <span className="text-2xs text-muted-foreground">Metric</span>
+            <span className="text-2xs text-muted-foreground">지표</span>
             <Select fieldSize="sm" className="text-2xs" value={metricKey} onChange={(event) => setMetricKey(event.target.value as DeterministicMetricKey)}>
               {COMPARABLE_METRICS.map((metric) => (
                 <option key={metric.key} value={metric.key}>{metric.label}</option>

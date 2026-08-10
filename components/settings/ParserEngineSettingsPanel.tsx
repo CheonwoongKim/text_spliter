@@ -106,7 +106,7 @@ export default function ParserEngineSettingsPanel({
               onClick={onReload}
               className="shrink-0 text-2xs font-medium text-danger hover:text-danger/80 transition-smooth"
             >
-              Retry
+              다시 시도
             </button>
           </div>
         )}
@@ -115,14 +115,14 @@ export default function ParserEngineSettingsPanel({
           <aside className="lg:col-span-3 lg:border-r lg:border-border-subtle lg:pr-8">
             <div className="mb-4">
               <h2 className="text-base font-semibold text-card-foreground">
-                Document engines
+                문서 엔진
               </h2>
               <p className="text-2xs text-muted-foreground mt-2">
                 실행 전에 엔진별 기본 프로필을 등록합니다.
               </p>
             </div>
 
-            <div className="space-y-2" aria-label="Document engines">
+            <div className="space-y-2" aria-label="문서 엔진">
               {engines.map((candidate) => {
                 const active = candidate.engineType === selectedEngine;
                 const dirty = dirtyEngines.has(candidate.engineType);
@@ -147,7 +147,7 @@ export default function ParserEngineSettingsPanel({
                       </span>
                       {dirty && (
                         <span className="shrink-0 text-2xs font-medium text-warning">
-                          Unsaved
+                          저장되지 않음
                         </span>
                       )}
                     </span>
@@ -167,7 +167,7 @@ export default function ParserEngineSettingsPanel({
               onClick={onOpenConnections}
               className="mt-4 text-2xs font-medium text-card-foreground hover:text-muted-foreground transition-smooth"
             >
-              Manage API credentials
+              API 자격 증명 관리
             </button>
           </aside>
 
@@ -210,13 +210,13 @@ export default function ParserEngineSettingsPanel({
               >
                 {loading && (
                   <p className="text-2xs text-muted-foreground">
-                    Loading document engine settings...
+                    문서 엔진 설정을 불러오는 중...
                   </p>
                 )}
 
                 {selectedEngine === "Upstage" && (
                   <SettingField
-                    label="OCR language"
+                    label="OCR 언어"
                     description="Upstage 내부 OCR에 전달할 언어 코드입니다. 비워두면 자동 감지를 사용합니다."
                   >
                     <input
@@ -232,7 +232,7 @@ export default function ParserEngineSettingsPanel({
                 {selectedEngine === "LlamaIndex" && (
                   <>
                     <SettingField
-                      label="Parsing tier"
+                      label="파싱 티어"
                       description="복잡한 표와 스캔 문서는 Agentic 이상을 권장합니다."
                     >
                       <select
@@ -248,7 +248,7 @@ export default function ParserEngineSettingsPanel({
                         <option value="agentic_plus">Agentic Plus</option>
                       </select>
                     </SettingField>
-                    <SettingField label="Parser version">
+                    <SettingField label="파서 버전">
                       <input
                         type="text"
                         value={config.llamaVersion || "latest"}
@@ -257,7 +257,7 @@ export default function ParserEngineSettingsPanel({
                         className={fieldClassName}
                       />
                     </SettingField>
-                    <SettingField label="Page range" description="선택 사항입니다. 예: 1-5 또는 1,3,5-10">
+                    <SettingField label="페이지 범위" description="선택 사항입니다. 예: 1-5 또는 1,3,5-10">
                       <input
                         type="text"
                         value={config.pageRange || ""}
@@ -266,7 +266,7 @@ export default function ParserEngineSettingsPanel({
                         className={fieldClassName}
                       />
                     </SettingField>
-                    <SettingField label="OCR language" description="비워두면 자동 감지를 사용합니다.">
+                    <SettingField label="OCR 언어" description="비워두면 자동 감지를 사용합니다.">
                       <input
                         type="text"
                         value={config.language || ""}
@@ -281,7 +281,7 @@ export default function ParserEngineSettingsPanel({
                 {selectedEngine === "Azure" && (
                   <>
                     <SettingField
-                      label="Model"
+                      label="모델"
                       description="사용할 Azure Document Intelligence 모델을 선택합니다."
                     >
                       <select
@@ -294,7 +294,7 @@ export default function ParserEngineSettingsPanel({
                         <option value="prebuilt-document">Prebuilt Document</option>
                       </select>
                     </SettingField>
-                    <SettingField label="Output format">
+                    <SettingField label="출력 형식">
                       <select
                         value={config.azureOutputFormat || "markdown"}
                         onChange={(event) => update({
@@ -316,7 +316,7 @@ export default function ParserEngineSettingsPanel({
                         Google Document AI의 인증 정보는 Connections에서 관리하며, 결과는 JSON으로 수집됩니다.
                       </p>
                     </div>
-                    <SettingField label="Processor location" description="예: us 또는 eu">
+                    <SettingField label="프로세서 위치" description="예: us 또는 eu">
                       <input
                         type="text"
                         value={config.googleLocation || ""}
@@ -325,7 +325,7 @@ export default function ParserEngineSettingsPanel({
                         className={fieldClassName}
                       />
                     </SettingField>
-                    <SettingField label="Processor ID">
+                    <SettingField label="프로세서 ID">
                       <input
                         type="text"
                         value={config.googleProcessorId || ""}
@@ -339,7 +339,7 @@ export default function ParserEngineSettingsPanel({
 
                 {selectedEngine === "Docling" && (
                   <>
-                    <SettingField label="Output format" description="Markdown이 기본 권장 형식입니다.">
+                    <SettingField label="출력 형식" description="Markdown이 기본 권장 형식입니다.">
                       <select
                         value={config.doclingOutputFormat || "markdown"}
                         onChange={(event) => update({
@@ -353,7 +353,7 @@ export default function ParserEngineSettingsPanel({
                       </select>
                     </SettingField>
                     <SettingField
-                      label="Parser pipeline"
+                      label="파서 파이프라인"
                       description="VLM은 복잡한 레이아웃에 유리하지만 더 많은 연산이 필요합니다."
                     >
                       <select
@@ -363,11 +363,11 @@ export default function ParserEngineSettingsPanel({
                         })}
                         className={fieldClassName}
                       >
-                        <option value="standard">Standard</option>
+                        <option value="standard">표준</option>
                         <option value="vlm">VLM</option>
                       </select>
                     </SettingField>
-                    <SettingField label="Table structure mode">
+                    <SettingField label="표 구조 모드">
                       <select
                         value={config.doclingTableMode || "accurate"}
                         onChange={(event) => update({
@@ -376,7 +376,7 @@ export default function ParserEngineSettingsPanel({
                         className={fieldClassName}
                       >
                         <option value="fast">Fast</option>
-                        <option value="accurate">Accurate</option>
+                        <option value="accurate">정확도 우선</option>
                       </select>
                     </SettingField>
                     <label className="flex h-control-xl items-center gap-3 rounded-lg border border-border px-3">
@@ -386,9 +386,9 @@ export default function ParserEngineSettingsPanel({
                         onChange={(event) => update({ extractImages: event.target.checked })}
                         className="h-4 w-4 rounded-sm border-border accent-surface-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-surface-foreground"
                       />
-                      <span className="text-xs text-card-foreground">Embed images</span>
+                      <span className="text-xs text-card-foreground">이미지 포함</span>
                     </label>
-                    <SettingField label="OCR mode">
+                    <SettingField label="OCR 모드">
                       <select
                         value={config.doclingOcrMode || "auto"}
                         onChange={(event) => update({
@@ -397,12 +397,12 @@ export default function ParserEngineSettingsPanel({
                         className={fieldClassName}
                       >
                         <option value="disabled">Disabled (native text only)</option>
-                        <option value="auto">Auto</option>
-                        <option value="force">Force OCR</option>
+                        <option value="auto">자동</option>
+                        <option value="force">OCR 강제</option>
                       </select>
                     </SettingField>
                     {config.doclingOcrMode !== "disabled" && (
-                      <SettingField label="OCR language" description="비워두면 자동 감지를 사용합니다.">
+                      <SettingField label="OCR 언어" description="비워두면 자동 감지를 사용합니다.">
                         <input
                           type="text"
                           value={config.language || ""}
@@ -422,7 +422,7 @@ export default function ParserEngineSettingsPanel({
                         PDF는 가능한 경우 원본으로 전달합니다. DOC/DOCX/HWP/HWPX는 Connections에 등록한 네이티브 렌더러에서 페이지 이미지로 캡처합니다.
                       </p>
                     </div>
-                    <SettingField label="Model ID" description="재현 가능한 비교를 위해 실제 실행할 모델 ID를 저장합니다.">
+                    <SettingField label="모델 ID" description="재현 가능한 비교를 위해 실제 실행할 모델 ID를 저장합니다.">
                       <input
                         type="text"
                         value={config.modelId || ""}
@@ -459,9 +459,9 @@ export default function ParserEngineSettingsPanel({
                         })}
                         className={fieldClassName}
                       >
-                        <option value="auto">Auto</option>
-                        <option value="low">Low</option>
-                        <option value="high">High</option>
+                        <option value="auto">자동</option>
+                        <option value="low">낮음</option>
+                        <option value="high">높음</option>
                       </select>
                     </SettingField>
                     <SettingField label="Maximum output tokens">

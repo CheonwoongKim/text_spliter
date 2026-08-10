@@ -201,14 +201,14 @@ export default function GoldenCaseEditor({
               <input value={caseKey} onChange={(event) => setCaseKey(event.target.value)} disabled={!editable || saving} placeholder="auto-generated" className={fieldClass} />
             </label>
             <label className="block">
-              <span className="block text-2xs font-medium text-muted-foreground mb-2">Language</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">언어</span>
               <input value={language} onChange={(event) => setLanguage(event.target.value)} disabled={!editable || saving} placeholder="ko" className={fieldClass} />
             </label>
             <label className="block">
               <span className="block text-2xs font-medium text-muted-foreground mb-2">Difficulty</span>
               <select value={difficulty} onChange={(event) => setDifficulty(event.target.value as typeof difficulty)} disabled={!editable || saving} className={fieldClass}>
                 <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
+                <option value="medium">보통</option>
                 <option value="hard">Hard</option>
               </select>
             </label>
@@ -221,7 +221,7 @@ export default function GoldenCaseEditor({
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <label className="block">
-              <span className="block text-2xs font-medium text-muted-foreground mb-2">Reference answer</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">기준 답변</span>
               <textarea value={referenceAnswer} onChange={(event) => setReferenceAnswer(event.target.value)} disabled={!editable || saving} rows={7} className={fieldClass} placeholder="검토자가 기대하는 기준 답변" />
             </label>
             <label className="block">
@@ -231,7 +231,7 @@ export default function GoldenCaseEditor({
           </div>
 
           <label className="block">
-            <span className="block text-2xs font-medium text-muted-foreground mb-2">Expected evidence</span>
+            <span className="block text-2xs font-medium text-muted-foreground mb-2">기대 근거</span>
             <textarea value={expectedEvidence} onChange={(event) => setExpectedEvidence(event.target.value)} disabled={!editable || saving} rows={5} className={`${fieldClass} font-mono`} placeholder="document_hash | page | block_id | chunk_key | note" />
             <span className="block text-2xs text-muted-foreground mt-2">
               한 줄에 하나씩 입력합니다. 모르는 값은 비워 두고 `|` 구분자는 유지하세요.
@@ -290,7 +290,7 @@ export default function GoldenCaseEditor({
             <div className="flex items-center gap-3">
               {isNew && (
                 <Button variant="ghost" size="sm" onClick={onCancelNew} disabled={saving}>
-                  Cancel
+                  취소
                 </Button>
               )}
               <Button variant="primary" size="md" onClick={handleSubmit} disabled={saving || !question.trim()}>

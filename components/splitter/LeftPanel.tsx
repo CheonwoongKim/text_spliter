@@ -93,14 +93,14 @@ const LeftPanel = memo(function LeftPanel({
                      hover:text-surface-foreground disabled:cursor-not-allowed disabled:opacity-disabled"
           >
             <RotateCcw className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            Reset
+            초기화
           </button>
 
           <Button variant="primary" size="md" onClick={onSplit} disabled={loading}>
           {loading ? (
             <>
               <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
-              Processing...
+              처리 중...
             </>
           ) : (
             <>

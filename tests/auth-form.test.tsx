@@ -35,7 +35,7 @@ afterEach(async () => {
 test("signin renders its own route copy and toggles password visibility", async () => {
   const [{ fireEvent, render }, { default: AuthForm }] = await uiModules;
   const view = render(<AuthForm mode="signin" />);
-  const passwordInput = view.getByLabelText("Password") as HTMLInputElement;
+  const passwordInput = view.getByLabelText("비밀번호") as HTMLInputElement;
   const signupLink = view.getByRole("link", { name: /회원가입/ }) as HTMLAnchorElement;
 
   assert.equal(view.getByRole("heading").textContent, "Welcom, Back!");
@@ -57,7 +57,7 @@ test("signin restores, updates, and removes the remembered email", async () => {
   saveRememberedEmail("saved@example.com");
 
   const view = render(<AuthForm mode="signin" />);
-  const emailInput = view.getByLabelText("Email") as HTMLInputElement;
+  const emailInput = view.getByLabelText("이메일") as HTMLInputElement;
   const rememberCheckbox = view.getByRole("checkbox", {
     name: "이메일 저장",
   }) as HTMLInputElement;
@@ -90,13 +90,13 @@ test("signup renders confirmation and blocks passwords outside the policy", asyn
   assert.equal(new URL(loginLink.href).pathname, "/login");
   assert.equal(view.queryByRole("checkbox", { name: "이메일 저장" }), null);
 
-  fireEvent.change(view.getByLabelText("Email"), {
+  fireEvent.change(view.getByLabelText("이메일"), {
     target: { value: "user@example.com" },
   });
-  fireEvent.change(view.getByLabelText("Password"), {
+  fireEvent.change(view.getByLabelText("비밀번호"), {
     target: { value: "password" },
   });
-  fireEvent.change(view.getByLabelText("Password Confirm"), {
+  fireEvent.change(view.getByLabelText("비밀번호 확인"), {
     target: { value: "password" },
   });
   fireEvent.submit(view.container.querySelector("form")!);
@@ -110,13 +110,13 @@ test("signup blocks a mismatched confirmation after policy validation", async ()
   const [{ fireEvent, render, waitFor }, { default: AuthForm }] = await uiModules;
   const view = render(<AuthForm mode="signup" />);
 
-  fireEvent.change(view.getByLabelText("Email"), {
+  fireEvent.change(view.getByLabelText("이메일"), {
     target: { value: "user@example.com" },
   });
-  fireEvent.change(view.getByLabelText("Password"), {
+  fireEvent.change(view.getByLabelText("비밀번호"), {
     target: { value: "Strong1!" },
   });
-  fireEvent.change(view.getByLabelText("Password Confirm"), {
+  fireEvent.change(view.getByLabelText("비밀번호 확인"), {
     target: { value: "Different1!" },
   });
   fireEvent.submit(view.container.querySelector("form")!);

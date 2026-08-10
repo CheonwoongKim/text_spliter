@@ -30,7 +30,7 @@ function ChunkCard({ chunk }: ChunkCardProps) {
         <button
           onClick={copyToClipboard}
           className="text-2xs px-2 py-1 bg-subtle hover:bg-secondary-background rounded-sm transition-smooth"
-          title="Copy"
+          title="복사"
         >
           {copied ? "✓ Copied" : "Copy"}
         </button>

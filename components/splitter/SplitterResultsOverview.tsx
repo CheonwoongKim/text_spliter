@@ -112,7 +112,7 @@ function SplitterResultsOverview({
               <Button variant="ghost" size="sm" className="px-0"
                 onClick={() => onOpenRun(run.id)}
                 rightIcon={<ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />}>
-                Detail
+                상세
               </Button>
             ),
           },

@@ -71,7 +71,7 @@ test("parser results overview exposes every engine and multi-engine actions", ()
   assert.match(markup, /Primary/);
   assert.match(markup, /Additional/);
   assert.match(markup, /Full comparison/);
-  assert.equal((markup.match(/Detail/g) || []).length, 2);
+  assert.equal((markup.match(/상세/g) || []).length, 2);
 });
 
 test("parser result formats list every supported output without duplicates", () => {

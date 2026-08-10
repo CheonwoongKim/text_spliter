@@ -62,8 +62,8 @@ const SAMPLE_HTML = `<article>
   <h1>2026 Product Brief</h1>
   <p>Document processing converts the source file into structured content.</p>
   <table>
-    <thead><tr><th>Metric</th><th>Result</th></tr></thead>
-    <tbody><tr><td>Text accuracy</td><td>98.4%</td></tr></tbody>
+    <thead><tr><th>지표</th><th>결과</th></tr></thead>
+    <tbody><tr><td>텍스트 정확도</td><td>98.4%</td></tr></tbody>
   </table>
 </article>`;
 
@@ -515,7 +515,7 @@ function ParserRightPanel({
                   }}
                   className="px-2 py-2 text-2xs text-muted-foreground transition-smooth hover:text-card-foreground"
                 >
-                  Clear
+                  지우기
                 </button>
               )}
             </div>
@@ -536,14 +536,14 @@ function ParserRightPanel({
               </dd>
             </div>
             <div className="min-w-0">
-              <dt className="text-2xs text-muted-foreground">Engine</dt>
+              <dt className="text-2xs text-muted-foreground">엔진</dt>
               <dd className="mt-1 truncate text-xs font-medium text-card-foreground">
                 {displayResult.run?.engineId || displayResult.metadata.parserType}
                 {displayResult.run?.model ? ` · ${displayResult.run.model}` : ""}
               </dd>
             </div>
             <div>
-              <dt className="text-2xs text-muted-foreground">Processing</dt>
+              <dt className="text-2xs text-muted-foreground">처리 중</dt>
               <dd className="mt-1 text-xs font-medium text-card-foreground">
                 {displayResult.metadata.processingTime} ms
               </dd>
@@ -568,7 +568,7 @@ function ParserRightPanel({
               </h3>
               {isPreview && !showComparison && (
                 <span className="rounded-sm bg-muted px-2 py-1 text-2xs text-muted-foreground">
-                  Preview
+                  미리보기
                 </span>
               )}
             </div>

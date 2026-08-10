@@ -211,7 +211,7 @@ export default function RagTestPanel({
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
             <div className="block">
-              <span className="block text-2xs font-medium text-muted-foreground mb-2">Embedding</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">임베딩</span>
               <div
                 className="flex h-10 items-center rounded-lg border border-border bg-muted px-3 text-xs
                          text-card-foreground"
@@ -223,7 +223,7 @@ export default function RagTestPanel({
               </div>
             </div>
             <label className="block">
-              <span className="block text-2xs font-medium text-muted-foreground mb-2">Answer model</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">답변 모델</span>
               <Select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={loading}>
                 {GENERATION_MODELS.map((model) => (
                   <option key={model.value} value={model.value}>{model.label}</option>
@@ -231,12 +231,12 @@ export default function RagTestPanel({
               </Select>
             </label>
             <label className="block">
-              <span className="block text-2xs font-medium text-muted-foreground mb-2">Reasoning</span>
+              <span className="block text-2xs font-medium text-muted-foreground mb-2">추론 강도</span>
               <Select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={loading}>
                 <option value="none">None</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+                <option value="low">낮음</option>
+                <option value="medium">보통</option>
+                <option value="high">높음</option>
               </Select>
             </label>
             <label className="block">
