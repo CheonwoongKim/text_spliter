@@ -43,6 +43,14 @@ interface MenuButtonProps {
   onMenuChange: (menu: AppMenu) => void;
 }
 
+/**
+ * A navigation item rests in the muted foreground rather than the placeholder
+ * grey: at the 10px navigation size the placeholder tone falls below the
+ * contrast a label needs to be read at all.
+ *
+ * Selection is carried by weight as well as colour, so it survives for a reader
+ * who cannot separate these two greys.
+ */
 function MenuButton({ menu, activeMenu, onMenuChange }: MenuButtonProps) {
   const meta = APP_MENU_META[menu];
   const isActive = activeMenu === menu;
@@ -55,7 +63,7 @@ function MenuButton({ menu, activeMenu, onMenuChange }: MenuButtonProps) {
       className={`flex h-14 w-14 flex-col items-center justify-center rounded-lg transition-smooth ${
         isActive
           ? "text-card-foreground"
-          : "text-subdued hover:text-card-foreground"
+          : "text-muted-foreground hover:text-card-foreground"
       }`}
       aria-label={meta.title}
       aria-current={isActive ? "page" : undefined}
@@ -66,7 +74,9 @@ function MenuButton({ menu, activeMenu, onMenuChange }: MenuButtonProps) {
         strokeWidth={1}
         aria-hidden="true"
       />
-      <span className="text-nav font-medium">{meta.shortLabel}</span>
+      <span className={`text-nav ${isActive ? "font-bold" : "font-medium"}`}>
+        {meta.shortLabel}
+      </span>
     </button>
   );
 }
