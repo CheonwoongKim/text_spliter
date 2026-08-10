@@ -71,7 +71,7 @@ test("the authentication screens speak Korean, titles included", () => {
   const form = readFileSync("components/auth/AuthForm.tsx", "utf8");
   const content = form.slice(
     form.indexOf("const AUTH_CONTENT"),
-    form.indexOf("const FIELD_CLASS"),
+    form.indexOf("/**\n * Every field here"),
   );
 
   for (const key of ["title", "submit", "pending", "link"]) {

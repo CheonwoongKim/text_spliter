@@ -89,6 +89,14 @@ UI에는 IBM Plex Sans KR 하나만 사용합니다. `next/font/google`이 빌�
 | `text-lg` | 17 / 28px | workspace page heading |
 | `text-xl` | 20 / 32px | standalone entry heading only |
 | `text-2xl` | 24 / 38px | product name, authentication title only |
+| `text-control-sm` | 12 / 20px | text inside a control on a 13px surface |
+| `text-control-md` | 14 / 22px | text inside a control on a 15px surface |
+
+박스 안의 텍스트는 한 단계 내려 씁니다. 테두리가 눈이 글자를 재는 기준선을 만들기 때문에, 같은 15px이라도 필드 안에 있으면 옆의 본문보다 커 보입니다. 한 단계 내리면 둘이 같은 크기로 읽힙니다. 13px 하한 아래로 내려가는 크기는 이 두 개뿐이고, 컨트롤을 통해서만 닿을 수 있습니다 — label·hint·error는 박스 밖이므로 하한을 지킵니다.
+
+컨트롤의 크기는 `sm`(32px) · `md`(36px) · `lg`(40px) · `xl`(48px) 네 단계이며, 텍스트 크기와 radius가 여기에 함께 따라옵니다. `xl`은 로그인처럼 독립 진입 화면 전용으로, 14px 텍스트와 `rounded-2xl`(16px)을 갖습니다. 나머지는 12px 텍스트와 `rounded-lg`(8px)입니다. 반경이 높이를 따라가므로 48px 필드는 넉넉한 모서리를, 32px 컨트롤은 조인 모서리를 유지합니다.
+
+체크박스는 20px 정사각형에 `rounded-sm`(4px)입니다. 이전에는 16px에 8px 반경 — 자기 너비의 절반이라 원으로 보였고, 원은 라디오 버튼으로 읽혀 "이 중 하나 고르기"라는 뜻이 됩니다. 라벨은 `<label>` 안에 있어 글자를 눌러도 선택됩니다.
 
 허용 font weight는 `400`, `500`, `600`, `700`입니다. 일반 본문은 `400`, 컨트롤은 `500`, 제목은 `600`, 제품명만 `700`을 사용합니다.
 

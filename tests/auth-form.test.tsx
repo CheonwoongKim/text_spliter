@@ -63,7 +63,7 @@ test("signin restores, updates, and removes the remembered email", async () => {
   }) as HTMLInputElement;
 
   assert.match(rememberCheckbox.className, /appearance-none/);
-  assert.match(rememberCheckbox.className, /rounded-lg/);
+  assert.match(rememberCheckbox.className, /rounded-sm/);
   assert.match(rememberCheckbox.className, /border-control/);
   assert.doesNotMatch(rememberCheckbox.className, /focus-ring/);
   assert.match(rememberCheckbox.className, /focus-visible:border-surface-foreground/);

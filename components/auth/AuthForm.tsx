@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/shared/Button";
+import { Checkbox } from "@/components/shared/Checkbox";
+import { Input } from "@/components/shared/FormFields";
 import {
   getRememberedEmail,
   saveRememberedEmail,
@@ -56,8 +59,16 @@ const AUTH_CONTENT = {
   },
 } as const;
 
-const FIELD_CLASS =
-  "h-control-xl w-full rounded-2xl border border-control bg-card text-xs text-card-foreground placeholder-light focus-ring";
+/**
+ * Every field here is the shared control at its entry-screen size.
+ *
+ * `bg-card` rather than the shared default: a workspace field sits inside a
+ * `bg-card` panel and is recessed against it, but this screen has no panel, so
+ * a field on the canvas has to be raised off it instead or it disappears into
+ * the page and leaves only its border behind.
+ */
+const FIELD_SIZE = "xl" as const;
+const FIELD_SURFACE = "bg-card";
 
 function PasswordVisibilityIcon({ visible }: { visible: boolean }) {
   return (
@@ -106,27 +117,28 @@ function PasswordField({
         {label}
       </label>
       <div className="relative">
-        <input
+        <Input
           id={id}
           name={name}
           type={isVisible ? "text" : "password"}
           placeholder={placeholder}
-          className={`${FIELD_CLASS} pl-4 pr-12`}
+          fieldSize={FIELD_SIZE}
+          className={`${FIELD_SURFACE} pr-12`}
           autoComplete={autoComplete}
           minLength={minLength}
           required
         />
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => setIsVisible((current) => !current)}
           aria-label={`${visibilityLabel} ${isVisible ? "숨기기" : "보기"}`}
           aria-pressed={isVisible}
-          className="absolute inset-y-0 right-2 my-auto h-control-md w-control-md rounded-lg
-                   border border-transparent text-muted-foreground hover:bg-muted hover:text-card-foreground
-                   focus-visible:outline-none focus-visible:border-surface-foreground"
+          className="absolute inset-y-0 right-2 my-auto"
         >
           <PasswordVisibilityIcon visible={isVisible} />
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -238,13 +250,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
               <label htmlFor={`${fieldPrefix}-email`} className="mb-2 block text-xs font-normal text-surface-foreground">
                 이메일
               </label>
-              <input
+              <Input
                 ref={emailInputRef}
                 id={`${fieldPrefix}-email`}
                 name="email"
                 type="email"
                 placeholder="예: name@company.com"
-                className={`${FIELD_CLASS} px-4`}
+                fieldSize={FIELD_SIZE}
+                className={FIELD_SURFACE}
                 autoComplete="email"
                 required
               />
@@ -274,31 +287,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
           </div>
 
           {!isSignup && (
-            <label className="mt-4 flex w-fit cursor-pointer items-center gap-2 text-xs font-normal text-muted-foreground">
-              <span className="relative h-4 w-4 shrink-0">
-                <input
-                  type="checkbox"
-                  checked={shouldRememberEmail}
-                  onChange={handleRememberEmailChange}
-                  className="h-4 w-4 appearance-none rounded-lg border border-control bg-card
-                           checked:border-surface-foreground checked:bg-surface-foreground
-                           focus:outline-none focus-visible:border-surface-foreground"
-                />
-                {shouldRememberEmail && (
-                  <svg
-                    className="pointer-events-none absolute inset-0 m-auto h-3 w-3 text-card"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    aria-hidden="true"
-                  >
-                    <path d="M2.5 6.25 4.75 8.5 9.5 3.75" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </span>
-              이메일 저장
-            </label>
+            <Checkbox
+              className="mt-4"
+              checked={shouldRememberEmail}
+              onChange={handleRememberEmailChange}
+              label="이메일 저장"
+            />
           )}
 
           <div className="mt-8 space-y-4">
@@ -311,17 +305,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
               </p>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-control-xl bg-surface-foreground hover:bg-card-foreground
-                       text-base text-card font-medium rounded-2xl
-                       border border-surface-foreground transition-smooth
-                       flex items-center justify-center gap-2
-                       disabled:cursor-not-allowed disabled:opacity-disabled"
-            >
+            <Button type="submit" size="xl" isLoading={loading}>
               {loading ? content.pending : content.submit}
-            </button>
+            </Button>
           </div>
 
           <Link

@@ -80,12 +80,33 @@ function hasInvalidState(
  * it line up. Before this, buttons stood 36px and most fields 40px, which is
  * only visible when they sit on the same row — which is where they always sit.
  */
-export type ControlSize = "sm" | "md" | "lg";
+export type ControlSize = "sm" | "md" | "lg" | "xl";
 
 export const controlHeights: Record<ControlSize, string> = {
   sm: "h-control-sm",
   md: "h-control-md",
   lg: "h-control-lg",
+  xl: "h-control-xl",
+};
+
+/** The corner follows the control's height: a 48px field carries a rounder one. */
+export const controlRadii: Record<ControlSize, string> = {
+  sm: "rounded-lg",
+  md: "rounded-lg",
+  lg: "rounded-lg",
+  xl: "rounded-2xl",
+};
+
+/**
+ * A value inside a field reads larger than the same text on the page, so each
+ * size drops one step. `xl` belongs to a standalone entry screen, whose text
+ * sits at 15px; the rest sit under the 13px of a workspace.
+ */
+export const controlTextSizes: Record<ControlSize, string> = {
+  sm: "text-control-sm",
+  md: "text-control-sm",
+  lg: "text-control-sm",
+  xl: "text-control-md",
 };
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -100,7 +121,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <input
         ref={ref}
         aria-invalid={error ? true : ariaInvalid}
-        className={`w-full ${controlHeights[fieldSize]} px-3 border rounded-lg bg-surface text-xs text-card-foreground placeholder-light focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
+        className={`w-full ${controlHeights[fieldSize]} px-3 border ${controlRadii[fieldSize]} bg-surface ${controlTextSizes[fieldSize]} text-card-foreground placeholder-light focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
           invalid ? "border-danger focus:border-danger" : "border-control"
         } ${className}`}
         {...props}
@@ -122,7 +143,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       <select
         ref={ref}
         aria-invalid={error ? true : ariaInvalid}
-        className={`w-full ${controlHeights[fieldSize]} px-3 border rounded-lg bg-surface text-xs text-card-foreground focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
+        className={`w-full ${controlHeights[fieldSize]} px-3 border ${controlRadii[fieldSize]} bg-surface ${controlTextSizes[fieldSize]} text-card-foreground focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
           invalid ? "border-danger focus:border-danger" : "border-control"
         } ${className}`}
         {...props}
@@ -145,7 +166,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       <textarea
         ref={ref}
         aria-invalid={error ? true : ariaInvalid}
-        className={`w-full px-3 py-2 border rounded-lg bg-surface text-xs text-card-foreground placeholder-light focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
+        className={`w-full px-3 py-2 border rounded-lg bg-surface ${controlTextSizes.md} text-card-foreground placeholder-light focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
           invalid ? "border-danger focus:border-danger" : "border-control"
         } ${className}`}
         {...props}

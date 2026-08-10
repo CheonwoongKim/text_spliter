@@ -26,6 +26,9 @@ test("the login screen declares no size below the floor", () => {
     ["text-2xl", "text-base", "text-xs"],
     "an entry screen needs a title, a reading size, and the floor — nothing else",
   );
+  // What goes inside a box is corrected a step down, and that decision lives in
+  // the primitives rather than here.
+  assert.equal(declarations(/\btext-control-(?:sm|md)\b/g).length, 0);
 });
 
 test("the authentication title is a heading, at a heading's weight", () => {
@@ -35,23 +38,42 @@ test("the authentication title is a heading, at a heading's weight", () => {
   assert.match(heading, /\bfont-semibold\b/, "600 is the weight for a heading; 500 is for controls");
 });
 
-test("what a person reads and acts on sits at 15px, not at the floor", () => {
+test("what a person reads sits at 15px, and what they act on is corrected to 14px", () => {
   const feedback = form.match(/className=\{`text-\w+ \$\{feedback\.type/)?.[0] ?? "";
-  const submit = form.match(/type="submit"[\s\S]{0,400}?className="([^"]+)"/)?.[1] ?? "";
 
   assert.match(feedback, /text-base/, "a status message is read, so it takes the reading size");
-  assert.match(submit, /text-base/, "the primary action of the screen is not label-sized");
-  assert.match(submit, /font-medium/, "500 is the weight for a control");
+
+  // The submit button and the fields are the shared primitives at their
+  // entry-screen size, which maps to 14px: one step under this screen's 15px,
+  // because a border makes the same text look larger inside it.
+  assert.match(form, /<Button type="submit" size="xl"/);
+  assert.match(form, /const FIELD_SIZE = "xl" as const;/);
+
+  const button = readFileSync("components/shared/Button.tsx", "utf8");
+  const fields = readFileSync("components/shared/FormFields.tsx", "utf8");
+  assert.match(button, /xl: "h-control-xl[^"]*text-control-md/);
+  assert.match(fields, /xl: "text-control-md"/);
 });
 
 test("every field label and the secondary link stay at the floor", () => {
   const labels = declarations(/<label[^>]*className="[^"]*"/g);
 
-  assert.ok(labels.length >= 3, "email, password and the remember-me choice all carry a label");
+  assert.equal(labels.length, 2, "email and password carry a label; the checkbox owns its own");
   for (const label of labels) {
     assert.match(label, /\btext-xs\b/, `a label sits at the floor: ${label}`);
     assert.match(label, /\bfont-normal\b/, "a label is not emphasised over the value it names");
   }
+
+  const link = form.match(/className="mt-12[^"]*"/)?.[0] ?? "";
+  assert.match(link, /\btext-xs\b/, "a link is read on the page, not inside a box");
+});
+
+test("the screen builds its controls from the shared primitives", () => {
+  assert.doesNotMatch(form, /<input\b/, "a hand-rolled field drifts from every other field");
+  assert.doesNotMatch(form, /<button\b/, "a hand-rolled button drifts from every other button");
+  assert.match(form, /<Checkbox\b/);
+  assert.match(form, /<Button\b/);
+  assert.match(form, /<Input\b/);
 });
 
 test("the screen overrides neither line height nor tracking", () => {

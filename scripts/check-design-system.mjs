@@ -90,16 +90,16 @@ const COMPONENT_BUDGETS = [
   {
     name: "hand-rolled button",
     pattern: /<button\b/g,
-    budget: 92,
+    budget: 90,
     guidance: "Use <Button> from components/shared. See docs/DESIGN_SYSTEM.md.",
     exempt: ["components/shared/Button.tsx"],
   },
   {
     name: "hand-rolled text input",
     pattern: /<input\b/g,
-    budget: 37,
+    budget: 34,
     guidance: "Use the field primitives in components/shared/FormFields.tsx.",
-    exempt: ["components/shared/FormFields.tsx"],
+    exempt: ["components/shared/FormFields.tsx", "components/shared/Checkbox.tsx"],
   },
   {
     name: "hand-rolled select",

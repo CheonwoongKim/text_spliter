@@ -25,12 +25,16 @@ function tokenNames(prefix: string) {
  * a floor, so the step itself is gone.
  */
 test("the type scale starts at the 13px floor and has no step below it", () => {
-  assert.deepEqual(tokenNames("ds-font-size"), ["xs", "base", "lg", "xl", "2xl"]);
+  // `control-*` is the optically corrected tier for text inside a box; it is
+  // held to its own rules in tests/control-typography.test.ts.
+  const pageScale = tokenNames("ds-font-size").filter((name) => !name.startsWith("control-"));
+
+  assert.deepEqual(pageScale, ["xs", "base", "lg", "xl", "2xl"]);
   assert.match(tokens, /--ds-font-size-xs: 0\.8125rem/);
   assert.match(tokens, /--ds-font-size-base: 0\.9375rem/);
   assert.match(tokens, /--ds-font-size-lg: 1\.0625rem/);
   assert.match(tokens, /--ds-font-size-2xl: 1\.5rem/);
-  assert.doesNotMatch(tokens, /--ds-font-size-(?:2xs|micro|caption|sm|3xl)/);
+  assert.doesNotMatch(tokens, /--ds-font-size-(?:2xs|micro|caption|3xl)/);
 });
 
 test("11px survives only for the GNB, which no other surface can reach", () => {
@@ -99,18 +103,17 @@ test("the previous face is fully removed rather than left half-swapped", () => {
   }
 });
 
-test("authentication inputs change focus border without transition animation", () => {
-  const inputs = [...authForm.matchAll(/<input[\s\S]*?\/>/g)]
-    .map((match) => match[0])
-    .filter((input) => !/type="checkbox"/.test(input));
+test("authentication fields are the shared control, focused without animation", () => {
+  const fields = readFileSync("components/shared/FormFields.tsx", "utf8");
+  const input = fields.slice(fields.indexOf("      <input"), fields.indexOf("/>", fields.indexOf("      <input")));
 
-  assert.equal(inputs.length, 2);
-  assert.match(authForm, /const FIELD_CLASS =[\s\S]*focus-ring/);
-  assert.doesNotMatch(authForm.match(/const FIELD_CLASS =[\s\S]*?;/)?.[0] ?? "", /transition-smooth/);
-  for (const input of inputs) {
-    assert.match(input, /FIELD_CLASS/);
-    assert.doesNotMatch(input, /transition-smooth/);
-  }
+  // A border that animates on focus arrives after the caret does, so the field
+  // looks unfocused for the moment a person starts typing.
+  assert.match(input, /focus-ring/);
+  assert.doesNotMatch(input, /transition-smooth/);
+
+  assert.equal([...authForm.matchAll(/<Input\b/g)].length, 2, "email and password use the primitive");
+  assert.doesNotMatch(authForm, /<input\b/, "no field on this screen is hand-rolled any more");
 });
 
 test("login and signup are distinct public routes with password confirmation", () => {

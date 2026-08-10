@@ -72,6 +72,14 @@ const config: Config = {
     },
     fontSize: {
       nav: ["var(--ds-navigation-font-size)", { lineHeight: "var(--ds-line-height-nav)" }],
+      "control-sm": [
+        "var(--ds-font-size-control-sm)",
+        { lineHeight: "var(--ds-line-height-control-sm)" },
+      ],
+      "control-md": [
+        "var(--ds-font-size-control-md)",
+        { lineHeight: "var(--ds-line-height-control-md)" },
+      ],
       xs: ["var(--ds-font-size-xs)", { lineHeight: "var(--ds-line-height-xs)" }],
       base: ["var(--ds-font-size-base)", { lineHeight: "var(--ds-line-height-base)" }],
       lg: ["var(--ds-font-size-lg)", { lineHeight: "var(--ds-line-height-lg)" }],

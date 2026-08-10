@@ -59,6 +59,16 @@
   --ds-font-size-lg: 1.0625rem;
   --ds-font-size-xl: 1.25rem;
   --ds-font-size-2xl: 1.5rem;
+  /* Text inside a control reads larger than the same text on the page. The
+     border draws a boundary the eye measures the glyphs against, so a 15px
+     value in a field looks bigger than 15px of body copy beside it. One step
+     down cancels the illusion and the two read as the same size.
+     These are the only sizes under the 13px floor, and a control is the only
+     way to reach them: a label, a hint, or an error sits outside the box and
+     stays on the floor. Each pairs with the surface it sits on — a 15px screen
+     gets 14px controls, a 13px screen gets 12px. */
+  --ds-font-size-control-md: 0.875rem;
+  --ds-font-size-control-sm: 0.75rem;
   /* 11px, and only for the GNB, where the label sits under its own icon and is
      read as part of a fixed, memorised set rather than as running text. */
   --ds-navigation-font-size: 0.6875rem;
@@ -69,6 +79,8 @@
   /* Each line box holds the face's 1.5em content box at the x-height-adjusted
      size, so text sits centred inside fixed-height controls instead of riding
      high on a deeper descender. */
+  --ds-line-height-control-md: 1.375rem;
+  --ds-line-height-control-sm: 1.25rem;
   --ds-line-height-nav: 1.125rem;
   --ds-line-height-xs: 1.375rem;
   --ds-line-height-base: 1.5rem;

@@ -17,7 +17,7 @@ export type ButtonVariant =
   | "dangerGhost"
   | "danger"
   | "soft";
-export type ButtonSize = "sm" | "md" | "lg" | "icon";
+export type ButtonSize = "sm" | "md" | "lg" | "xl" | "icon";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -37,11 +37,18 @@ const variantStyles: Record<ButtonVariant, string> = {
   soft: "bg-upload-zone text-card-foreground hover:bg-muted focus-visible:ring-surface-foreground",
 };
 
+/**
+ * A label inside a button reads larger than the same words on the page, so
+ * each size drops one step: `control-sm` under a 13px workspace, `control-md`
+ * under the 15px of a standalone entry screen. `xl` is that entry-screen size,
+ * where the button is the single thing the screen asks for.
+ */
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "h-control-sm px-3 text-xs gap-1 rounded-lg",
-  md: "h-control-md px-4 text-xs gap-2 rounded-lg",
-  lg: "h-control-lg px-6 text-xs gap-3 rounded-lg",
-  icon: "h-8 w-8 text-xs rounded-lg",
+  sm: "h-control-sm px-3 text-control-sm gap-1 rounded-lg",
+  md: "h-control-md px-4 text-control-sm gap-2 rounded-lg",
+  lg: "h-control-lg px-6 text-control-sm gap-3 rounded-lg",
+  xl: "h-control-xl w-full px-6 text-control-md gap-2 rounded-2xl",
+  icon: "h-8 w-8 text-control-sm rounded-lg",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
