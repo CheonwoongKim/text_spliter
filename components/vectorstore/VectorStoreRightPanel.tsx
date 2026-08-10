@@ -1,6 +1,7 @@
 "use client";
 
 import { Database } from "lucide-react";
+import Modal from "@/components/shared/Modal";
 import { Button } from "@/components/shared/Button";
 import { memo, useState, useCallback, useEffect } from "react";
 import type { TableDataResponse } from "@/lib/types";
@@ -231,67 +232,24 @@ function VectorStoreRightPanel({
       </div>
 
       {/* Cell Content Modal */}
-      {modalData && (
-        <div
-          className="fixed inset-0 bg-overlay flex items-center justify-center z-modal"
-          onClick={handleCloseModal}
-        >
-          <div
-            className="bg-card rounded-lg shadow-lg max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-              <div>
-                <h3 className="text-xs font-medium text-card-foreground">
-                  {modalData.columnName}
-                </h3>
-                <p className="text-2xs text-muted-foreground mt-1">
-                  {typeof modalData.value === "object" && modalData.value !== null
-                    ? "JSON Object"
-                    : typeof modalData.value}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleCopy}
-                  className="px-3 py-2 text-2xs font-medium rounded-lg
-                           bg-upload-zone text-card-foreground hover:bg-muted
-                           transition-smooth flex items-center gap-2"
-                >
-                  {copied ? (
-                    <>
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      Copy
-                    </>
-                  )}
-                </button>
-                <Button variant="ghost" size="icon" onClick={handleCloseModal} aria-label="Close">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </Button>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="flex-1 overflow-auto px-6 py-4">
-              <pre className="text-xs text-card-foreground whitespace-pre-wrap break-words font-mono bg-surface p-4 rounded-lg border border-border">
-                {modalData.formattedValue}
-              </pre>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={Boolean(modalData)}
+        onClose={handleCloseModal}
+        title={modalData?.columnName || ""}
+        description={modalData && typeof modalData.value === "object" && modalData.value !== null
+          ? "JSON Object"
+          : modalData ? typeof modalData.value : undefined}
+        size="xl"
+        footer={
+          <Button variant="soft" size="sm" onClick={handleCopy}>
+            {copied ? "Copied" : "Copy"}
+          </Button>
+        }
+      >
+        <pre className="whitespace-pre-wrap break-words rounded-lg border border-border bg-surface p-4 font-mono text-xs text-card-foreground">
+          {modalData?.formattedValue}
+        </pre>
+      </Modal>
     </div>
   );
 }

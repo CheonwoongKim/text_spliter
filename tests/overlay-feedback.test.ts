@@ -36,13 +36,20 @@ test("an outcome is carried by an icon and a role, not by colour alone", () => {
   assert.match(status, /Icon className/, "every tone renders an icon");
 });
 
-test("the collection dialogs use the shared overlay", () => {
-  const panel = readFileSync("components/vectorstore/VectorStoreLeftPanel.tsx", "utf8");
+test("migrated dialogs use the shared overlay", () => {
+  const migrated = [
+    "components/vectorstore/VectorStoreLeftPanel.tsx",
+    "components/vectorstore/VectorStoreRightPanel.tsx",
+    "components/evaluation/RagasEvaluationModal.tsx",
+  ];
 
-  assert.match(panel, /<Modal/);
-  assert.doesNotMatch(
-    panel,
-    /className="fixed inset-0/,
-    "the create and delete dialogs must not paint their own overlay",
-  );
+  for (const path of migrated) {
+    const panel = readFileSync(path, "utf8");
+    assert.match(panel, /<Modal/, `${path} must use the shared overlay`);
+    assert.doesNotMatch(
+      panel,
+      /className="fixed inset-0/,
+      `${path} still paints its own overlay, so it traps no focus`,
+    );
+  }
 });

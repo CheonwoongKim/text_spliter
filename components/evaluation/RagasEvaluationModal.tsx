@@ -1,6 +1,7 @@
 "use client";
 
 import { Select } from "@/components/shared/FormFields";
+import Modal from "@/components/shared/Modal";
 import { Button } from "@/components/shared/Button";
 import type { EvaluationRun, RagGenerationModel, RagasMetricKey } from "@/lib/types";
 
@@ -55,17 +56,24 @@ export default function RagasEvaluationModal({
   const available = Boolean(health) && !healthError;
 
   return (
-    <div className="fixed inset-0 z-modal bg-overlay flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-lg shadow-lg p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-base font-semibold text-card-foreground">Run Ragas evaluation</h3>
-            <p className="text-2xs text-muted-foreground mt-1">완료된 RAG 결과를 별도의 모델 판정 배치로 평가합니다.</p>
-          </div>
-          <span className={`px-3 py-1 rounded-full text-2xs ${available ? "bg-success-surface text-success" : healthError ? "bg-danger-surface text-danger" : "bg-muted text-muted-foreground"}`}>
-            {checking ? "Checking worker" : available ? `Ragas ${health?.frameworkVersion}` : "Worker unavailable"}
-          </span>
-        </div>
+    <Modal
+      isOpen
+      onClose={onClose}
+      title="Ragas 모델 판정 실행"
+      description="완료된 RAG 결과를 별도의 모델 판정 배치로 평가합니다. 결정적 지표·사람 리뷰와 합산되지 않습니다."
+      size="lg"
+      footer={<>
+        <Button variant="ghost" size="sm" onClick={onClose} disabled={executing}>Cancel</Button>
+        <Button variant="primary" size="md" onClick={onRun} disabled={checking || executing || !available || !health?.allowedModels.includes(model) || !metrics.length || run.succeeded_count === 0}>
+          {executing ? "Evaluating..." : `Evaluate ${run.succeeded_count} cases`}
+        </Button>
+      </>}
+    >
+      <div className="flex justify-end">
+        <span className={`px-3 py-1 rounded-full text-2xs ${available ? "bg-success-surface text-success" : healthError ? "bg-danger-surface text-danger" : "bg-muted text-muted-foreground"}`}>
+          {checking ? "Checking worker" : available ? `Ragas ${health?.frameworkVersion}` : "Worker unavailable"}
+        </span>
+      </div>
 
         <div className="mt-4 py-3 border-y border-border">
           <p className="text-2xs font-medium text-card-foreground truncate">{run.name}</p>
@@ -122,13 +130,6 @@ export default function RagasEvaluationModal({
           </div>
         )}
 
-        <div className="flex justify-end gap-3 mt-6">
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={executing}>Cancel</Button>
-          <Button variant="primary" size="md" onClick={onRun} disabled={checking || executing || !available || !health?.allowedModels.includes(model) || !metrics.length || run.succeeded_count === 0}>
-            {executing ? "Evaluating..." : `Evaluate ${run.succeeded_count} cases`}
-          </Button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

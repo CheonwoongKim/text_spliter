@@ -90,7 +90,7 @@ const COMPONENT_BUDGETS = [
   {
     name: "hand-rolled button",
     pattern: /<button\b/g,
-    budget: 98,
+    budget: 97,
     guidance: "Use <Button> from components/shared. See docs/DESIGN_SYSTEM.md.",
     exempt: ["components/shared/Button.tsx"],
   },
@@ -111,7 +111,7 @@ const COMPONENT_BUDGETS = [
   {
     name: "hand-rolled overlay",
     pattern: /className="fixed inset-0/g,
-    budget: 5,
+    budget: 3,
     guidance: "Use <Modal> so focus handling and dismissal behave the same everywhere.",
     exempt: ["components/shared/Modal.tsx", "components/shared/ModalDialog.tsx"],
   },
