@@ -50,6 +50,21 @@ styles/design-tokens.css → tailwind.config.ts → app/globals.css / components
 COMPONENT_BUDGETS = [ hand-rolled button, text input, select, overlay, parallel style constant ]
 ```
 
+현재 남은 프리미티브와 그 역할:
+
+| 컴포넌트 | 담당 |
+|---|---|
+| `PagePanel` · `PanelSection` | 페이지 프레임, 거터, 제목 위계 |
+| `SplitWorkspace` | 파이프라인 단계의 설정/결과 2열 구조 |
+| `TabBar` | 화면 내 보기 전환 |
+| `DataTable` | 비교 표 |
+| `Button` · `FormFields` | 컨트롤과 그 크기 스케일 |
+| `Modal` · `ModalDialog` | 오버레이, 포커스 트랩, Escape |
+| `StatusMessage` | 작업 결과 알림 |
+| `PanelPlaceholder` | 빈 상태와 로딩 |
+
+오버레이와 평행 스타일 상수는 예산이 0이므로 사실상 금지입니다.
+
 - 개수가 예산을 넘으면 빌드가 실패합니다.
 - 마이그레이션이 끝나면 스크립트가 새 숫자를 알려주고, 그때 예산을 **낮춥니다**.
 - 예산을 올리는 변경은 허용하지 않습니다.
