@@ -41,6 +41,8 @@ test("migrated dialogs use the shared overlay", () => {
     "components/vectorstore/VectorStoreLeftPanel.tsx",
     "components/vectorstore/VectorStoreRightPanel.tsx",
     "components/evaluation/RagasEvaluationModal.tsx",
+    "components/evaluation/EvaluationPanel.tsx",
+    "components/evaluation/DocumentEvaluationView.tsx",
   ];
 
   for (const path of migrated) {

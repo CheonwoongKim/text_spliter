@@ -111,7 +111,7 @@ const COMPONENT_BUDGETS = [
   {
     name: "hand-rolled overlay",
     pattern: /className="fixed inset-0/g,
-    budget: 3,
+    budget: 0,
     guidance: "Use <Modal> so focus handling and dismissal behave the same everywhere.",
     exempt: ["components/shared/Modal.tsx", "components/shared/ModalDialog.tsx"],
   },

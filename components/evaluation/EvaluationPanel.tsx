@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Modal from "@/components/shared/Modal";
 import { Input, Select, Textarea } from "@/components/shared/FormFields";
 import { Button } from "@/components/shared/Button";
 
@@ -687,23 +688,28 @@ export default function EvaluationPanel() {
         )}
       </div>
 
-      {datasetModalOpen && (
-        <div className="fixed inset-0 z-modal bg-overlay flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-card border border-border rounded-lg shadow-lg p-6">
-            <h3 className="text-base font-semibold text-card-foreground">{editingDataset ? "Edit dataset" : "New evaluation dataset"}</h3>
-            <p className="text-2xs text-muted-foreground mt-1">골든 케이스를 같은 목적과 버전으로 묶습니다.</p>
+      <Modal
+        isOpen={datasetModalOpen}
+        onClose={() => setDatasetModalOpen(false)}
+        title={editingDataset ? "데이터셋 수정" : "새 평가 데이터셋"}
+        description="골든 케이스를 같은 목적과 버전으로 묶습니다."
+        size="md"
+        footer={<><Button variant="ghost" size="sm" onClick={() => setDatasetModalOpen(false)} disabled={saving}>Cancel</Button><Button variant="primary" size="md" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()}>{saving ? "Saving..." : "Save dataset"}</Button></>}
+      >
             <div className="space-y-4 mt-6">
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Name *</span><Input fieldSize="lg" autoFocus value={datasetName} onChange={(event) => setDatasetName(event.target.value)} placeholder="Korean financial reports"/></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Description</span><Textarea value={datasetDescription} onChange={(event) => setDatasetDescription(event.target.value)} rows={4} placeholder="평가 목적과 포함 문서 범위"/></label>
             </div>
-            <div className="flex justify-end gap-3 mt-6"><Button variant="ghost" size="sm" onClick={() => setDatasetModalOpen(false)} disabled={saving}>Cancel</Button><Button variant="primary" size="md" onClick={handleSaveDataset} disabled={saving || !datasetName.trim()}>{saving ? "Saving..." : "Save dataset"}</Button></div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
-      {runModalOpen && (
-        <div className="fixed inset-0 z-modal bg-overlay flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-lg shadow-lg p-6">
+      <Modal
+        isOpen={runModalOpen}
+        onClose={() => setRunModalOpen(false)}
+        title="평가 실행"
+        description="선택한 케이스를 하나의 검색·생성 설정으로 실행합니다. 실행을 시작하면 데이터셋 버전이 동결됩니다."
+        size="xl"
+        footer={<><Button variant="ghost" size="sm" onClick={() => setRunModalOpen(false)} disabled={executing}>Cancel</Button><Button variant="primary" size="md" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20 || regressionTolerance < 0 || regressionTolerance > 100}>{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</Button></>}
+      >
             <div className="flex items-start justify-between gap-4">
               <div><h3 className="text-base font-semibold text-card-foreground">Run evaluation</h3><p className="text-2xs text-muted-foreground mt-1">선택한 {selectedCaseIds.size}개 케이스에 동일한 파이프라인을 적용합니다.</p></div>
               <span className="px-3 py-1 rounded-full bg-warning-surface text-warning text-2xs">Version will freeze</span>
@@ -737,10 +743,7 @@ export default function EvaluationPanel() {
             {executing && (
               <div className="mt-4"><div className="flex items-center justify-between text-2xs text-muted-foreground mb-2"><span>Executing cases</span><span>{executionProgress.completed}/{executionProgress.total}</span></div><div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-surface-foreground transition-all duration-slow" style={{ width: `${executionProgress.total ? (executionProgress.completed / executionProgress.total) * 100 : 0}%` }} /></div></div>
             )}
-            <div className="flex justify-end gap-3 mt-6"><Button variant="ghost" size="sm" onClick={() => setRunModalOpen(false)} disabled={executing}>Cancel</Button><Button variant="primary" size="md" onClick={executeEvaluationRun} disabled={executing || !runTable || topK < 1 || topK > 20 || regressionTolerance < 0 || regressionTolerance > 100}>{executing ? "Running..." : `Run ${selectedCaseIds.size} cases`}</Button></div>
-          </div>
-        </div>
-      )}
+      </Modal>
       <RagasEvaluationModal
         open={ragasModalOpen}
         run={workspace.runs.find((run) => run.id === selectedRunId) || null}
