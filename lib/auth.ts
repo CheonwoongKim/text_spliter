@@ -7,30 +7,38 @@ import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 export const AUTH_TOKEN_KEY = "auth_token";
 const REMEMBERED_EMAIL_KEY = "remembered_login_email";
+let currentAccessToken: string | null = null;
 
 /**
- * Get the authentication token from localStorage
+ * Read the access token synchronized from Supabase's current session.
+ * Supabase owns persistence; this in-memory copy only supports legacy callers
+ * that need a synchronous header while the protected workbench is mounted.
  */
 export function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(AUTH_TOKEN_KEY);
+  return currentAccessToken;
 }
 
 /**
- * Set the authentication token in localStorage
+ * Synchronize the in-memory compatibility token.
  */
 export function setAuthToken(token: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
+  currentAccessToken = token;
 }
 
 /**
- * Remove all authentication tokens from localStorage
+ * Clear the in-memory token and remove keys written by older releases.
  */
 export function clearAuthTokens(): void {
+  currentAccessToken = null;
+
   if (typeof window === "undefined") return;
-  localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem("refresh_token");
+
+  try {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem("refresh_token");
+  } catch {
+    // Supabase still owns the canonical session if storage access is blocked.
+  }
 }
 
 export function getRememberedEmail(): string | null {
@@ -107,12 +115,18 @@ export function handleUnauthorized(): void {
   console.log('[Auth] Unauthorized - clearing tokens and redirecting to login');
   clearAuthTokens();
 
-  void getBrowserSupabase().auth.signOut({ scope: "local" }).catch((error) => {
-    console.error('[Auth] Failed to clear Supabase session:', error);
-  });
+  const redirectToLogin = () => window.location.replace('/login');
 
-  // Redirect to login page
-  window.location.href = '/login';
+  try {
+    void getBrowserSupabase().auth.signOut({ scope: "local" })
+      .catch((error) => {
+        console.error('[Auth] Failed to clear Supabase session:', error);
+      })
+      .finally(redirectToLogin);
+  } catch (error) {
+    console.error('[Auth] Failed to initialize Supabase sign-out:', error);
+    redirectToLogin();
+  }
 }
 
 /**

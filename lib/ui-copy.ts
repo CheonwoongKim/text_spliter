@@ -23,10 +23,20 @@
 
 /** The screens written in English. Everything else in the product is Korean. */
 export const AUTH_SURFACES: readonly string[] = [
+  "components/auth/AuthFeedback.tsx",
+  "components/auth/AuthField.tsx",
   "components/auth/AuthForm.tsx",
+  "components/auth/AuthPage.tsx",
+  "components/auth/AuthPasswordField.tsx",
+  "components/auth/ForgotPasswordForm.tsx",
+  "components/auth/ResetPasswordForm.tsx",
+  "components/auth/usePasswordRecoverySession.ts",
+  "lib/auth-feedback.ts",
   "lib/password-policy.ts",
   "app/login/page.tsx",
   "app/signup/page.tsx",
+  "app/forgot-password/page.tsx",
+  "app/reset-password/page.tsx",
 ];
 
 /** Terms that must survive translation, checked by tests/ui-copy.test.ts. */

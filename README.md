@@ -177,6 +177,8 @@ supabase link --project-ref <application-project-ref>
 supabase db push --linked
 ```
 
+Supabase Auth의 Redirect URL 허용 목록에는 배포 주소의 `/reset-password` 경로를 추가해야 합니다. 로컬 설정은 `http://localhost:3002/reset-password`를 사용합니다.
+
 스키마 원본은 `supabase/migrations/`에 있습니다. `public` 스키마의 앱 테이블에는 RLS가 활성화되어 있으며 서버 전용 Secret Key를 사용하는 API Route만 접근합니다. 문서 원본은 Supabase Storage의 비공개 `documents` 버킷에 저장되고, 객체 경로의 첫 디렉터리는 Supabase Auth 사용자 UUID로 제한됩니다.
 
 **주요 테이블:**
@@ -221,7 +223,8 @@ npm start
 
 ### 1. 로그인 및 회원가입
 
-- `/login`에서 Supabase Auth 이메일·비밀번호 로그인 또는 회원가입
+- `/login`과 `/signup`에서 Supabase Auth 이메일·비밀번호 로그인 또는 회원가입
+- `/forgot-password`와 `/reset-password`에서 계정 존재 여부를 노출하지 않는 비밀번호 복구
 - access token은 보호 API 요청에 전달되며 서버가 Supabase Auth를 통해 사용자를 검증
 - 브라우저에는 publishable key만 제공되고 Supabase Secret Key는 서버에만 유지
 - 로그아웃 시 로컬 Supabase 세션과 호환 토큰을 함께 제거
@@ -367,7 +370,10 @@ npm start
 text_spliter/
 ├── app/                    # Next.js pages and authenticated API routes
 │   ├── api/                # keys, parsing, storage, splitting, and VDB APIs
-│   └── login/              # Supabase Auth page
+│   ├── login/              # Supabase Auth sign-in
+│   ├── signup/             # Supabase Auth account creation
+│   ├── forgot-password/    # password reset request
+│   └── reset-password/     # recovery-session password update
 ├── components/
 │   ├── connect/            # AI/parser provider credentials
 │   ├── layout/             # shell, navigation, and auth boundary

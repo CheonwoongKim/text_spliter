@@ -82,7 +82,7 @@ test("the copy a person acts on is present, and in English", () => {
   const form = readFileSync("components/auth/AuthForm.tsx", "utf8");
   const content = form.slice(
     form.indexOf("const AUTH_CONTENT"),
-    form.indexOf("/**\n * Every field here"),
+    form.indexOf("const SIGNUP_CONFIRMATION"),
   );
 
   for (const key of ["title", "submit", "pending", "link"]) {

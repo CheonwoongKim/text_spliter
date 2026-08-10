@@ -29,6 +29,12 @@ test("Button renders correct variant classes, icons, and loading state", () => {
   assert.match(primaryHtml, /text-surface/);
   assert.match(primaryHtml, /Submit/);
 
+  const neutralHtml = renderToStaticMarkup(
+    React.createElement(Button, { variant: "neutral" }, "Continue")
+  );
+  assert.match(neutralHtml, /bg-border-darkest/);
+  assert.match(neutralHtml, /text-card-foreground/);
+
   const dangerHtml = renderToStaticMarkup(
     React.createElement(Button, { variant: "danger", size: "sm" }, "Delete")
   );

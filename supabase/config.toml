@@ -19,6 +19,6 @@ port = 54323
 [auth]
 enabled = true
 site_url = "http://localhost:3002"
-additional_redirect_urls = ["http://localhost:3002"]
+additional_redirect_urls = ["http://localhost:3002", "http://localhost:3002/reset-password"]
 minimum_password_length = 8
 password_requirements = "lower_upper_letters_digits_symbols"

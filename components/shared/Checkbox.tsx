@@ -47,7 +47,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             type="checkbox"
             disabled={disabled}
             className={`peer h-5 w-5 appearance-none rounded-sm border ${checkboxBorderClasses[borderTone]} bg-card
-                        checked:border-surface-foreground checked:bg-surface-foreground
+                        checked:border-border-darkest checked:bg-border-darkest
                         focus:outline-none focus-visible:border-surface-foreground
                         disabled:cursor-not-allowed`}
             {...props}
@@ -55,7 +55,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           {/* Drawn over the input rather than inside it: a checkbox cannot hold
               a child, and `appearance-none` leaves nothing to style. */}
           <Check
-            className="pointer-events-none absolute h-4 w-4 text-card opacity-0 peer-checked:opacity-100"
+            className="pointer-events-none absolute h-4 w-4 text-card-foreground opacity-0 peer-checked:opacity-100"
             strokeWidth={2}
             aria-hidden="true"
           />

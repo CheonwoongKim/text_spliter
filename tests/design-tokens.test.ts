@@ -9,7 +9,10 @@ const rootLayout = readFileSync("app/layout.tsx", "utf8");
 const loginPage = readFileSync("app/login/page.tsx", "utf8");
 const signupPage = readFileSync("app/signup/page.tsx", "utf8");
 const authForm = readFileSync("components/auth/AuthForm.tsx", "utf8");
+const authField = readFileSync("components/auth/AuthField.tsx", "utf8");
+const authPasswordField = readFileSync("components/auth/AuthPasswordField.tsx", "utf8");
 const authGuard = readFileSync("components/layout/AuthGuard.tsx", "utf8");
+const passwordPolicy = readFileSync("lib/password-policy.ts", "utf8");
 const supabaseConfig = readFileSync("supabase/config.toml", "utf8");
 
 function tokenNames(prefix: string) {
@@ -112,32 +115,42 @@ test("authentication fields are the shared control, focused without animation", 
   assert.match(input, /focus-ring/);
   assert.doesNotMatch(input, /transition-smooth/);
 
-  assert.equal([...authForm.matchAll(/<Input\b/g)].length, 2, "email and password use the primitive");
   assert.equal(
-    [...authForm.matchAll(/borderTone="default"/g)].length,
+    [...`${authField}\n${authPasswordField}`.matchAll(/<Input\b/g)].length,
+    2,
+    "email and password use the primitive",
+  );
+  assert.equal(
+    [...`${authForm}\n${authField}\n${authPasswordField}`.matchAll(/borderTone="default"/g)].length,
     3,
     "auth fields and checkbox use the subdued resting border before focus",
   );
-  assert.doesNotMatch(authForm, /<input\b/, "no field on this screen is hand-rolled any more");
+  assert.doesNotMatch(
+    `${authForm}\n${authPasswordField}`,
+    /<input\b/,
+    "no field on this screen is hand-rolled any more",
+  );
 });
 
 test("login and signup are distinct public routes with password confirmation", () => {
   assert.match(loginPage, /<AuthForm mode="signin" \/>/);
   assert.match(signupPage, /<AuthForm mode="signup" \/>/);
-  assert.match(authGuard, /new Set\(\["\/login", "\/signup"\]\)/);
+  for (const path of ["/login", "/signup", "/forgot-password", "/reset-password"]) {
+    assert.ok(authGuard.includes(`"${path}"`), `${path} must remain public`);
+  }
   assert.match(authForm, /passwordConfirmation/);
-  assert.match(authForm, /Passwords do not match/);
+  assert.match(passwordPolicy, /Passwords do not match/);
   assert.match(authForm, /href: "\/signup"/);
   assert.match(authForm, /href: "\/login"/);
   assert.match(authForm, /Welcome back/);
   assert.match(authForm, /Create your account/);
-  assert.equal([...authForm.matchAll(/<PasswordField/g)].length, 2);
-  assert.match(authForm, /type=\{isVisible \? "text" : "password"\}/);
-  assert.match(authForm, /aria-pressed=\{isVisible\}/);
+  assert.equal([...authForm.matchAll(/<AuthPasswordField/g)].length, 2);
+  assert.match(authPasswordField, /type=\{isVisible \? "text" : "password"\}/);
+  assert.match(authPasswordField, /aria-pressed=\{isVisible\}/);
 });
 
 test("client and local Supabase enforce the same signup password policy", () => {
-  assert.match(authForm, /getPasswordPolicyError\(password\)/);
+  assert.match(authForm, /getNewPasswordError\(password, confirmation\)/);
   assert.match(supabaseConfig, /minimum_password_length = 8/);
   assert.match(
     supabaseConfig,

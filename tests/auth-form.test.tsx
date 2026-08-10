@@ -1,10 +1,18 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { JSDOM } from "jsdom";
 
 const dom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "http://localhost:3002/login",
 });
+
+class NoopIntersectionObserver {
+  disconnect() {}
+  observe() {}
+  takeRecords() { return []; }
+  unobserve() {}
+}
 
 Object.defineProperties(globalThis, {
   window: { configurable: true, value: dom.window },
@@ -16,6 +24,7 @@ Object.defineProperties(globalThis, {
   Event: { configurable: true, value: dom.window.Event },
   MouseEvent: { configurable: true, value: dom.window.MouseEvent },
   FormData: { configurable: true, value: dom.window.FormData },
+  IntersectionObserver: { configurable: true, value: NoopIntersectionObserver },
 });
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -27,10 +36,19 @@ const uiModules = Promise.all([
 ]);
 
 afterEach(async () => {
-  const [{ cleanup }] = await uiModules;
-  cleanup();
+  const [{ act, cleanup }] = await uiModules;
+  const { clearAuthTokens } = await import("../lib/auth");
+  await act(async () => {
+    cleanup();
+    await Promise.resolve();
+  });
+  clearAuthTokens();
   dom.window.localStorage.clear();
 });
+
+function supabaseWithAuth(auth: object): SupabaseClient {
+  return { auth } as unknown as SupabaseClient;
+}
 
 test("signin renders its own route copy and toggles password visibility", async () => {
   const [{ fireEvent, render }, { default: AuthForm }] = await uiModules;
@@ -41,6 +59,12 @@ test("signin renders its own route copy and toggles password visibility", async 
   assert.equal(view.getByRole("heading").textContent, "Welcome back");
   assert.equal(new URL(signupLink.href).pathname, "/signup");
   assert.equal(passwordInput.type, "password");
+  assert.equal(passwordInput.placeholder, "Enter your password");
+  assert.equal(passwordInput.getAttribute("minlength"), null);
+  assert.equal(
+    new URL((view.getByRole("link", { name: "Forgot password?" }) as HTMLAnchorElement).href).pathname,
+    "/forgot-password",
+  );
 
   fireEvent.click(view.getByRole("button", { name: "Show password" }));
 
@@ -68,6 +92,8 @@ test("signin restores, updates, and removes the remembered email", async () => {
   assert.doesNotMatch(rememberCheckbox.className, /border-control/);
   assert.doesNotMatch(rememberCheckbox.className, /focus-ring/);
   assert.match(rememberCheckbox.className, /focus-visible:border-surface-foreground/);
+  assert.match(rememberCheckbox.className, /checked:bg-border-darkest/);
+  assert.match(rememberCheckbox.className, /checked:border-border-darkest/);
 
   await waitFor(() => {
     assert.equal(emailInput.value, "saved@example.com");
@@ -105,6 +131,10 @@ test("signup renders confirmation and blocks passwords outside the policy", asyn
   await waitFor(() => {
     assert.match(view.getByRole("alert").textContent ?? "", /upper and lower case/i);
   });
+  const passwordInput = view.getByLabelText("Password") as HTMLInputElement;
+  assert.equal(passwordInput.getAttribute("aria-invalid"), "true");
+  assert.match(passwordInput.getAttribute("aria-describedby") ?? "", /hint/);
+  assert.equal(document.activeElement, passwordInput);
 });
 
 test("signup blocks a mismatched confirmation after policy validation", async () => {
@@ -125,4 +155,116 @@ test("signup blocks a mismatched confirmation after policy validation", async ()
   await waitFor(() => {
     assert.equal(view.getByRole("alert").textContent, "Passwords do not match.");
   });
+});
+
+test("signin submits credentials, disables duplicate submission, and redirects on success", async () => {
+  const [{ act, fireEvent, render, waitFor }, { default: AuthForm }] = await uiModules;
+  let resolveRequest: ((value: unknown) => void) | undefined;
+  let requestCount = 0;
+  let submittedCredentials: unknown;
+  let authenticatedCount = 0;
+  const request = new Promise((resolve) => {
+    resolveRequest = resolve;
+  });
+  const client = supabaseWithAuth({
+    signInWithPassword: (credentials: unknown) => {
+      requestCount += 1;
+      submittedCredentials = credentials;
+      return request;
+    },
+  });
+  const view = render(
+    <AuthForm
+      mode="signin"
+      getSupabase={() => client}
+      onAuthenticated={() => {
+        authenticatedCount += 1;
+      }}
+    />,
+  );
+
+  fireEvent.change(view.getByLabelText("Email"), {
+    target: { value: "user@example.com" },
+  });
+  fireEvent.change(view.getByLabelText("Password"), {
+    target: { value: "Correct1!" },
+  });
+  const form = view.container.querySelector("form")!;
+  fireEvent.submit(form);
+
+  await waitFor(() => {
+    assert.equal(view.getByRole("button", { name: "Signing in..." }).hasAttribute("disabled"), true);
+  });
+  fireEvent.submit(form);
+  assert.equal(requestCount, 1);
+  assert.deepEqual(submittedCredentials, {
+    email: "user@example.com",
+    password: "Correct1!",
+  });
+
+  await act(async () => {
+    resolveRequest?.({
+      data: { session: { access_token: "verified-token" } },
+      error: null,
+    });
+    await request;
+  });
+
+  await waitFor(() => {
+    assert.equal(authenticatedCount, 1);
+  });
+  const { getAuthToken } = await import("../lib/auth");
+  assert.equal(getAuthToken(), "verified-token");
+  assert.equal(dom.window.localStorage.getItem("auth_token"), null);
+});
+
+test("signin maps provider errors to stable product copy", async () => {
+  const [{ fireEvent, render, waitFor }, { default: AuthForm }] = await uiModules;
+  const client = supabaseWithAuth({
+    signInWithPassword: async () => ({
+      data: { session: null },
+      error: { code: "invalid_credentials", message: "provider-specific details" },
+    }),
+  });
+  const view = render(<AuthForm mode="signin" getSupabase={() => client} />);
+
+  fireEvent.change(view.getByLabelText("Email"), {
+    target: { value: "user@example.com" },
+  });
+  fireEvent.change(view.getByLabelText("Password"), {
+    target: { value: "Wrong1!" },
+  });
+  fireEvent.submit(view.container.querySelector("form")!);
+
+  await waitFor(() => {
+    assert.equal(view.getByRole("alert").textContent, "Email or password is incorrect.");
+  });
+  assert.doesNotMatch(view.container.textContent ?? "", /provider-specific details/);
+});
+
+test("signup without a session reports email confirmation without exposing an existing account", async () => {
+  const [{ fireEvent, render, waitFor }, { default: AuthForm }] = await uiModules;
+  const client = supabaseWithAuth({
+    signUp: async () => ({
+      data: { session: null },
+      error: { code: "user_already_exists", message: "User already registered" },
+    }),
+  });
+  const view = render(<AuthForm mode="signup" getSupabase={() => client} />);
+
+  fireEvent.change(view.getByLabelText("Email"), {
+    target: { value: "user@example.com" },
+  });
+  fireEvent.change(view.getByLabelText("Password"), {
+    target: { value: "Strong1!" },
+  });
+  fireEvent.change(view.getByLabelText("Confirm password"), {
+    target: { value: "Strong1!" },
+  });
+  fireEvent.submit(view.container.querySelector("form")!);
+
+  await waitFor(() => {
+    assert.match(view.getByRole("status").textContent ?? "", /Check your inbox/);
+  });
+  assert.doesNotMatch(view.container.textContent ?? "", /already registered/i);
 });

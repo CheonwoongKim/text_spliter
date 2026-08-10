@@ -1,16 +1,30 @@
 "use client";
 
 import type { Session } from "@supabase/supabase-js";
+import { LoaderCircle, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/shared/Button";
 import { clearAuthTokens, syncAuthSession } from "@/lib/auth";
+import { restoreAuthSession } from "@/lib/auth-session";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-const PUBLIC_PATHS = new Set(["/login", "/signup"]);
+export const PUBLIC_PATHS = new Set([
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+]);
+
+const REDIRECT_AUTHENTICATED_PATHS = new Set([
+  "/login",
+  "/signup",
+  "/forgot-password",
+]);
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
@@ -18,77 +32,101 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const isPublicPath = PUBLIC_PATHS.has(pathname);
   const [session, setSession] = useState<Session | null>(null);
   const [isChecking, setIsChecking] = useState(true);
+  const [checkError, setCheckError] = useState<string | null>(null);
+  const [checkAttempt, setCheckAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    const supabase = getBrowserSupabase();
 
     const applySession = (nextSession: Session | null) => {
       if (!active) return;
 
       syncAuthSession(nextSession);
       setSession(nextSession);
+      setCheckError(null);
       setIsChecking(false);
     };
 
-    void supabase.auth.getSession().then(({ data, error }) => {
-      if (error) {
-        console.error("[AuthGuard] Failed to restore Supabase session:", error);
-        clearAuthTokens();
-        applySession(null);
-        return;
-      }
+    const failSessionCheck = (error: unknown) => {
+      if (!active) return;
 
-      applySession(data.session);
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      applySession(session);
-    });
-
-    return () => {
-      active = false;
-      authListener.subscription.unsubscribe();
+      console.error("[AuthGuard] Failed to restore Supabase session:", error);
+      clearAuthTokens();
+      setSession(null);
+      setCheckError("인증 상태를 확인하지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요.");
+      setIsChecking(false);
     };
-  }, []);
 
-  const needsRedirect =
-    !isChecking && ((!session && !isPublicPath) || (Boolean(session) && isPublicPath));
+    setIsChecking(true);
+    setCheckError(null);
+
+    try {
+      const supabase = getBrowserSupabase();
+
+      void restoreAuthSession(supabase.auth)
+        .then(applySession)
+        .catch(failSessionCheck);
+
+      const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        applySession(nextSession);
+      });
+
+      return () => {
+        active = false;
+        authListener.subscription.unsubscribe();
+      };
+    } catch (error) {
+      failSessionCheck(error);
+      return () => {
+        active = false;
+      };
+    }
+  }, [checkAttempt]);
 
   useEffect(() => {
-    if (isChecking) return;
+    if (isChecking || checkError) return;
 
     if (!session && !isPublicPath) {
       router.replace("/login");
-    } else if (session && isPublicPath) {
+    } else if (session && REDIRECT_AUTHENTICATED_PATHS.has(pathname)) {
       router.replace("/");
     }
-  }, [isChecking, isPublicPath, router, session]);
+  }, [checkError, isChecking, isPublicPath, pathname, router, session]);
 
-  if (isChecking || needsRedirect) {
+  // Public entry screens belong in the first HTML response. Session restore
+  // still runs in the background so an existing user can be redirected.
+  if (isPublicPath) {
+    return <>{children}</>;
+  }
+
+  if (checkError) {
     return (
-      <div className="h-screen flex items-center justify-center bg-surface">
-        <div className="flex flex-col items-center gap-4">
-          <svg
-            className="w-icon-md h-icon-md animate-spin text-card-foreground"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
+      <div className="flex h-screen items-center justify-center bg-surface px-4">
+        <div className="flex max-w-auth flex-col items-center gap-4 text-center">
+          <p className="text-base text-card-foreground" role="alert">
+            {checkError}
+          </p>
+          <Button
+            variant="secondary"
+            leftIcon={<RotateCcw className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />}
+            onClick={() => setCheckAttempt((attempt) => attempt + 1)}
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
+            다시 시도
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isChecking || !session) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-surface">
+        <div className="flex flex-col items-center gap-4">
+          <LoaderCircle
+            className="h-icon-md w-icon-md animate-spin text-card-foreground"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
           <span className="text-xs text-muted-foreground">불러오는 중...</span>
         </div>
       </div>

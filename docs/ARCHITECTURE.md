@@ -16,7 +16,10 @@ The application is a document-processing workbench. It lets an authenticated use
 ```text
 app/
 ├── api/                 # authenticated server routes and provider adapters
-├── login/               # Supabase Auth entry point
+├── login/               # Supabase Auth sign-in
+├── signup/              # Supabase Auth account creation
+├── forgot-password/     # Enumeration-safe reset request
+├── reset-password/      # Recovery-session password update
 └── page.tsx             # workbench composition and client state
 
 components/

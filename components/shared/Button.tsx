@@ -16,6 +16,7 @@ export type ButtonVariant =
   | "ghost"
   | "dangerGhost"
   | "danger"
+  | "neutral"
   | "soft";
 export type ButtonSize = "sm" | "md" | "lg" | "xl" | "icon";
 
@@ -34,6 +35,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost: "text-muted-foreground hover:text-card-foreground hover:bg-muted focus-visible:ring-surface-foreground",
   dangerGhost: "text-muted-foreground hover:text-danger hover:bg-danger-surface focus-visible:ring-danger",
   danger: "bg-danger-surface text-danger border border-danger-border hover:bg-danger-action hover:text-danger-action-foreground focus-visible:ring-danger",
+  neutral: "bg-border-darkest text-card-foreground hover:bg-border-control focus-visible:ring-surface-foreground",
   soft: "bg-upload-zone text-card-foreground hover:bg-muted focus-visible:ring-surface-foreground",
 };
 

@@ -47,7 +47,7 @@ Use Node.js 20.9 or newer. The Ragas worker supports Python 3.11 through 3.13.
 - The sidebar reads top to bottom as the pipeline: document, parse, chunk, index, ask. Measurement and saved artifacts sit in their own sections so an archive is never read as the next step. Menu labels are Korean and short enough for the narrow rail.
 - Answer evaluation and parser evaluation are separate menus, not tabs of one screen: they take different inputs, produce different metrics, and are never summed.
 - A renamed menu ID keeps an entry in `RENAMED_MENUS` so a returning user's stored value still resolves.
-- `/login` and `/signup` remain distinct public routes protected by `AuthGuard`; dashboard panels remain behind Supabase Auth.
+- `/login`, `/signup`, `/forgot-password`, and `/reset-password` remain distinct public routes. They render before client session restoration; dashboard panels remain behind `AuthGuard` and Supabase Auth.
 - Persisted menu values pass through `normalizeAppMenu`. Unknown or removed values must fall back safely to Parser.
 
 ### Parser experiments and comparison
@@ -89,7 +89,7 @@ Use Node.js 20.9 or newer. The Ragas worker supports Python 3.11 through 3.13.
 - Type sizes are tuned to the face's x-height, not to a nominal pixel value. Changing the UI face changes the optical size at every step, so re-check the smallest tiers against `tests/typography-metrics.test.ts` before shipping one.
 - Use IBM Plex Sans KR for UI copy and the configured mono font only for data/code. Korean copy uses the design system's tighter tracking and readable line height.
 - The product speaks Korean. Anything a person is asked to do or told about — actions, states, labels, explanations — is Korean, and the shared wording lives in `lib/ui-copy.ts` so one action does not read three ways on three screens.
-- The authentication screens are the one exception and are wholly English: title, labels, placeholders, actions, and errors alike. `AUTH_SURFACES` in `lib/ui-copy.ts` lists them, and `tests/ui-copy.test.ts` checks both directions — no Korean inside those files, and no auth wording anywhere else. A half-translated screen is the one arrangement to avoid; pick a language per screen and finish it.
+- The authentication screens are the one exception and are wholly English: title, labels, placeholders, actions, and errors alike. Their content root declares `lang="en"`. `AUTH_SURFACES` in `lib/ui-copy.ts` lists them, and `tests/ui-copy.test.ts` checks both directions — no Korean inside those files, and no auth wording anywhere else. A half-translated screen is the one arrangement to avoid; pick a language per screen and finish it.
 - Three kinds of English stay in English, because translating them costs the reader the ability to match what they see against a provider console, a paper, or an API response: provider option names (`Agentic Plus`, `Prebuilt Layout`), measurement names (`Recall@K`, `Faithfulness`), and identifiers or formats (model ids, `JSON`, `chunk_key`). `PRESERVED_TERMS` lists them and `tests/ui-copy.test.ts` enforces it.
 - Interactive controls use Lucide icons with the established sizing and stroke conventions. Preserve visible keyboard focus and accessible names.
 - A Lucide stroke renders at `strokeWidth * size / 24`. Below one pixel it is antialiased toward the background and the icon reads lighter than the colour it was given, so 16px and 20px icons use 1.5.

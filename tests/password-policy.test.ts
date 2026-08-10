@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  getNewPasswordError,
   getPasswordPolicyError,
   PASSWORD_MIN_LENGTH,
   PASSWORD_REQUIREMENT_TEXT,
@@ -24,4 +25,17 @@ test("signup password policy accepts only the documented character mix", () => {
   ]) {
     assert.ok(getPasswordPolicyError(password), `${password} should be rejected`);
   }
+});
+
+test("new password validation identifies the field that needs attention", () => {
+  assert.deepEqual(getNewPasswordError("weak", "weak"), {
+    target: "password",
+    message:
+      "Password must be at least 8 characters and include upper and lower case letters, a number, and a symbol.",
+  });
+  assert.deepEqual(getNewPasswordError("Strong1!", "Different1!"), {
+    target: "confirmation",
+    message: "Passwords do not match.",
+  });
+  assert.equal(getNewPasswordError("Strong1!", "Strong1!"), null);
 });
