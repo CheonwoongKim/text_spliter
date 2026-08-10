@@ -342,9 +342,9 @@ export default function ParseResultDetailPanel({
                   )}
 
                   {/* File Information */}
-                  <h4 className="text-base font-semibold text-surface-foreground mb-2">
+                  <h3 className="text-xs font-semibold text-surface-foreground mb-2">
                     {result.file_name}
-                  </h4>
+                  </h3>
                   <div className="space-y-1 text-xs text-muted-foreground mb-4">
                     <p>Type: {result.mime_type}</p>
                     <p>Size: {(result.file_size / 1024).toFixed(2)} KB</p>

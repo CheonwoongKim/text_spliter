@@ -178,7 +178,7 @@ function CredentialCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center justify-between gap-4">
-            <h4 className="text-xs font-medium text-card-foreground">{title}</h4>
+            <h3 className="text-xs font-medium text-card-foreground">{title}</h3>
             <button
               type="button"
               onClick={onTest}
@@ -645,7 +645,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <h4 className="text-xs font-medium text-card-foreground">Google Document AI</h4>
+                        <h3 className="text-xs font-medium text-card-foreground">Google Document AI</h3>
                         <button
                           onClick={() => handleTestConnection('google')}
                           disabled={testResults.google.status === 'testing' || !keys.googleParserServiceAccountEmail || !keys.googleParserPrivateKey || !keys.googleParserProjectId || !keys.googleParserLocation || !keys.googleParserProcessorId}
@@ -788,7 +788,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-xs font-medium text-card-foreground">Managed Supabase Vector Store</h4>
+                      <h3 className="text-xs font-medium text-card-foreground">Managed Supabase Vector Store</h3>
                       <span className="px-3 py-1 rounded-full bg-success-surface text-xs font-medium text-success">
                         Connected
                       </span>

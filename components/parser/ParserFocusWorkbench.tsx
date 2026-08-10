@@ -394,7 +394,7 @@ export default function ParserFocusWorkbench({
                       {sampleMode ? (
                         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
                           <p className="text-xs font-medium text-card-foreground">2026 Product Brief</p>
-                          <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-card-foreground">
+                          <p className="mt-3 whitespace-pre-wrap text-xs text-card-foreground">
                             {selectedArea.consensusContent || "Select a document area to inspect."}
                           </p>
                         </div>
@@ -425,7 +425,7 @@ export default function ParserFocusWorkbench({
                     : "border-warning-border bg-warning-surface"
                 }`}>
                   <p className="text-xs font-medium text-card-foreground">Triage finding</p>
-                  <p className="mt-1 text-xs leading-4 text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {selectedArea.majorityGroupId
                       ? `${selectedArea.agreementCount} of ${selectedArea.engineCount} engines returned the same normalized result. This is not proof of correctness; verify it against the original.`
                       : "No majority result exists. Automated comparison cannot determine correctness, so original evidence review is required."}

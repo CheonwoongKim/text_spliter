@@ -25,13 +25,13 @@ export default function MarkdownViewer({ content }: MarkdownViewerProps) {
             <h3 className="mb-2 mt-4 text-xs font-semibold">{children}</h3>
           ),
           p: ({ children }) => (
-            <p className="mb-4 text-xs leading-5 last:mb-0">{children}</p>
+            <p className="mb-4 text-xs last:mb-0">{children}</p>
           ),
           ul: ({ children }) => (
-            <ul className="mb-4 list-disc space-y-1 pl-6 text-xs leading-5">{children}</ul>
+            <ul className="mb-4 list-disc space-y-1 pl-6 text-xs">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="mb-4 list-decimal space-y-1 pl-6 text-xs leading-5">{children}</ol>
+            <ol className="mb-4 list-decimal space-y-1 pl-6 text-xs">{children}</ol>
           ),
           blockquote: ({ children }) => (
             <blockquote className="mb-4 border-l border-border pl-4 text-muted-foreground">

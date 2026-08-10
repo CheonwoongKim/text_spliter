@@ -419,7 +419,7 @@ export default function EvaluationRunsView({
                 <div className="flex items-start gap-3">
                   <span className="w-6 h-6 flex-shrink-0 rounded-full bg-muted text-xs text-muted-foreground flex items-center justify-center">{index + 1}</span>
                   <div className="min-w-0">
-                    <p className="text-xs leading-5 text-card-foreground line-clamp-3">{caseRun.question_snapshot}</p>
+                    <p className="text-xs text-card-foreground line-clamp-3">{caseRun.question_snapshot}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className={`px-2 py-1 rounded-sm text-xs ${statusClass(caseRun.status)}`}>{caseRun.status}</span>
                       {caseRun.reviewer_decision !== "pending" && (
@@ -461,7 +461,7 @@ export default function EvaluationRunsView({
                     {!!selectedCaseRun.reference_facts_snapshot.length && (
                       <ul className="mt-4 space-y-2">
                         {selectedCaseRun.reference_facts_snapshot.map((fact, index) => (
-                          <li key={`${index}-${fact}`} className="flex gap-2 text-xs leading-5 text-muted-foreground">
+                          <li key={`${index}-${fact}`} className="flex gap-2 text-xs text-muted-foreground">
                             <span className="text-card-foreground">•</span><span>{fact}</span>
                           </li>
                         ))}
@@ -511,7 +511,7 @@ export default function EvaluationRunsView({
                             <span className="text-card-foreground"><strong className="text-card-foreground mr-2">[{context.rank}]</strong>chunk {context.chunkId}</span>
                             <span className="flex items-center gap-2 text-muted-foreground">{Boolean(relevance?.relevant) && <span className="text-success">matched</span>}{Boolean(relevance?.cited) && <span className="text-card-foreground">cited</span>}<span>cosine {context.similarity.toFixed(4)}</span></span>
                           </summary>
-                          <p className="mt-3 text-xs leading-5 text-card-foreground whitespace-pre-wrap max-h-56 overflow-y-auto">{context.content}</p>
+                          <p className="mt-3 text-xs text-card-foreground whitespace-pre-wrap max-h-56 overflow-y-auto">{context.content}</p>
                           <pre className="mt-3 text-xs text-muted-foreground whitespace-pre-wrap break-all">{JSON.stringify(context.metadata, null, 2)}</pre>
                         </details>
                       );
@@ -542,7 +542,7 @@ export default function EvaluationRunsView({
                               <p className={`text-xs mt-1 ${detail?.status === "failed" ? "text-danger" : "text-muted-foreground"}`}>{detail?.status || "not selected"}</p>
                             </div>
                             <p className="font-semibold text-card-foreground tabular-nums">{numberMetric(score)}</p>
-                            <p className="leading-5 text-muted-foreground whitespace-pre-wrap">{detail?.reason || detail?.error || "판정 근거가 없습니다."}</p>
+                            <p className=" text-muted-foreground whitespace-pre-wrap">{detail?.reason || detail?.error || "판정 근거가 없습니다."}</p>
                           </div>
                         );
                       })}

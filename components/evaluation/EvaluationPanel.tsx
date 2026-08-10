@@ -657,7 +657,7 @@ export default function EvaluationPanel() {
                         <span className="text-xs uppercase tracking-wide text-muted-foreground">{evaluationCase.case_key || `Case ${index + 1}`}</span>
                         <span className="text-xs text-muted-foreground">{evaluationCase.difficulty}</span>
                       </div>
-                      <p className="text-xs leading-5 text-card-foreground mt-2 line-clamp-3">{evaluationCase.question}</p>
+                      <p className="text-xs text-card-foreground mt-2 line-clamp-3">{evaluationCase.question}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
                         {!evaluationCase.answerable && <span className="px-2 py-1 bg-warning-surface text-warning rounded-sm text-xs">unanswerable</span>}
                         {evaluationCase.tags.slice(0, 3).map((tag) => <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground rounded-sm text-xs">{tag}</span>)}
@@ -736,9 +736,9 @@ export default function EvaluationPanel() {
                 <span className="block text-xs font-medium text-muted-foreground mb-2">Allowed metric drop (%)</span>
                 <Input fieldSize="lg" type="number" min={0} max={100} step={1} value={regressionTolerance} onChange={(event) => setRegressionTolerance(Number(event.target.value))} disabled={executing || !baselineRunId}/>
               </label>
-              <p className="md:col-span-2 text-xs leading-5 text-muted-foreground">기준 실행을 선택하면 자동 검색·인용 지표가 허용 범위보다 낮아질 때 회귀로 기록합니다.</p>
+              <p className="md:col-span-2 text-xs text-muted-foreground">기준 실행을 선택하면 자동 검색·인용 지표가 허용 범위보다 낮아질 때 회귀로 기록합니다.</p>
             </div>
-            <div className="mt-4 px-4 py-3 bg-upload-zone border-l-2 border-surface-foreground text-xs leading-5 text-muted-foreground">각 케이스는 OpenAI embedding 1회와 Responses API 1회를 호출합니다. 검색 함수와 사용자 격리는 Managed Supabase Vector Store에서 자동으로 적용됩니다.</div>
+            <div className="mt-4 px-4 py-3 bg-upload-zone border-l-2 border-surface-foreground text-xs text-muted-foreground">각 케이스는 OpenAI embedding 1회와 Responses API 1회를 호출합니다. 검색 함수와 사용자 격리는 Managed Supabase Vector Store에서 자동으로 적용됩니다.</div>
             {executing && (
               <div className="mt-4"><div className="flex items-center justify-between text-xs text-muted-foreground mb-2"><span>Executing cases</span><span>{executionProgress.completed}/{executionProgress.total}</span></div><div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-surface-foreground transition-all duration-slow" style={{ width: `${executionProgress.total ? (executionProgress.completed / executionProgress.total) * 100 : 0}%` }} /></div></div>
             )}

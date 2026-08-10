@@ -361,7 +361,7 @@ export default function ParseComparisonWorkbench({
               <div className="h-full min-h-[420px] p-6">
                 <div className="mx-auto max-w-[520px] rounded-lg border border-border bg-card p-6 shadow-sm">
                   <p className="text-base font-semibold text-card-foreground">2026 Product Brief</p>
-                  <p className="mt-4 text-xs leading-5 text-card-foreground">
+                  <p className="mt-4 text-xs text-card-foreground">
                     Document processing converts the source file into structured text while
                     preserving headings, paragraphs, and tables.
                   </p>
@@ -460,7 +460,7 @@ export default function ParseComparisonWorkbench({
               >
                 <div className="p-3">
                   <p className="text-xs font-medium text-card-foreground">{criterion.label}</p>
-                  <p className="text-xs leading-4 text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {criterion.description}
                   </p>
                 </div>

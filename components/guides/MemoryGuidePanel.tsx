@@ -324,7 +324,7 @@ function BulletList({ items }: { items: readonly string[] }) {
   return (
     <ul className="space-y-2">
       {items.map((item) => (
-        <li key={item} className="flex gap-2 text-xs leading-5 text-muted-foreground">
+        <li key={item} className="flex gap-2 text-xs text-muted-foreground">
           <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-muted-foreground" aria-hidden="true" />
           <span>{item}</span>
         </li>
@@ -410,7 +410,7 @@ export default function MemoryGuidePanel() {
                     <StepIcon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   </div>
                   <h3 className="mt-4 text-xs font-medium text-card-foreground">{title as string}</h3>
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{description as string}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">{description as string}</p>
                 </li>
               );
             })}
@@ -471,7 +471,7 @@ export default function MemoryGuidePanel() {
                   <dl className="mt-4 space-y-3 border-t border-border-subtle pt-4 text-xs">
                     <div>
                       <dt className="text-muted-foreground">예시</dt>
-                      <dd className="mt-1 leading-5 text-card-foreground">{layer.example}</dd>
+                      <dd className="mt-1 text-card-foreground">{layer.example}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground">일반적인 수명</dt>
@@ -631,11 +631,11 @@ export default function MemoryGuidePanel() {
                   <dl className="mt-4 space-y-3 border-t border-border-subtle pt-4 text-xs">
                     <div>
                       <dt className="text-muted-foreground">주의할 점</dt>
-                      <dd className="mt-1 leading-5 text-card-foreground">{provider.limitation}</dd>
+                      <dd className="mt-1 text-card-foreground">{provider.limitation}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground">적합한 경우</dt>
-                      <dd className="mt-1 leading-5 text-card-foreground">{provider.bestFor}</dd>
+                      <dd className="mt-1 text-card-foreground">{provider.bestFor}</dd>
                     </div>
                   </dl>
 
@@ -676,13 +676,13 @@ export default function MemoryGuidePanel() {
                     </th>
                     <td className="whitespace-nowrap px-4 py-4 text-muted-foreground">{provider.technique}</td>
                     <td className="whitespace-nowrap px-4 py-4 text-muted-foreground">{provider.deployment}</td>
-                    <td className="min-w-64 px-4 py-4 leading-5 text-muted-foreground">{provider.bestFor}</td>
+                    <td className="min-w-64 px-4 py-4 text-muted-foreground">{provider.bestFor}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+          <p className="mt-3 text-xs text-muted-foreground">
             완전한 로컬 실행을 원한다면 메모리 저장소뿐 아니라 LLM과 임베딩 모델의 실행 위치도 함께 확인해야 합니다.
           </p>
         </section>

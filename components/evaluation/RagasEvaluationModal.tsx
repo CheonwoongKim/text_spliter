@@ -105,7 +105,7 @@ export default function RagasEvaluationModal({
                   />
                   <span className="min-w-0">
                     <span className="block text-xs font-medium text-card-foreground">{metric.label}</span>
-                    <span className="block text-xs leading-5 text-muted-foreground mt-1">{metric.description}</span>
+                    <span className="block text-xs text-muted-foreground mt-1">{metric.description}</span>
                   </span>
                 </label>
               );
@@ -113,7 +113,7 @@ export default function RagasEvaluationModal({
           </div>
         </fieldset>
 
-        <div className="mt-4 px-4 py-3 bg-upload-zone border-l-2 border-surface-foreground text-xs leading-5 text-muted-foreground">
+        <div className="mt-4 px-4 py-3 bg-upload-zone border-l-2 border-surface-foreground text-xs text-muted-foreground">
           선택한 지표는 케이스마다 여러 OpenAI 호출을 만들 수 있으며 Answer relevancy는 text-embedding-3-small도 사용합니다. 기준 답변이 없는 케이스의 Context 지표는 0점 대신 unavailable로 기록됩니다.
         </div>
         {healthError && <p className="mt-4 text-xs text-danger">{healthError}</p>}
