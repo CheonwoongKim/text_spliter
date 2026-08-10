@@ -41,9 +41,9 @@ styles/design-tokens.css → tailwind.config.ts → app/globals.css / components
 
 ## Typography
 
-UI에는 IBM Plex Sans KR 하나만 사용합니다. `next/font/google`이 빌드 시점에 폰트를 받아 프로젝트에서 자체 호스팅하므로 런타임에 폰트 CDN으로 나가는 요청이 없으며, fallback metric 보정으로 font swap 레이아웃 이동을 줄입니다. 한글은 별도 subset 이름이 아니라 unicode-range 조각으로 분할되어 제공되므로, 브라우저는 각 화면이 실제로 렌더링하는 글리프 조각과 굵기만 요청합니다. 400/500/600/700 네 굵기를 모두 로드해 semibold를 합성 없이 표시합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
+UI에는 IBM Plex Sans KR 하나만 사용합니다. `next/font/google`이 빌드 시점에 폰트를 받아 프로젝트에서 자체 호스팅하므로 런타임에 폰트 CDN으로 나가는 요청이 없습니다. next/font는 이 CJK 페이스의 메트릭을 보유하지 않아 보정된 fallback face를 만들지 않으므로, swap 시점에 Arial과의 메트릭 차이만큼 레이아웃이 움직입니다. 한글은 별도 subset 이름이 아니라 unicode-range 조각으로 분할되어 제공되므로, 브라우저는 각 화면이 실제로 렌더링하는 글리프 조각과 굵기만 요청합니다. 400/500/600/700 네 굵기를 모두 로드해 semibold를 합성 없이 표시합니다. Geist Mono는 JSON, 코드, ID, 원시 응답처럼 고정폭 정렬이 기능적으로 필요한 데이터에만 사용합니다.
 
-업무 화면의 기본 본문과 입력값은 `13px`, section heading은 `15px`, page heading은 `17px`을 사용합니다. `11px`은 eyebrow, label, metadata, table heading, compact tab·helper text, Top bar breadcrumb에 사용하고, `10px`은 GNB 메뉴명에만 사용하는 예외 토큰입니다. `20px`과 `24px`은 인증 화면처럼 독립된 진입 화면의 제목에만 허용합니다.
+업무 화면의 기본 본문과 입력값은 `13px`, section heading은 `15px`, page heading은 `17px`을 사용합니다. `11px`은 eyebrow, label, metadata, table heading, compact tab·helper text, Top bar breadcrumb, GNB 메뉴명에 사용하는 최소 크기입니다. IBM Plex Sans KR의 x-height가 이전 페이스보다 3.9% 작아, 10px 예외 토큰은 가독성 하한을 밑돌아 폐지했습니다. `20px`과 `24px`은 인증 화면처럼 독립된 진입 화면의 제목에만 허용합니다.
 
 | Utility | Size / line-height | Role |
 | --- | --- | --- |
@@ -99,7 +99,7 @@ Spacing은 다음 9개 값만 사용합니다. `0`은 값 없음의 의미로 �
 
 | Utility | Value | Role |
 | --- | --- | --- |
-| `h-icon-md`, `w-icon-md` | 20px | primary navigation icon |
+| `h-icon-md`, `w-icon-md` | 20px | primary navigation icon (stroke 1.5, 선택 시 2) |
 | `h-control-sm` | 32px | compact control |
 | `h-control-md` | 36px | icon button, compact select |
 | `h-control-lg` | 40px | default control |

@@ -50,8 +50,13 @@
   --ds-font-size-lg: 1.0625rem;
   --ds-font-size-xl: 1.25rem;
   --ds-font-size-2xl: 1.5rem;
-  --ds-navigation-font-size: 0.625rem;
-  --ds-line-height-2xs: 1rem;
+  /* 11px, matching the compact-label tier: IBM Plex Sans KR has a 3.9% smaller
+     x-height than the face this scale was tuned for, so a 10px label lost the
+     legibility the navigation was designed with. */
+  --ds-navigation-font-size: 0.6875rem;
+  /* 18px: an 11px line in this face occupies 16.5px, so a 16px line box left
+     the text sitting off-centre inside fixed-height controls. */
+  --ds-line-height-2xs: 1.125rem;
   --ds-line-height-xs: 1.25rem;
   --ds-line-height-base: 1.5rem;
   --ds-line-height-lg: 1.625rem;

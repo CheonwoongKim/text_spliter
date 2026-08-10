@@ -17,14 +17,16 @@ function tokenNames(prefix: string) {
     .map((match) => match[1]);
 }
 
-test("typography has five core sizes and dedicated auth and navigation sizes", () => {
+test("typography has five core sizes and a shared compact-label floor", () => {
   assert.deepEqual(tokenNames("ds-font-size"), ["2xs", "xs", "base", "lg", "xl", "2xl"]);
   assert.match(tokens, /--ds-font-size-2xs: 0\.6875rem/);
   assert.match(tokens, /--ds-font-size-xs: 0\.8125rem/);
   assert.match(tokens, /--ds-font-size-base: 0\.9375rem/);
   assert.match(tokens, /--ds-font-size-lg: 1\.0625rem/);
   assert.match(tokens, /--ds-font-size-2xl: 1\.5rem/);
-  assert.match(tokens, /--ds-navigation-font-size: 0\.625rem/);
+  // The navigation label shares the 11px floor rather than sitting a step below
+  // it; see tests/typography-metrics.test.ts for why the 10px step was dropped.
+  assert.match(tokens, /--ds-navigation-font-size: 0\.6875rem/);
   assert.doesNotMatch(tokens, /--ds-font-size-(?:micro|caption|sm|3xl)/);
 });
 
