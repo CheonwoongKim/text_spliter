@@ -3,6 +3,7 @@
 import { memo, useMemo, useState } from "react";
 import { Select } from "@/components/shared/FormFields";
 
+import DataTable from "@/components/shared/DataTable";
 import type { MetricBreakdownRow } from "@/lib/evaluation-metrics";
 import type { DeterministicMetricKey } from "@/lib/types";
 import {
@@ -69,56 +70,70 @@ function ParserImpactView({ parserBreakdown }: ParserImpactViewProps) {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[560px]">
-          <div className="grid grid-cols-[minmax(160px,1.4fr)_92px_112px_120px_minmax(120px,1fr)] bg-upload-zone">
-            <div className="px-3 py-2 text-2xs font-medium text-muted-foreground">Parser</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Cases</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Average</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Baseline</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Change</div>
-          </div>
-
-          {comparison.parsers.map((entry) => {
-            const metric = entry.metrics.find((item) => item.key === metricKey);
-            const change = describeParserDelta(entry, metricKey);
-            const improved = !entry.isBaseline && (metric?.delta ?? 0) > 0;
-            const regressed = !entry.isBaseline && (metric?.delta ?? 0) < 0;
-
-            return (
-              <div
-                key={entry.parser}
-                className={`grid grid-cols-[minmax(160px,1.4fr)_92px_112px_120px_minmax(120px,1fr)]
-                           border-t border-border-subtle ${entry.isBaseline ? "bg-upload-zone" : "bg-card"}`}
-              >
-                <div className="min-w-0 px-3 py-3">
-                  <p className="truncate text-xs font-medium text-card-foreground">{entry.parser}</p>
-                </div>
-                <div className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-card-foreground">
-                  {entry.succeededCount}
-                </div>
-                <div className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-card-foreground">
-                  {formatAverage(metric?.average ?? null)}
-                </div>
-                <div className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-muted-foreground">
-                  {formatAverage(metric?.baselineAverage ?? null)}
-                </div>
-                <div
-                  className={`flex items-center border-l border-border-subtle px-3 py-3 text-2xs ${
-                    entry.reliable && improved
-                      ? "text-success"
-                      : entry.reliable && regressed
-                        ? "text-danger"
-                        : "text-muted-foreground"
-                  }`}
-                >
-                  {change}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <DataTable
+        caption="파서별 검색 품질"
+        minWidth={560}
+        rows={comparison.parsers}
+        rowKey={(entry) => entry.parser}
+        isSelected={(entry) => entry.isBaseline}
+        columns={[
+          {
+            key: "parser",
+            header: "Parser",
+            width: "minmax(160px,1.4fr)",
+            render: (entry) => (
+              <p className="truncate text-xs font-medium text-card-foreground">{entry.parser}</p>
+            ),
+          },
+          {
+            key: "cases",
+            header: "Cases",
+            width: "92px",
+            render: (entry) => entry.succeededCount,
+          },
+          {
+            key: "average",
+            header: "Average",
+            width: "112px",
+            render: (entry) => formatAverage(
+              entry.metrics.find((item) => item.key === metricKey)?.average ?? null,
+            ),
+          },
+          {
+            key: "baseline",
+            header: "Baseline",
+            width: "120px",
+            render: (entry) => (
+              <span className="text-muted-foreground">
+                {formatAverage(
+                  entry.metrics.find((item) => item.key === metricKey)?.baselineAverage ?? null,
+                )}
+              </span>
+            ),
+          },
+          {
+            key: "change",
+            header: "Change",
+            width: "minmax(120px,1fr)",
+            render: (entry) => {
+              const metric = entry.metrics.find((item) => item.key === metricKey);
+              const improved = !entry.isBaseline && (metric?.delta ?? 0) > 0;
+              const regressed = !entry.isBaseline && (metric?.delta ?? 0) < 0;
+              return (
+                <span className={
+                  entry.reliable && improved
+                    ? "text-success"
+                    : entry.reliable && regressed
+                      ? "text-danger"
+                      : "text-muted-foreground"
+                }>
+                  {describeParserDelta(entry, metricKey)}
+                </span>
+              );
+            },
+          },
+        ]}
+      />
 
       {comparison.unscoredParsers.length > 0 && (
         <p className="mt-2 text-2xs text-muted-foreground">

@@ -2,6 +2,7 @@
 
 import { ArrowRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/shared/Button";
+import DataTable from "@/components/shared/DataTable";
 import { memo, useMemo } from "react";
 import {
   bestRunIds,
@@ -16,9 +17,6 @@ interface SplitterResultsOverviewProps {
   onOpenRun: (runId: string) => void;
   onClearRuns: () => void;
 }
-
-const GRID_COLUMNS =
-  "grid-cols-[minmax(190px,1.4fr)_84px_minmax(150px,1fr)_96px_104px_112px_92px]";
 
 function percent(value: number): string {
   return `${Math.round(value * 100)}%`;
@@ -61,34 +59,26 @@ function SplitterResultsOverview({
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[840px]">
-          <div className={`grid ${GRID_COLUMNS} bg-upload-zone`}>
-            <div className="px-3 py-2 text-2xs font-medium text-muted-foreground">Configuration</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Chunks</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Length min/med/max</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Evenness</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Cut mid-text</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Provenance</div>
-            <div className="border-l border-border-subtle px-3 py-2 text-2xs font-medium text-muted-foreground">Result</div>
-          </div>
-
-          {runs.map((run, index) => {
-            const metric = metrics[index];
-            const selected = selectedRunId === run.id;
-            const badges = [
-              fewestChunks.includes(run.id) ? "Fewest chunks" : null,
-              mostEven.includes(run.id) ? "Most even" : null,
-              cleanestBoundaries.includes(run.id) ? "Cleanest cuts" : null,
-            ].filter((badge): badge is string => Boolean(badge));
-
-            return (
-              <div
-                key={run.id}
-                className={`grid ${GRID_COLUMNS} border-t border-border-subtle
-                           ${selected ? "bg-upload-zone" : "bg-card"}`}
-              >
-                <div className="min-w-0 px-3 py-3">
+      <DataTable
+        caption="청킹 실행 비교"
+        minWidth={840}
+        rows={runs}
+        rowKey={(run) => run.id}
+        isSelected={(run) => run.id === selectedRunId}
+        columns={[
+          {
+            key: "config",
+            header: "Configuration",
+            width: "minmax(190px,1.4fr)",
+            render: (run, index) => {
+              const metric = metrics[index];
+              const badges = [
+                fewestChunks.includes(run.id) ? "Fewest chunks" : null,
+                mostEven.includes(run.id) ? "Most even" : null,
+                cleanestBoundaries.includes(run.id) ? "Cleanest cuts" : null,
+              ].filter((badge): badge is string => Boolean(badge));
+              return (
+                <div className="min-w-0">
                   <p className="truncate text-xs font-medium text-card-foreground">
                     {describeSplitterRun(run)}
                   </p>
@@ -96,46 +86,38 @@ function SplitterResultsOverview({
                     {badges.length > 0 ? badges.join(" · ") : formatDuration(metric.processingTime)}
                   </p>
                 </div>
-                <div className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-card-foreground">
-                  {metric.totalChunks}
-                </div>
-                <div className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-card-foreground">
-                  {metric.minLength} / {metric.medianLength} / {metric.maxLength}
-                </div>
-                <div
-                  className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-card-foreground"
-                  title="Standard deviation of chunk length. Lower is more uniform."
-                >
-                  ±{metric.lengthStdDev}
-                </div>
-                <div
-                  className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-card-foreground"
-                  title="Chunks that end mid-sentence"
-                >
-                  {percent(metric.brokenBoundaryRatio)}
-                </div>
-                <div
-                  className="flex items-center border-l border-border-subtle px-3 py-3 text-2xs text-card-foreground"
-                  title="Chunks carrying page provenance for retrieval scoring"
-                >
-                  {metric.provenanceCoverage > 0 ? percent(metric.provenanceCoverage) : "-"}
-                </div>
-                <div className="flex items-center border-l border-border-subtle px-3 py-3">
-                  <button
-                    type="button"
-                    onClick={() => onOpenRun(run.id)}
-                    className="flex items-center gap-1 text-2xs font-medium text-card-foreground transition-smooth
-                             hover:opacity-hover"
-                  >
-                    Detail
-                    <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+              );
+            },
+          },
+          { key: "chunks", header: "Chunks", width: "84px",
+            render: (_run, index) => metrics[index].totalChunks },
+          { key: "length", header: "Length min/med/max", width: "minmax(150px,1fr)",
+            render: (_run, index) =>
+              `${metrics[index].minLength} / ${metrics[index].medianLength} / ${metrics[index].maxLength}` },
+          { key: "evenness", header: "Evenness", width: "96px",
+            title: "Standard deviation of chunk length. Lower is more uniform.",
+            render: (_run, index) => `±${metrics[index].lengthStdDev}` },
+          { key: "cuts", header: "Cut mid-text", width: "104px",
+            title: "Chunks that end mid-sentence",
+            render: (_run, index) => percent(metrics[index].brokenBoundaryRatio) },
+          { key: "provenance", header: "Provenance", width: "112px",
+            title: "Chunks carrying page provenance for retrieval scoring",
+            render: (_run, index) => metrics[index].provenanceCoverage > 0
+              ? percent(metrics[index].provenanceCoverage) : "-" },
+          {
+            key: "detail",
+            header: "Result",
+            width: "92px",
+            render: (run) => (
+              <Button variant="ghost" size="sm" className="px-0"
+                onClick={() => onOpenRun(run.id)}
+                rightIcon={<ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />}>
+                Detail
+              </Button>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }
