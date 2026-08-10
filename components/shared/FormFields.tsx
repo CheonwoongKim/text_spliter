@@ -112,17 +112,30 @@ export const controlTextSizes: Record<ControlSize, string> = {
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
   fieldSize?: ControlSize;
+  borderTone?: "default" | "control";
 }
 
+const inputBorderClasses: Record<NonNullable<InputProps["borderTone"]>, string> = {
+  default: "border-border",
+  control: "border-control",
+};
+
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ error = false, fieldSize = "md", className = "", "aria-invalid": ariaInvalid, ...props }, ref) => {
+  ({
+    error = false,
+    fieldSize = "md",
+    borderTone = "control",
+    className = "",
+    "aria-invalid": ariaInvalid,
+    ...props
+  }, ref) => {
     const invalid = hasInvalidState(error, ariaInvalid);
     return (
       <input
         ref={ref}
         aria-invalid={error ? true : ariaInvalid}
         className={`w-full ${controlHeights[fieldSize]} px-3 border ${controlRadii[fieldSize]} bg-surface ${controlTextSizes[fieldSize]} text-card-foreground placeholder-light focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
-          invalid ? "border-danger focus:border-danger" : "border-control"
+          invalid ? "border-danger focus:border-danger" : inputBorderClasses[borderTone]
         } ${className}`}
         {...props}
       />

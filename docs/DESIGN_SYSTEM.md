@@ -108,6 +108,8 @@ Label은 필드의 의미를 명확하게 설명합니다. Placeholder는 label�
 
 모든 입력필드 label과 입력값, Placeholder는 `text-xs`(13px)를 사용합니다. Placeholder는 크기를 따로 갖지 않고 필드의 크기를 물려받습니다 — 힌트와 그 자리를 대신할 입력값이 타이핑 도중 크기가 달라지면 안 되기 때문입니다. 따라서 크기를 정하는 것은 필드 쪽이고, 크기 클래스를 쓰지 않은 필드는 `app/globals.css`의 `input, select, textarea` 기본값인 13px로 떨어집니다. 하한을 13px로 올리면서 label을 입력값보다 작게 두던 위계는 사라졌고, 이제 weight와 color가 그 역할을 합니다 — label은 `font-medium`에 `muted-foreground`, 입력값은 `card-foreground`입니다. Placeholder는 `fg-placeholder` 토큰으로 본문과 명확히 구분하고, 입력값보다 시각적으로 강조하지 않습니다.
 
+로그인과 회원가입 화면은 제품에서 유일하게 **영문으로 작성**합니다. 제목·label·placeholder·버튼·오류 메시지까지 전부 영문이며, 한글과 섞지 않습니다 — 영문 제목 아래 한글 label이 놓인 상태가 "의도"가 아니라 "미완성"으로 읽혔던 것이 이 결정의 이유입니다. 대상 파일은 `lib/ui-copy.ts`의 `AUTH_SURFACES`에 명시하고, `tests/ui-copy.test.ts`가 양방향으로 검사합니다: 인증 화면 안에 한글이 없을 것, 인증 화면 문구가 밖으로 새지 않을 것.
+
 로그인과 회원가입은 각각 `/login`, `/signup` 경로를 사용합니다. 회원가입 비밀번호는 8자 이상이며 영문 대문자·소문자, 숫자, 특수문자를 모두 포함해야 하고 비밀번호 확인 값과 일치해야 합니다. 이 규칙은 클라이언트 검증과 로컬 `supabase/config.toml`에 동일하게 적용합니다. 운영 Supabase 프로젝트도 Auth 설정의 password strength를 같은 값으로 유지해야 합니다.
 
 입력필드 포커스 테두리는 파란색 accent가 아니라 `surface-foreground`를 사용해 검정 계열로 표시합니다.
@@ -118,7 +120,7 @@ Label은 필드의 의미를 명확하게 설명합니다. Placeholder는 label�
 
 Placeholder는 보조 정보일 뿐이므로 label을 대신할 수 없습니다. 모든 입력 필드는 화면에 표시되는 label과 연결합니다.
 
-비밀번호, API key, private key처럼 민감한 값에는 실제 값처럼 보이는 예시를 제공하지 않습니다. 비밀번호는 `영문 대·소문자, 숫자, 특수문자 포함 8자리 이상 입력`처럼 보안 조건만 안내할 수 있고, 그 외 민감한 필드는 placeholder를 생략합니다.
+비밀번호, API key, private key처럼 민감한 값에는 실제 값처럼 보이는 예시를 제공하지 않습니다. 비밀번호는 `8+ characters with upper and lower case, a number, and a symbol`처럼 보안 조건만 안내할 수 있고, 그 외 민감한 필드는 placeholder를 생략합니다.
 
 ## Spacing
 

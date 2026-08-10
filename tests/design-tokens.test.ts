@@ -113,6 +113,11 @@ test("authentication fields are the shared control, focused without animation", 
   assert.doesNotMatch(input, /transition-smooth/);
 
   assert.equal([...authForm.matchAll(/<Input\b/g)].length, 2, "email and password use the primitive");
+  assert.equal(
+    [...authForm.matchAll(/borderTone="default"/g)].length,
+    3,
+    "auth fields and checkbox use the subdued resting border before focus",
+  );
   assert.doesNotMatch(authForm, /<input\b/, "no field on this screen is hand-rolled any more");
 });
 
@@ -121,11 +126,11 @@ test("login and signup are distinct public routes with password confirmation", (
   assert.match(signupPage, /<AuthForm mode="signup" \/>/);
   assert.match(authGuard, /new Set\(\["\/login", "\/signup"\]\)/);
   assert.match(authForm, /passwordConfirmation/);
-  assert.match(authForm, /비밀번호가 일치하지 않습니다/);
+  assert.match(authForm, /Passwords do not match/);
   assert.match(authForm, /href: "\/signup"/);
   assert.match(authForm, /href: "\/login"/);
-  assert.match(authForm, /다시 만나 반갑습니다/);
-  assert.match(authForm, /만나서 반갑습니다/);
+  assert.match(authForm, /Welcome back/);
+  assert.match(authForm, /Create your account/);
   assert.equal([...authForm.matchAll(/<PasswordField/g)].length, 2);
   assert.match(authForm, /type=\{isVisible \? "text" : "password"\}/);
   assert.match(authForm, /aria-pressed=\{isVisible\}/);

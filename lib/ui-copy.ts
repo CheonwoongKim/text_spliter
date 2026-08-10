@@ -12,7 +12,22 @@
  *
  * Everything a person is asked to do or told about — actions, states, labels,
  * and explanations — is Korean.
+ *
+ * The authentication screens are the exception, and they are wholly English:
+ * title, labels, placeholders, actions, and error messages alike. They are the
+ * doorway rather than the product, they carry no term a reader has to match
+ * against anything, and mixing the two languages there is what made them read
+ * as unfinished. `AUTH_SURFACES` names them so the boundary is a list rather
+ * than a judgement call, and tests/ui-copy.test.ts checks both sides of it.
  */
+
+/** The screens written in English. Everything else in the product is Korean. */
+export const AUTH_SURFACES: readonly string[] = [
+  "components/auth/AuthForm.tsx",
+  "lib/password-policy.ts",
+  "app/login/page.tsx",
+  "app/signup/page.tsx",
+];
 
 /** Terms that must survive translation, checked by tests/ui-copy.test.ts. */
 export const PRESERVED_TERMS: readonly string[] = [

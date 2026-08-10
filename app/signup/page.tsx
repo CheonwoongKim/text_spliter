@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AuthForm from "@/components/auth/AuthForm";
 
 export const metadata: Metadata = {
-  title: "회원가입 | BGK",
+  title: "Sign up | BGK",
 };
 
 export default function SignupPage() {

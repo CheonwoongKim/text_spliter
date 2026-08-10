@@ -8,7 +8,11 @@ import {
 
 test("signup password policy accepts only the documented character mix", () => {
   assert.equal(PASSWORD_MIN_LENGTH, 8);
-  assert.match(PASSWORD_REQUIREMENT_TEXT, /대·소문자/);
+  // The hint has to name every rule getPasswordPolicyError enforces, or a
+  // person is told their password is wrong without being told what is missing.
+  for (const rule of [/8\+/, /upper and lower case/i, /number/i, /symbol/i]) {
+    assert.match(PASSWORD_REQUIREMENT_TEXT, rule);
+  }
   assert.equal(getPasswordPolicyError("Strong1!"), null);
 
   for (const password of [

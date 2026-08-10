@@ -35,18 +35,18 @@ afterEach(async () => {
 test("signin renders its own route copy and toggles password visibility", async () => {
   const [{ fireEvent, render }, { default: AuthForm }] = await uiModules;
   const view = render(<AuthForm mode="signin" />);
-  const passwordInput = view.getByLabelText("비밀번호") as HTMLInputElement;
-  const signupLink = view.getByRole("link", { name: /회원가입/ }) as HTMLAnchorElement;
+  const passwordInput = view.getByLabelText("Password") as HTMLInputElement;
+  const signupLink = view.getByRole("link", { name: /Sign up/ }) as HTMLAnchorElement;
 
-  assert.equal(view.getByRole("heading").textContent, "다시 만나 반갑습니다");
+  assert.equal(view.getByRole("heading").textContent, "Welcome back");
   assert.equal(new URL(signupLink.href).pathname, "/signup");
   assert.equal(passwordInput.type, "password");
 
-  fireEvent.click(view.getByRole("button", { name: "비밀번호 보기" }));
+  fireEvent.click(view.getByRole("button", { name: "Show password" }));
 
   assert.equal(passwordInput.type, "text");
   assert.equal(
-    view.getByRole("button", { name: "비밀번호 숨기기" }).getAttribute("aria-pressed"),
+    view.getByRole("button", { name: "Hide password" }).getAttribute("aria-pressed"),
     "true"
   );
 });
@@ -57,14 +57,15 @@ test("signin restores, updates, and removes the remembered email", async () => {
   saveRememberedEmail("saved@example.com");
 
   const view = render(<AuthForm mode="signin" />);
-  const emailInput = view.getByLabelText("이메일") as HTMLInputElement;
+  const emailInput = view.getByLabelText("Email") as HTMLInputElement;
   const rememberCheckbox = view.getByRole("checkbox", {
-    name: "이메일 저장",
+    name: "Remember email",
   }) as HTMLInputElement;
 
   assert.match(rememberCheckbox.className, /appearance-none/);
   assert.match(rememberCheckbox.className, /rounded-sm/);
-  assert.match(rememberCheckbox.className, /border-control/);
+  assert.match(rememberCheckbox.className, /border-border/);
+  assert.doesNotMatch(rememberCheckbox.className, /border-control/);
   assert.doesNotMatch(rememberCheckbox.className, /focus-ring/);
   assert.match(rememberCheckbox.className, /focus-visible:border-surface-foreground/);
 
@@ -84,25 +85,25 @@ test("signin restores, updates, and removes the remembered email", async () => {
 test("signup renders confirmation and blocks passwords outside the policy", async () => {
   const [{ fireEvent, render, waitFor }, { default: AuthForm }] = await uiModules;
   const view = render(<AuthForm mode="signup" />);
-  const loginLink = view.getByRole("link", { name: /로그인/ }) as HTMLAnchorElement;
+  const loginLink = view.getByRole("link", { name: /Sign in/ }) as HTMLAnchorElement;
 
-  assert.equal(view.getByRole("heading").textContent, "만나서 반갑습니다");
+  assert.equal(view.getByRole("heading").textContent, "Create your account");
   assert.equal(new URL(loginLink.href).pathname, "/login");
-  assert.equal(view.queryByRole("checkbox", { name: "이메일 저장" }), null);
+  assert.equal(view.queryByRole("checkbox", { name: "Remember email" }), null);
 
-  fireEvent.change(view.getByLabelText("이메일"), {
+  fireEvent.change(view.getByLabelText("Email"), {
     target: { value: "user@example.com" },
   });
-  fireEvent.change(view.getByLabelText("비밀번호"), {
+  fireEvent.change(view.getByLabelText("Password"), {
     target: { value: "password" },
   });
-  fireEvent.change(view.getByLabelText("비밀번호 확인"), {
+  fireEvent.change(view.getByLabelText("Confirm password"), {
     target: { value: "password" },
   });
   fireEvent.submit(view.container.querySelector("form")!);
 
   await waitFor(() => {
-    assert.match(view.getByRole("alert").textContent ?? "", /영문 대·소문자/);
+    assert.match(view.getByRole("alert").textContent ?? "", /upper and lower case/i);
   });
 });
 
@@ -110,18 +111,18 @@ test("signup blocks a mismatched confirmation after policy validation", async ()
   const [{ fireEvent, render, waitFor }, { default: AuthForm }] = await uiModules;
   const view = render(<AuthForm mode="signup" />);
 
-  fireEvent.change(view.getByLabelText("이메일"), {
+  fireEvent.change(view.getByLabelText("Email"), {
     target: { value: "user@example.com" },
   });
-  fireEvent.change(view.getByLabelText("비밀번호"), {
+  fireEvent.change(view.getByLabelText("Password"), {
     target: { value: "Strong1!" },
   });
-  fireEvent.change(view.getByLabelText("비밀번호 확인"), {
+  fireEvent.change(view.getByLabelText("Confirm password"), {
     target: { value: "Different1!" },
   });
   fireEvent.submit(view.container.querySelector("form")!);
 
   await waitFor(() => {
-    assert.equal(view.getByRole("alert").textContent, "비밀번호가 일치하지 않습니다.");
+    assert.equal(view.getByRole("alert").textContent, "Passwords do not match.");
   });
 });

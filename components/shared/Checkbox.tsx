@@ -20,10 +20,16 @@ export interface CheckboxProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size" | "type"> {
   /** The words beside the box. They are part of the target. */
   label: React.ReactNode;
+  borderTone?: "default" | "control";
 }
 
+const checkboxBorderClasses: Record<NonNullable<CheckboxProps["borderTone"]>, string> = {
+  default: "border-border",
+  control: "border-control",
+};
+
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ label, className = "", id, disabled, ...props }, ref) => {
+  ({ label, borderTone = "control", className = "", id, disabled, ...props }, ref) => {
     const generatedId = useId();
     const inputId = id || generatedId;
 
@@ -40,10 +46,10 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             id={inputId}
             type="checkbox"
             disabled={disabled}
-            className="peer h-5 w-5 appearance-none rounded-sm border border-control bg-card
-                     checked:border-surface-foreground checked:bg-surface-foreground
-                     focus:outline-none focus-visible:border-surface-foreground
-                     disabled:cursor-not-allowed"
+            className={`peer h-5 w-5 appearance-none rounded-sm border ${checkboxBorderClasses[borderTone]} bg-card
+                        checked:border-surface-foreground checked:bg-surface-foreground
+                        focus:outline-none focus-visible:border-surface-foreground
+                        disabled:cursor-not-allowed`}
             {...props}
           />
           {/* Drawn over the input rather than inside it: a checkbox cannot hold

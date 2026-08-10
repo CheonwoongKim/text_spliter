@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
-import { PRESERVED_TERMS, UI_COPY } from "@/lib/ui-copy";
+import { AUTH_SURFACES, PRESERVED_TERMS, UI_COPY } from "@/lib/ui-copy";
 
 /**
  * The product speaks Korean, but not every English word on screen is product
@@ -60,14 +60,25 @@ test("measurement names were not translated away", () => {
 });
 
 /**
- * The authentication screens are the first thing a person sees, and they were
- * the last place English survived: the sign-in title read "Welcom, Back!" —
- * misspelt, and in a language the rest of the product does not use.
+ * The authentication screens are English, and wholly so.
  *
- * Nothing on these screens names a provider option, a metric, or a model, so
- * unlike the workbench they have no reason to carry a Latin word at all.
+ * They were half-translated for a while — an English title over Korean labels
+ * and Korean errors — which is the one arrangement that reads as unfinished
+ * rather than as a choice. Both directions are checked here: no Korean on the
+ * way in, and no drift of the exception into the rest of the product.
  */
-test("the authentication screens speak Korean, titles included", () => {
+test("the authentication screens are written in English throughout", () => {
+  for (const path of AUTH_SURFACES) {
+    const source = readFileSync(path, "utf8");
+    const strings = [...source.matchAll(/(?:"([^"\n]*)"|`([^`\n]*)`)/g)]
+      .map((match) => match[1] ?? match[2])
+      .filter((value) => /[가-힣]/.test(value));
+
+    assert.deepEqual(strings, [], `${path} still shows Korean on an English screen`);
+  }
+});
+
+test("the copy a person acts on is present, and in English", () => {
   const form = readFileSync("components/auth/AuthForm.tsx", "utf8");
   const content = form.slice(
     form.indexOf("const AUTH_CONTENT"),
@@ -79,8 +90,23 @@ test("the authentication screens speak Korean, titles included", () => {
 
     assert.equal(values.length, 2, `${key} must be set for both sign-in and sign-up`);
     for (const value of values) {
-      assert.match(value, /[가-힣]/, `${key} "${value}" is read by a Korean speaker`);
-      assert.doesNotMatch(value, /[A-Za-z]/, `${key} "${value}" has no term that must stay English`);
+      assert.match(value, /[A-Za-z]/, `${key} "${value}" is read on an English screen`);
+    }
+  }
+});
+
+test("the English exception does not leak past the screens that declare it", () => {
+  const declared = new Set(AUTH_SURFACES);
+
+  for (const path of FILES) {
+    if (declared.has(path)) continue;
+
+    const source = readFileSync(path, "utf8");
+    for (const term of ["Sign in", "Sign up", "Welcome back", "Remember email"]) {
+      assert.ok(
+        !source.includes(term),
+        `${path} borrows "${term}" from the authentication screens; the product is Korean`,
+      );
     }
   }
 });

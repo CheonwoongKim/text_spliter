@@ -40,19 +40,19 @@ type Feedback = {
 
 const AUTH_CONTENT = {
   signin: {
-    title: "다시 만나 반갑습니다",
-    submit: "로그인",
-    pending: "로그인 중...",
-    link: "계정이 없나요? 회원가입",
+    title: "Welcome back",
+    submit: "Sign in",
+    pending: "Signing in...",
+    link: "No account yet? Sign up",
     href: "/signup",
     passwordAutoComplete: "current-password",
     passwordMinLength: 6,
   },
   signup: {
-    title: "만나서 반갑습니다",
-    submit: "계정 생성",
-    pending: "계정 생성 중...",
-    link: "이미 계정이 있나요? 로그인",
+    title: "Create your account",
+    submit: "Sign up",
+    pending: "Creating account...",
+    link: "Already have an account? Sign in",
     href: "/login",
     passwordAutoComplete: "new-password",
     passwordMinLength: PASSWORD_MIN_LENGTH,
@@ -123,6 +123,7 @@ function PasswordField({
           type={isVisible ? "text" : "password"}
           placeholder={placeholder}
           fieldSize={FIELD_SIZE}
+          borderTone="default"
           className={`${FIELD_SURFACE} pr-12`}
           autoComplete={autoComplete}
           minLength={minLength}
@@ -133,7 +134,7 @@ function PasswordField({
           variant="ghost"
           size="icon"
           onClick={() => setIsVisible((current) => !current)}
-          aria-label={`${visibilityLabel} ${isVisible ? "숨기기" : "보기"}`}
+          aria-label={`${isVisible ? "Hide" : "Show"} ${visibilityLabel.toLowerCase()}`}
           aria-pressed={isVisible}
           className="absolute inset-y-0 right-2 my-auto"
         >
@@ -192,7 +193,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
       const passwordConfirmation = String(formData.get("passwordConfirmation") ?? "");
       if (password !== passwordConfirmation) {
-        setFeedback({ type: "error", text: "비밀번호가 일치하지 않습니다." });
+        setFeedback({ type: "error", text: "Passwords do not match." });
         return;
       }
     }
@@ -218,17 +219,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
         isSignup
           ? {
               type: "success",
-              text: "계정 확인 메일을 보냈습니다. 이메일 인증 후 로그인해 주세요.",
+              text: "Check your inbox to confirm your address, then sign in.",
             }
           : {
               type: "error",
-              text: "로그인 세션을 생성하지 못했습니다. 다시 시도해 주세요.",
+              text: "Could not start a session. Please try again.",
             }
       );
     } catch (error) {
       setFeedback({
         type: "error",
-        text: error instanceof Error ? error.message : "인증에 실패했습니다.",
+        text: error instanceof Error ? error.message : "Authentication failed.",
       });
     } finally {
       setLoading(false);
@@ -248,15 +249,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
           <div className="space-y-6">
             <div>
               <label htmlFor={`${fieldPrefix}-email`} className="mb-2 block text-xs font-normal text-surface-foreground">
-                이메일
+                Email
               </label>
               <Input
                 ref={emailInputRef}
                 id={`${fieldPrefix}-email`}
                 name="email"
                 type="email"
-                placeholder="예: name@company.com"
+                placeholder="name@company.com"
                 fieldSize={FIELD_SIZE}
+                borderTone="default"
                 className={FIELD_SURFACE}
                 autoComplete="email"
                 required
@@ -266,8 +268,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
             <PasswordField
               id={`${fieldPrefix}-password`}
               name="password"
-              label="비밀번호"
-              visibilityLabel="비밀번호"
+              label="Password"
+              visibilityLabel="Password"
               placeholder={PASSWORD_REQUIREMENT_TEXT}
               autoComplete={content.passwordAutoComplete}
               minLength={content.passwordMinLength}
@@ -277,9 +279,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
               <PasswordField
                 id={`${fieldPrefix}-password-confirmation`}
                 name="passwordConfirmation"
-                label="비밀번호 확인"
-                visibilityLabel="비밀번호 확인"
-                placeholder="동일한 비밀번호를 다시 입력"
+                label="Confirm password"
+                visibilityLabel="Password confirmation"
+                placeholder="Re-enter the same password"
                 autoComplete="new-password"
                 minLength={PASSWORD_MIN_LENGTH}
               />
@@ -289,9 +291,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
           {!isSignup && (
             <Checkbox
               className="mt-4"
+              borderTone="default"
               checked={shouldRememberEmail}
               onChange={handleRememberEmailChange}
-              label="이메일 저장"
+              label="Remember email"
             />
           )}
 
