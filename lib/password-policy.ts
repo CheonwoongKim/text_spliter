@@ -5,7 +5,7 @@ export const PASSWORD_MIN_LENGTH = 8;
  * the rest of the product is Korean. See docs/DESIGN_SYSTEM.md.
  */
 export const PASSWORD_REQUIREMENT_TEXT =
-  "8+ characters with upper and lower case, a number, and a symbol";
+  "8+ chars, mixed case, number, symbol";
 
 const PASSWORD_REQUIREMENTS = [
   /[a-z]/,

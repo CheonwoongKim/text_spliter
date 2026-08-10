@@ -256,7 +256,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 id={`${fieldPrefix}-email`}
                 name="email"
                 type="email"
-                placeholder="name@company.com"
+                placeholder="ex: example@email.com"
                 fieldSize={FIELD_SIZE}
                 borderTone="default"
                 className={FIELD_SURFACE}
@@ -281,7 +281,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 name="passwordConfirmation"
                 label="Confirm password"
                 visibilityLabel="Password confirmation"
-                placeholder="Re-enter the same password"
+                placeholder="Repeat password"
                 autoComplete="new-password"
                 minLength={PASSWORD_MIN_LENGTH}
               />
