@@ -1,8 +1,11 @@
 "use client";
 
-import { History, LoaderCircle } from "lucide-react";
+import { History } from "lucide-react";
 import { memo, useCallback, useEffect, useState } from "react";
 
+import { Button } from "@/components/shared/Button";
+import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
+import StatusMessage from "@/components/shared/StatusMessage";
 import { getAuthToken } from "@/lib/auth";
 import { costFromStoredRun, formatUsd } from "@/lib/cost-estimate";
 import type { JsonValue } from "@/lib/types";
@@ -95,39 +98,26 @@ function RagRunHistory({ refreshToken, onReuseQuestion }: RagRunHistoryProps) {
   useEffect(() => { void fetchRuns(); }, [fetchRuns, refreshToken]);
 
   if (loading && runs.length === 0) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center text-center">
-        <LoaderCircle
-          className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
-          strokeWidth={1.5}
-          aria-hidden="true"
-        />
-        <p className="text-xs text-muted-foreground">실행 이력을 불러오는 중</p>
-      </div>
-    );
+    return <PanelPlaceholder loading title="실행 이력을 불러오는 중" />;
   }
 
   if (error) {
     return (
       <div className="p-4">
-        <p className="text-xs text-danger">{error}</p>
+        <StatusMessage tone="danger" details={<Button variant="ghost" size="sm" className="px-0" onClick={() => void fetchRuns()}>다시 시도</Button>}>
+          {error}
+        </StatusMessage>
       </div>
     );
   }
 
   if (runs.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-center px-6">
-        <History
-          className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-          strokeWidth={1.5}
-          aria-hidden="true"
-        />
-        <p className="text-xs font-medium text-card-foreground">아직 실행 이력이 없습니다</p>
-        <p className="mt-1 text-2xs text-muted-foreground">
-          질의를 실행하면 검색 설정·근거·답변·비용이 함께 기록됩니다.
-        </p>
-      </div>
+      <PanelPlaceholder
+        icon={History}
+        title="아직 실행 이력이 없습니다"
+        description="질의를 실행하면 검색 설정·근거·답변·비용이 함께 기록되어 여기에서 비교할 수 있습니다."
+      />
     );
   }
 

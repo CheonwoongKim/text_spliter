@@ -3,6 +3,7 @@
 import { Boxes, Check, FileText, LoaderCircle, Save } from "lucide-react";
 import TabBar from "@/components/shared/TabBar";
 import { Button } from "@/components/shared/Button";
+import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useAuthFetch } from "@/lib/hooks/useAuthFetch";
 import type { SplitterRun } from "@/lib/splitter-comparison";
@@ -210,29 +211,14 @@ const RightPanel = memo(function RightPanel({
             onClearRuns={() => onClearRuns?.()}
           />
         ) : !result ? (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            {loading ? (
-              <LoaderCircle
-                className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-            ) : (
-              <FileText
-                className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-            )}
-            <p className="text-xs font-medium text-card-foreground">
-              {loading ? "Splitting text" : "No result yet"}
-            </p>
-            <p className="mt-1 text-2xs text-muted-foreground">
-              {loading
-                ? "Chunks will appear when processing is complete."
-                : "Add source text, choose a splitter, and run it."}
-            </p>
-          </div>
+          <PanelPlaceholder
+            loading={loading}
+            icon={FileText}
+            title={loading ? "청킹 중" : "아직 결과가 없습니다"}
+            description={loading
+              ? "처리가 끝나면 청크가 여기에 나타납니다."
+              : "원본 텍스트를 넣고 분할기를 골라 실행하세요. 설정을 바꿔 다시 실행하면 비교표가 생깁니다."}
+          />
         ) : viewMode === "card" ? (
           <CardView result={result} />
         ) : (

@@ -1,12 +1,13 @@
 "use client";
 
-import { Database, LoaderCircle } from "lucide-react";
+import { Database } from "lucide-react";
 import { Button } from "@/components/shared/Button";
 import { memo, useState, useCallback, useEffect } from "react";
 import type { TableDataResponse } from "@/lib/types";
 import { VDB_ROWS_PER_PAGE } from "@/lib/constants";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import Pagination from "@/components/shared/Pagination";
+import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
 
 interface VectorStoreRightPanelProps {
   selectedSchema: string | undefined;
@@ -141,38 +142,19 @@ function VectorStoreRightPanel({
       {/* Table Data */}
       <div className="flex-1 overflow-auto">
         {!selectedTable ? (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <Database
-              className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-            <p className="text-xs font-medium text-card-foreground">No collection selected</p>
-            <p className="mt-1 text-2xs text-muted-foreground">
-              Choose a collection from the left panel.
-            </p>
-          </div>
+          <PanelPlaceholder
+            icon={Database}
+            title="컬렉션을 선택하세요"
+            description="왼쪽 목록에서 컬렉션을 고르면 저장된 청크와 메타데이터를 볼 수 있습니다."
+          />
         ) : loading ? (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <LoaderCircle
-              className="mb-3 h-icon-md w-icon-md animate-spin text-muted-foreground"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-            <p className="text-xs font-medium text-card-foreground">Loading collection</p>
-          </div>
+          <PanelPlaceholder loading title="컬렉션을 불러오는 중" />
         ) : !tableData || tableData.rows.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <Database
-              className="mb-3 h-icon-md w-icon-md text-muted-foreground"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-            <p className="text-xs font-medium text-card-foreground">Collection is empty</p>
-            <p className="mt-1 text-2xs text-muted-foreground">
-              Upload chunks to see rows here.
-            </p>
-          </div>
+          <PanelPlaceholder
+            icon={Database}
+            title="컬렉션이 비어 있습니다"
+            description="청킹 화면에서 'Send to VDB'로 청크를 올리면 여기에 나타납니다."
+          />
         ) : (
           <div className="min-w-full">
             <table className="w-full border-collapse">
