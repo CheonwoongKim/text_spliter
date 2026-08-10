@@ -1,16 +1,18 @@
 "use client";
 
 import {
+  Archive,
   BrainCircuit,
   Boxes,
   ClipboardCheck,
-  Database,
+  FileCheck2,
   FileSearch,
   Folder,
   ListTree,
+  MessagesSquare,
   type LucideIcon,
 } from "lucide-react";
-import { memo } from "react";
+import { Fragment, memo } from "react";
 import {
   APP_MENU_META,
   APP_MENU_SECTIONS,
@@ -24,12 +26,14 @@ interface SidebarProps {
 }
 
 const MENU_ICONS = {
+  files: Folder,
   parser: FileSearch,
   splitter: ListTree,
-  storage: Database,
   vectorstore: Boxes,
+  ask: MessagesSquare,
   evaluation: ClipboardCheck,
-  files: Folder,
+  "document-eval": FileCheck2,
+  storage: Archive,
   memory: BrainCircuit,
 } satisfies Record<SidebarMenu, LucideIcon>;
 
@@ -68,30 +72,31 @@ function MenuButton({ menu, activeMenu, onMenuChange }: MenuButtonProps) {
 }
 
 function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
-  const workflowSection = APP_MENU_SECTIONS.find((section) => section.id === "workflow");
-  const resourceSection = APP_MENU_SECTIONS.find((section) => section.id === "resources");
-
   return (
-    <aside className="flex w-sidebar flex-col items-center border-r border-border-subtle bg-card py-6">
+    <aside className="flex w-sidebar flex-col items-center overflow-y-auto border-r border-border-subtle bg-card py-6">
       {/* Logo */}
       <div className="mb-8">
         <h1 className="text-card-foreground font-bold text-lg tracking-tight">BGK</h1>
       </div>
 
-      <nav className="flex min-h-0 flex-1 flex-col items-center" aria-label="Application navigation">
-        <div className="flex flex-col items-center gap-2" role="group" aria-label={workflowSection?.label}>
-          {workflowSection?.menuIds.map((menu) => (
-            <MenuButton key={menu} menu={menu} activeMenu={activeMenu} onMenuChange={onMenuChange} />
-          ))}
-        </div>
-
-        <div className="my-3 w-6 border-t border-border-subtle" aria-hidden="true" />
-
-        <div className="flex flex-col items-center gap-2" role="group" aria-label={resourceSection?.label}>
-          {resourceSection?.menuIds.map((menu) => (
-            <MenuButton key={menu} menu={menu} activeMenu={activeMenu} onMenuChange={onMenuChange} />
-          ))}
-        </div>
+      <nav className="flex min-h-0 flex-1 flex-col items-center" aria-label="주 메뉴">
+        {APP_MENU_SECTIONS.map((section, index) => (
+          <Fragment key={section.id}>
+            {index > 0 && (
+              <div className="my-3 w-6 border-t border-border-subtle" aria-hidden="true" />
+            )}
+            <div className="flex flex-col items-center gap-2" role="group" aria-label={section.label}>
+              {section.menuIds.map((menu) => (
+                <MenuButton
+                  key={menu}
+                  menu={menu}
+                  activeMenu={activeMenu}
+                  onMenuChange={onMenuChange}
+                />
+              ))}
+            </div>
+          </Fragment>
+        ))}
       </nav>
     </aside>
   );

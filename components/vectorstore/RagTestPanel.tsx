@@ -24,6 +24,9 @@ interface RagTestPanelProps {
   /** Model the selected collection was built with; retrieval reuses it. */
   collectionEmbeddingModel?: string;
   collectionVectorDimension?: number;
+  /** Prefills the question box when a past run is reused. */
+  questionSeed?: { token: number; question: string } | null;
+  onRunCompleted?: () => void;
 }
 
 interface ApiErrorBody {
@@ -54,6 +57,8 @@ export default function RagTestPanel({
   selectedTable,
   collectionEmbeddingModel,
   collectionVectorDimension,
+  questionSeed,
+  onRunCompleted,
 }: RagTestPanelProps) {
   const [question, setQuestion] = useState("");
   const [topK, setTopK] = useState(5);
@@ -91,6 +96,13 @@ export default function RagTestPanel({
     setConversation([]);
     setSessionId(null);
   }, [selectedSchema, selectedTable]);
+
+  const seedToken = questionSeed?.token;
+  const seedQuestion = questionSeed?.question;
+  useEffect(() => {
+    if (seedToken === undefined || !seedQuestion) return;
+    setQuestion(seedQuestion);
+  }, [seedToken, seedQuestion]);
 
   const endConversation = useCallback(() => {
     setConversation([]);
@@ -151,6 +163,7 @@ export default function RagTestPanel({
         { question: askedQuestion, answer: data.answer },
       ]);
       setQuestion("");
+      onRunCompleted?.();
     } catch (caught) {
       const body = caught as ApiErrorBody;
       setError({

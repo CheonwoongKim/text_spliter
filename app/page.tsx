@@ -11,10 +11,12 @@ import ParserLeftPanel from "@/components/parser/ParserLeftPanel";
 import ParserRightPanel from "@/components/parser/ParserRightPanel";
 import SettingsPanel, { type SettingsSection } from "@/components/settings/SettingsPanel";
 import VectorStoreLeftPanel from "@/components/vectorstore/VectorStoreLeftPanel";
+import AskWorkspace from "@/components/vectorstore/AskWorkspace";
 import VectorStoreRightPanel from "@/components/vectorstore/VectorStoreRightPanel";
 import StoragePanel from "@/components/storage/StoragePanel";
 import FilesPanel from "@/components/storage/FilesPanel";
 import ParseResultDetailPanel from "@/components/parser/ParseResultDetailPanel";
+import DocumentEvaluationPanel from "@/components/evaluation/DocumentEvaluationPanel";
 import EvaluationPanel from "@/components/evaluation/EvaluationPanel";
 import MemoryGuidePanel from "@/components/guides/MemoryGuidePanel";
 import { getAuthToken } from "@/lib/auth";
@@ -274,15 +276,6 @@ export default function Home() {
     [vectorStoreHandoff],
   );
 
-  const selectedCollection = useMemo(() => {
-    const { selectedSchema, selectedTable } = vectorStoreConfig;
-    if (!selectedTable) return undefined;
-
-    return schemas
-      .find((schema) => schema.name === (selectedSchema || MANAGED_VECTOR_SCHEMA))
-      ?.tables.find((table) => table.name === selectedTable);
-  }, [schemas, vectorStoreConfig]);
-
   const handleUseRunInSplitter = useCallback((runIndex: number) => {
     const run = parseRuns[runIndex];
     if (!run) return;
@@ -395,9 +388,9 @@ export default function Home() {
     }
   }, [vectorStoreConfig.selectedTable, handleLoadTableData]);
 
-  // Load schemas when VDB page is opened
+  // Both the index browser and the query workspace need the collection list.
   useEffect(() => {
-    if (activeMenu === "vectorstore" && schemas.length === 0) {
+    if ((activeMenu === "vectorstore" || activeMenu === "ask") && schemas.length === 0) {
       handleRefreshSchemas();
     }
   }, [activeMenu, schemas.length, handleRefreshSchemas]);
@@ -407,7 +400,7 @@ export default function Home() {
   // surface on the splitter screen.
   const activeError = activeMenu === "parser"
     ? parserError
-    : activeMenu === "vectorstore"
+    : activeMenu === "vectorstore" || activeMenu === "ask"
       ? vectorError
       : activeMenu === "splitter"
         ? splitter.error
@@ -415,7 +408,7 @@ export default function Home() {
 
   const dismissActiveError = useCallback(() => {
     if (activeMenu === "parser") setParserError(null);
-    else if (activeMenu === "vectorstore") setVectorError(null);
+    else if (activeMenu === "vectorstore" || activeMenu === "ask") setVectorError(null);
     else if (activeMenu === "splitter") setSplitterError(null);
   }, [activeMenu, setSplitterError]);
 
@@ -444,7 +437,7 @@ export default function Home() {
         <Header
           breadcrumbs={
             activeMenu === "parse-detail"
-              ? ["Workflow", "Runs", "Parse Result Detail"]
+              ? ["자료", "보관함", "파싱 결과 상세"]
               : getAppMenuBreadcrumbs(activeMenu)
           }
           activeMenu={activeMenu === "parse-detail" ? "storage" : activeMenu}
@@ -531,6 +524,17 @@ export default function Home() {
               <MemoryGuidePanel />
             ) : activeMenu === "evaluation" ? (
               <EvaluationPanel />
+            ) : activeMenu === "document-eval" ? (
+              <DocumentEvaluationPanel />
+            ) : activeMenu === "ask" ? (
+              <AskWorkspace
+                schemas={schemas}
+                selectedSchema={vectorStoreConfig.selectedSchema}
+                selectedTable={vectorStoreConfig.selectedTable}
+                loading={vectorLoading}
+                onSelectCollection={(schema, table) =>
+                  handleVectorStoreConfigChange({ selectedSchema: schema, selectedTable: table })}
+              />
             ) : activeMenu === "parse-detail" && selectedParseResultId ? (
               <div className="h-full px-4 py-6 sm:px-6 lg:px-10">
                 <ParseResultDetailPanel
@@ -556,8 +560,6 @@ export default function Home() {
                 <VectorStoreRightPanel
                   selectedSchema={vectorStoreConfig.selectedSchema}
                   selectedTable={vectorStoreConfig.selectedTable}
-                  selectedTableEmbeddingModel={selectedCollection?.embeddingModel}
-                  selectedTableVectorDimension={selectedCollection?.vectorDimension}
                   tableData={tableData}
                   loading={vectorLoading}
                   onRefresh={handleRefreshTableData}

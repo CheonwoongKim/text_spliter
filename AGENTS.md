@@ -44,6 +44,9 @@ Use Node.js 20.9 or newer. The Ragas worker supports Python 3.11 through 3.13.
 ### Application shell and navigation
 
 - The authenticated workbench is a stateful panel shell rather than one URL per dashboard menu. Add menu IDs, labels, sections, and breadcrumbs through `lib/navigation.ts`, render the panel in `app/page.tsx`, and map its icon in `components/layout/Sidebar.tsx`.
+- The sidebar reads top to bottom as the pipeline: document, parse, chunk, index, ask. Measurement and saved artifacts sit in their own sections so an archive is never read as the next step. Menu labels are Korean and short enough for the narrow rail.
+- Answer evaluation and parser evaluation are separate menus, not tabs of one screen: they take different inputs, produce different metrics, and are never summed.
+- A renamed menu ID keeps an entry in `RENAMED_MENUS` so a returning user's stored value still resolves.
 - `/login` and `/signup` remain distinct public routes protected by `AuthGuard`; dashboard panels remain behind Supabase Auth.
 - Persisted menu values pass through `normalizeAppMenu`. Unknown or removed values must fall back safely to Parser.
 

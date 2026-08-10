@@ -6,13 +6,10 @@ import type { TableDataResponse } from "@/lib/types";
 import { VDB_ROWS_PER_PAGE } from "@/lib/constants";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import Pagination from "@/components/shared/Pagination";
-import RagTestPanel from "@/components/vectorstore/RagTestPanel";
 
 interface VectorStoreRightPanelProps {
   selectedSchema: string | undefined;
   selectedTable: string | undefined;
-  selectedTableEmbeddingModel?: string;
-  selectedTableVectorDimension?: number;
   tableData: TableDataResponse | null;
   loading: boolean;
   onRefresh: () => void;
@@ -27,21 +24,17 @@ interface CellModalData {
 function VectorStoreRightPanel({
   selectedSchema,
   selectedTable,
-  selectedTableEmbeddingModel,
-  selectedTableVectorDimension,
   tableData,
   loading,
   onRefresh,
 }: VectorStoreRightPanelProps) {
   const [page, setPage] = useState(0);
-  const [activeTab, setActiveTab] = useState<"data" | "rag">("data");
   const [modalData, setModalData] = useState<CellModalData | null>(null);
   const { copied, copy, reset } = useCopyToClipboard();
   const rowsPerPage = VDB_ROWS_PER_PAGE;
 
   useEffect(() => {
     setPage(0);
-    setActiveTab("data");
   }, [selectedSchema, selectedTable]);
 
   const formatCellValue = useCallback((value: any) => {
@@ -103,34 +96,8 @@ function VectorStoreRightPanel({
                 "Select a collection"
               )}
             </h3>
-            {selectedTable && (
-              <div className="flex items-center gap-1 rounded-lg bg-upload-zone p-1">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("data")}
-                  className={`px-3 py-1 rounded-lg text-2xs font-medium transition-colors ${
-                    activeTab === "data"
-                      ? "bg-card text-card-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-card-foreground"
-                  }`}
-                >
-                  Data
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("rag")}
-                  className={`px-3 py-1 rounded-lg text-2xs font-medium transition-colors ${
-                    activeTab === "rag"
-                      ? "bg-card text-card-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-card-foreground"
-                  }`}
-                >
-                  RAG Test
-                </button>
-              </div>
-            )}
           </div>
-          {activeTab === "data" && <button
+          <button
             onClick={onRefresh}
             disabled={loading || !selectedTable}
             className="p-2 text-muted-foreground hover:text-card-foreground
@@ -173,21 +140,12 @@ function VectorStoreRightPanel({
                 />
               </svg>
             )}
-          </button>}
+          </button>
         </div>
       </div>
 
       {/* Table Data */}
-      {activeTab === "rag" ? (
-        <div className="flex-1 overflow-hidden">
-          <RagTestPanel
-            selectedSchema={selectedSchema}
-            selectedTable={selectedTable}
-            collectionEmbeddingModel={selectedTableEmbeddingModel}
-            collectionVectorDimension={selectedTableVectorDimension}
-          />
-        </div>
-      ) : <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto">
         {!selectedTable ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <Database
@@ -294,7 +252,7 @@ function VectorStoreRightPanel({
             />
           </div>
         )}
-      </div>}
+      </div>
 
       {/* Cell Content Modal */}
       {modalData && (
