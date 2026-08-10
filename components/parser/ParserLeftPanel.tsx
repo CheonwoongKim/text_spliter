@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Check, CloudUpload, FileText, FolderOpen, LoaderCircle, RotateCcw, Settings, X } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import { memo, useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { getAuthToken } from "@/lib/auth";
@@ -465,26 +466,7 @@ function ParserLeftPanel({
             Reset
           </button>
 
-          <button
-            type="button"
-            onClick={() => onParse({
-              primaryEngine,
-              engines: experimentEngines.map((parserType) => ({
-                parserType,
-                config: { ...engineConfigs[parserType] },
-              })),
-            })}
-            disabled={
-              loading
-              || !settingsReady
-              || !selectedFile
-              || !selectedFileSupported
-              || experimentEngines.length === 0
-            }
-            className="flex h-control-md items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
-                     font-medium text-surface transition-smooth hover:opacity-hover
-                     disabled:cursor-not-allowed disabled:opacity-disabled"
-          >
+          <Button variant="primary" size="md" onClick={() => onParse({ primaryEngine, engines: experimentEngines.map((parserType) => ({ parserType, config: { ...engineConfigs[parserType] }, })), })} disabled={ loading || !settingsReady || !selectedFile || !selectedFileSupported || experimentEngines.length === 0 }>
             {loading ? (
               <>
                 <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
@@ -498,7 +480,7 @@ function ParserLeftPanel({
                 <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               </>
             )}
-          </button>
+          </Button>
           </div>
         </div>
       </div>

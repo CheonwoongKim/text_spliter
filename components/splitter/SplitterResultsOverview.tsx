@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Trash2 } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import { memo, useMemo } from "react";
 import {
   bestRunIds,
@@ -54,15 +55,10 @@ function SplitterResultsOverview({
               : " Chunk a parser result to compare page provenance as well."}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onClearRuns}
-          className="flex h-control-sm items-center gap-2 rounded-lg border border-border px-3 text-2xs
-                   font-medium text-card-foreground transition-smooth hover:border-border-darkest"
-        >
+        <Button variant="outline" size="sm" onClick={onClearRuns}>
           <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
           Clear runs
-        </button>
+        </Button>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-border">

@@ -1,4 +1,5 @@
 import { Archive, Eye, LoaderCircle, Trash2, Upload } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 
 import Pagination from "@/components/shared/Pagination";
 import type { ParseResult, SplitResult } from "@/components/storage/storage-types";
@@ -102,24 +103,12 @@ export function ParseResultsTable({
                   <td className="w-48 whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">{formatDate(result.created_at)}</td>
                   <td className="w-28 whitespace-nowrap px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onView(result.id)}
-                        className="p-2 text-muted-foreground transition-smooth hover:text-card-foreground"
-                        aria-label={`View ${result.file_name}`}
-                        title="View"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => onView(result.id)} aria-label={`View ${result.file_name}`} title="View">
                         <Eye className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(result.id)}
-                        className="p-2 text-muted-foreground transition-smooth hover:text-danger"
-                        aria-label={`Delete ${result.file_name}`}
-                        title="Delete"
-                      >
+                      </Button>
+                      <Button variant="dangerGhost" size="icon" onClick={() => onDelete(result.id)} aria-label={`Delete ${result.file_name}`} title="Delete">
                         <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -195,33 +184,15 @@ export function SplitResultsTable({
                   <td className="w-48 whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">{formatDate(result.created_at)}</td>
                   <td className="w-28 whitespace-nowrap px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onView(result.id)}
-                        className="p-2 text-muted-foreground transition-smooth hover:text-card-foreground"
-                        aria-label={`View split result ${result.id}`}
-                        title="View"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => onView(result.id)} aria-label={`View split result ${result.id}`} title="View">
                         <Eye className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onUpload(result.id)}
-                        className="p-2 text-muted-foreground transition-smooth hover:text-card-foreground"
-                        aria-label={`Upload split result ${result.id} to Vector DB`}
-                        title="Upload to Vector DB"
-                      >
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => onUpload(result.id)} aria-label={`Upload split result ${result.id} to Vector DB`} title="Upload to Vector DB">
                         <Upload className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(result.id)}
-                        className="p-2 text-muted-foreground transition-smooth hover:text-danger"
-                        aria-label={`Delete split result ${result.id}`}
-                        title="Delete"
-                      >
+                      </Button>
+                      <Button variant="dangerGhost" size="icon" onClick={() => onDelete(result.id)} aria-label={`Delete split result ${result.id}`} title="Delete">
                         <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>

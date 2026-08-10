@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, LoaderCircle, RotateCcw } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import { memo } from "react";
 import { SplitterType, SplitterConfig as SplitterConfigType, SourceMetadata } from "@/lib/types";
 import TextInput from "./TextInput";
@@ -95,14 +96,7 @@ const LeftPanel = memo(function LeftPanel({
             Reset
           </button>
 
-          <button
-            type="button"
-            onClick={onSplit}
-            disabled={loading}
-            className="flex h-control-md items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
-                     font-medium text-surface transition-smooth hover:opacity-hover
-                     disabled:cursor-not-allowed disabled:opacity-disabled"
-          >
+          <Button variant="primary" size="md" onClick={onSplit} disabled={loading}>
           {loading ? (
             <>
               <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
@@ -114,7 +108,7 @@ const LeftPanel = memo(function LeftPanel({
               <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             </>
           )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

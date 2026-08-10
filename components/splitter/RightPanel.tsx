@@ -1,6 +1,7 @@
 "use client";
 
 import { Boxes, Check, FileText, LoaderCircle, Save } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useAuthFetch } from "@/lib/hooks/useAuthFetch";
 import type { SplitterRun } from "@/lib/splitter-comparison";
@@ -179,22 +180,14 @@ const RightPanel = memo(function RightPanel({
             </button>
 
             {onSendToVectorStore && (
-              <button
-                type="button"
-                onClick={handleSendToVectorStore}
-                disabled={saving || sending}
-                title="Save these chunks and open the vector store upload"
-                className="flex h-control-sm items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
-                         font-medium text-surface transition-smooth hover:opacity-hover
-                         disabled:cursor-not-allowed disabled:opacity-disabled"
-              >
+              <Button variant="primary" size="sm" onClick={handleSendToVectorStore} disabled={saving || sending} title="Save these chunks and open the vector store upload">
                 {sending ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
                 ) : (
                   <Boxes className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                 )}
                 {sending ? "Preparing..." : "Send to VDB"}
-              </button>
+              </Button>
             )}
           </div>
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Select } from "@/components/shared/FormFields";
 
 import { getAuthToken } from "@/lib/auth";
 import {
@@ -219,30 +220,20 @@ export default function RagTestPanel({
             </div>
             <label className="block">
               <span className="block text-2xs font-medium text-muted-foreground mb-2">Answer model</span>
-              <select
-                value={generationModel}
-                onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)}
-                disabled={loading}
-                className="w-full h-10 px-3 rounded-lg border border-border bg-surface text-xs text-card-foreground"
-              >
+              <Select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={loading}>
                 {GENERATION_MODELS.map((model) => (
                   <option key={model.value} value={model.value}>{model.label}</option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="block">
               <span className="block text-2xs font-medium text-muted-foreground mb-2">Reasoning</span>
-              <select
-                value={reasoningEffort}
-                onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)}
-                disabled={loading}
-                className="w-full h-10 px-3 rounded-lg border border-border bg-surface text-xs text-card-foreground"
-              >
+              <Select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={loading}>
                 <option value="none">None</option>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
-              </select>
+              </Select>
             </label>
             <label className="block">
               <span className="block text-2xs font-medium text-muted-foreground mb-2">Top K</span>

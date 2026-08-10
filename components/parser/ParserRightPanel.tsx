@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Clipboard, FileText, LoaderCircle, Save } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import JsonViewer from "@/components/parser/JsonViewer";
 import MarkdownViewer from "@/components/parser/MarkdownViewer";
@@ -573,14 +574,7 @@ function ParserRightPanel({
 
             {result && showDetail && (
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex h-control-sm items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
-                           font-medium text-surface transition-smooth hover:opacity-hover
-                           disabled:cursor-not-allowed disabled:opacity-disabled"
-                >
+                <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
                   {saving ? (
                     <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
                   ) : saved ? (
@@ -589,7 +583,7 @@ function ParserRightPanel({
                     <Save className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   )}
                   {saving ? "Saving..." : saved ? "Saved" : "Save"}
-                </button>
+                </Button>
                 <button
                   type="button"
                   onClick={handleCopy}

@@ -75,18 +75,32 @@ function hasInvalidState(
   );
 }
 
+/**
+ * Fields share the control scale with Button so a field and the button beside
+ * it line up. Before this, buttons stood 36px and most fields 40px, which is
+ * only visible when they sit on the same row — which is where they always sit.
+ */
+export type ControlSize = "sm" | "md" | "lg";
+
+export const controlHeights: Record<ControlSize, string> = {
+  sm: "h-control-sm",
+  md: "h-control-md",
+  lg: "h-control-lg",
+};
+
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
+  fieldSize?: ControlSize;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ error = false, className = "", "aria-invalid": ariaInvalid, ...props }, ref) => {
+  ({ error = false, fieldSize = "md", className = "", "aria-invalid": ariaInvalid, ...props }, ref) => {
     const invalid = hasInvalidState(error, ariaInvalid);
     return (
       <input
         ref={ref}
         aria-invalid={error ? true : ariaInvalid}
-        className={`w-full h-control-md px-3 border rounded-lg bg-surface text-xs text-card-foreground placeholder-light focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
+        className={`w-full ${controlHeights[fieldSize]} px-3 border rounded-lg bg-surface text-xs text-card-foreground placeholder-light focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
           invalid ? "border-danger focus:border-danger" : "border-border"
         } ${className}`}
         {...props}
@@ -98,16 +112,17 @@ Input.displayName = "Input";
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   error?: boolean;
+  fieldSize?: ControlSize;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ error = false, className = "", children, "aria-invalid": ariaInvalid, ...props }, ref) => {
+  ({ error = false, fieldSize = "md", className = "", children, "aria-invalid": ariaInvalid, ...props }, ref) => {
     const invalid = hasInvalidState(error, ariaInvalid);
     return (
       <select
         ref={ref}
         aria-invalid={error ? true : ariaInvalid}
-        className={`w-full h-control-md px-3 border rounded-lg bg-surface text-xs text-card-foreground focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
+        className={`w-full ${controlHeights[fieldSize]} px-3 border rounded-lg bg-surface text-xs text-card-foreground focus-ring disabled:opacity-disabled disabled:cursor-not-allowed ${
           invalid ? "border-danger focus:border-danger" : "border-border"
         } ${className}`}
         {...props}

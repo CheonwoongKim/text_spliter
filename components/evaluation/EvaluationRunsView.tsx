@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Select } from "@/components/shared/FormFields";
 import { Button } from "@/components/shared/Button";
 
 import ParserImpactView from "@/components/evaluation/ParserImpactView";
@@ -108,18 +109,14 @@ function ScoreSelect({
   return (
     <label className="block">
       <span className="block text-2xs font-medium text-muted-foreground mb-2">{label}</span>
-      <select
-        value={value || ""}
-        onChange={(event) => onChange(event.target.value ? Number(event.target.value) : undefined)}
-        className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground"
-      >
+      <Select value={value || ""} onChange={(event) => onChange(event.target.value ? Number(event.target.value) : undefined)}>
         <option value="">Not scored</option>
         <option value="1">1 · Poor</option>
         <option value="2">2</option>
         <option value="3">3 · Acceptable</option>
         <option value="4">4</option>
         <option value="5">5 · Excellent</option>
-      </select>
+      </Select>
     </label>
   );
 }
@@ -568,11 +565,11 @@ export default function EvaluationRunsView({
                   <div className="grid grid-cols-1 md:grid-cols-[180px_minmax(0,1fr)] gap-4 mt-4">
                     <label className="block">
                       <span className="block text-2xs font-medium text-muted-foreground mb-2">Decision</span>
-                      <select value={decision} onChange={(event) => setDecision(event.target.value as ReviewerDecision)} className="w-full h-10 px-3 border border-border rounded-lg bg-surface text-xs text-card-foreground">
+                      <Select value={decision} onChange={(event) => setDecision(event.target.value as ReviewerDecision)}>
                         <option value="pending">Pending</option>
                         <option value="pass">Pass</option>
                         <option value="fail">Fail</option>
-                      </select>
+                      </Select>
                     </label>
                     <label className="block">
                       <span className="block text-2xs font-medium text-muted-foreground mb-2">Notes</span>

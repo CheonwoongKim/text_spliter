@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState, useCallback, useEffect, useRef } from "react";
+import { Button } from "@/components/shared/Button";
 import PagePanel from "@/components/shared/PagePanel";
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 
@@ -418,13 +419,7 @@ const FilesPanel = memo(function FilesPanel() {
               )}
               <span>Refresh</span>
             </button>
-            <button
-              onClick={handleFileSelect}
-              disabled={uploading}
-              className="flex h-control-md items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
-                       font-medium text-surface transition-smooth hover:opacity-hover
-                       disabled:cursor-not-allowed disabled:opacity-disabled"
-            >
+            <Button variant="primary" size="md" onClick={handleFileSelect} disabled={uploading}>
               {uploading ? (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle
@@ -452,7 +447,7 @@ const FilesPanel = memo(function FilesPanel() {
                 </svg>
               )}
               <span>Upload</span>
-            </button>
+            </Button>
           </div>
         </div>
       </>}

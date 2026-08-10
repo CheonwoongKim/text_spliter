@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
+import { Select } from "@/components/shared/FormFields";
 
 import type { MetricBreakdownRow } from "@/lib/evaluation-metrics";
 import type { DeterministicMetricKey } from "@/lib/types";
@@ -51,27 +52,19 @@ function ParserImpactView({ parserBreakdown }: ParserImpactViewProps) {
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2">
             <span className="text-2xs text-muted-foreground">Metric</span>
-            <select
-              value={metricKey}
-              onChange={(event) => setMetricKey(event.target.value as DeterministicMetricKey)}
-              className="h-control-sm rounded-lg border border-border bg-surface px-2 text-2xs text-card-foreground"
-            >
+            <Select fieldSize="sm" className="text-2xs" value={metricKey} onChange={(event) => setMetricKey(event.target.value as DeterministicMetricKey)}>
               {COMPARABLE_METRICS.map((metric) => (
                 <option key={metric.key} value={metric.key}>{metric.label}</option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="flex items-center gap-2">
             <span className="text-2xs text-muted-foreground">Baseline</span>
-            <select
-              value={comparison.baselineParser || ""}
-              onChange={(event) => setBaseline(event.target.value || null)}
-              className="h-control-sm rounded-lg border border-border bg-surface px-2 text-2xs text-card-foreground"
-            >
+            <Select fieldSize="sm" className="text-2xs" value={comparison.baselineParser || ""} onChange={(event) => setBaseline(event.target.value || null)}>
               {comparison.parsers.map((entry) => (
                 <option key={entry.parser} value={entry.parser}>{entry.parser}</option>
               ))}
-            </select>
+            </Select>
           </label>
         </div>
       </div>

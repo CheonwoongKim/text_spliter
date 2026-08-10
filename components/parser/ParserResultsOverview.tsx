@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, ArrowRight, Check, GitCompare, ListTree } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import { memo, useMemo } from "react";
 import { buildParserFocusAreas } from "@/lib/parser-focus-analysis";
 import { resolveHandoffText } from "@/lib/workbench-handoff";
@@ -134,15 +135,10 @@ function ParserResultsOverview({
           </p>
         </div>
         {runs.length >= 2 && (
-          <button
-            type="button"
-            onClick={onCompare}
-            className="flex h-control-sm items-center gap-2 rounded-lg border border-border px-3 text-2xs
-                     font-medium text-card-foreground transition-smooth hover:border-border-darkest"
-          >
+          <Button variant="outline" size="sm" onClick={onCompare}>
             <GitCompare className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             Full comparison
-          </button>
+          </Button>
         )}
       </div>
 

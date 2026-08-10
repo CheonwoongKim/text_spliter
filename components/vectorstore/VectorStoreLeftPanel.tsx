@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/shared/Button";
 import type { VectorStoreConfig, DatabaseSchema } from "@/lib/types";
 import { getAuthToken } from "@/lib/auth";
 import {
@@ -179,14 +180,7 @@ function VectorStoreLeftPanel({
             Collections
           </h3>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              disabled={loading}
-              className="p-2 text-muted-foreground hover:text-card-foreground
-                       disabled:opacity-disabled disabled:cursor-not-allowed
-                       transition-smooth"
-              title="Create Collection"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setShowCreateModal(true)} disabled={loading} title="Create Collection">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -200,15 +194,8 @@ function VectorStoreLeftPanel({
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-            </button>
-            <button
-              onClick={onRefresh}
-              disabled={loading}
-              className="p-2 text-muted-foreground hover:text-card-foreground
-                       disabled:opacity-disabled disabled:cursor-not-allowed
-                       transition-smooth"
-              title="Refresh"
-            >
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onRefresh} disabled={loading} title="Refresh">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -222,7 +209,7 @@ function VectorStoreLeftPanel({
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

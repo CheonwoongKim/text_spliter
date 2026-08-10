@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Input } from "@/components/shared/FormFields";
+import { Button } from "@/components/shared/Button";
 import Image from "next/image";
 import { CheckCircle, CircleAlert, LoaderCircle } from "lucide-react";
 import { getAuthToken } from "@/lib/auth";
@@ -482,13 +484,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                   </svg>
                   Reset
                 </button>
-                <button
-                  onClick={handleSave}
-                  disabled={loading}
-                  className="flex h-control-md items-center gap-2 rounded-lg bg-surface-foreground px-3 text-xs
-                           font-medium text-surface transition-smooth hover:opacity-hover
-                           disabled:cursor-not-allowed disabled:opacity-disabled"
-                >
+                <Button variant="primary" size="md" onClick={handleSave} disabled={loading}>
                   {loading ? (
                     <>
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -505,7 +501,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                       Save
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -681,16 +677,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                           <label className="block text-2xs font-medium text-muted-foreground mb-2">
                             Service Account Email <span className="text-danger">*</span>
                           </label>
-                          <input
-                            type="password"
-                            value={keys.googleParserServiceAccountEmail}
-                            onChange={(e) => handleChange("googleParserServiceAccountEmail", e.target.value)}
-                            placeholder="your-service-account@project.iam.gserviceaccount.com"
-                            className="w-full h-10 px-3 border border-border rounded-lg
-                                     focus-ring
-                                     bg-surface text-card-foreground text-xs
-                                     placeholder-light"
-                          />
+                          <Input type="password" value={keys.googleParserServiceAccountEmail} onChange={(e) => handleChange("googleParserServiceAccountEmail", e.target.value)} placeholder="your-service-account@project.iam.gserviceaccount.com"/>
                           <p className="text-2xs text-muted-foreground mt-1">
                             From JSON key file: <code className="text-card-foreground">client_email</code> field
                           </p>
@@ -722,16 +709,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                           <label className="block text-2xs font-medium text-muted-foreground mb-2">
                             Project ID <span className="text-danger">*</span>
                           </label>
-                          <input
-                            type="password"
-                            value={keys.googleParserProjectId}
-                            onChange={(e) => handleChange("googleParserProjectId", e.target.value)}
-                            placeholder="your-project-id or 123456789"
-                            className="w-full h-10 px-3 border border-border rounded-lg
-                                     focus-ring
-                                     bg-surface text-card-foreground text-xs
-                                     placeholder-light"
-                          />
+                          <Input type="password" value={keys.googleParserProjectId} onChange={(e) => handleChange("googleParserProjectId", e.target.value)} placeholder="your-project-id or 123456789"/>
                           <p className="text-2xs text-muted-foreground mt-1">
                             From JSON key file: <code className="text-card-foreground">project_id</code> field, or from processor URL
                           </p>
@@ -741,16 +719,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                             <label className="block text-2xs font-medium text-muted-foreground mb-2">
                               Location <span className="text-danger">*</span>
                             </label>
-                            <input
-                              type="password"
-                              value={keys.googleParserLocation}
-                              onChange={(e) => handleChange("googleParserLocation", e.target.value)}
-                              placeholder="us, eu, or us-central1"
-                              className="w-full h-10 px-3 border border-border rounded-lg
-                                       focus-ring
-                                       bg-surface text-card-foreground text-xs
-                                       placeholder-light"
-                            />
+                            <Input type="password" value={keys.googleParserLocation} onChange={(e) => handleChange("googleParserLocation", e.target.value)} placeholder="us, eu, or us-central1"/>
                             <p className="text-2xs text-muted-foreground mt-1">
                               From processor URL: <code className="text-card-foreground">/locations/[location]/</code>
                             </p>
@@ -759,16 +728,7 @@ export default function LicensesPanel({ embedded = false }: LicensesPanelProps) 
                             <label className="block text-2xs font-medium text-muted-foreground mb-2">
                               Processor ID <span className="text-danger">*</span>
                             </label>
-                            <input
-                              type="password"
-                              value={keys.googleParserProcessorId}
-                              onChange={(e) => handleChange("googleParserProcessorId", e.target.value)}
-                              placeholder="9f9bd205a57448a5"
-                              className="w-full h-10 px-3 border border-border rounded-lg
-                                       focus-ring
-                                       bg-surface text-card-foreground text-xs
-                                       placeholder-light"
-                            />
+                            <Input type="password" value={keys.googleParserProcessorId} onChange={(e) => handleChange("googleParserProcessorId", e.target.value)} placeholder="9f9bd205a57448a5"/>
                             <p className="text-2xs text-muted-foreground mt-1">
                               From processor URL: <code className="text-card-foreground">/processors/[processor-id]:</code>
                             </p>

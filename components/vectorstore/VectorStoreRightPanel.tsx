@@ -1,6 +1,7 @@
 "use client";
 
 import { Database, LoaderCircle } from "lucide-react";
+import { Button } from "@/components/shared/Button";
 import { memo, useState, useCallback, useEffect } from "react";
 import type { TableDataResponse } from "@/lib/types";
 import { VDB_ROWS_PER_PAGE } from "@/lib/constants";
@@ -97,14 +98,7 @@ function VectorStoreRightPanel({
               )}
             </h3>
           </div>
-          <button
-            onClick={onRefresh}
-            disabled={loading || !selectedTable}
-            className="p-2 text-muted-foreground hover:text-card-foreground
-                     disabled:opacity-disabled disabled:cursor-not-allowed
-                     transition-smooth"
-            title="Refresh"
-          >
+          <Button variant="ghost" size="icon" onClick={onRefresh} disabled={loading || !selectedTable} title="Refresh">
             {loading ? (
               <svg
                 className="animate-spin h-4 w-4"
@@ -140,7 +134,7 @@ function VectorStoreRightPanel({
                 />
               </svg>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
