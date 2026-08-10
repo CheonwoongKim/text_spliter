@@ -16,6 +16,7 @@ import StoragePanel from "@/components/storage/StoragePanel";
 import FilesPanel from "@/components/storage/FilesPanel";
 import ParseResultDetailPanel from "@/components/parser/ParseResultDetailPanel";
 import EvaluationPanel from "@/components/evaluation/EvaluationPanel";
+import MemoryGuidePanel from "@/components/guides/MemoryGuidePanel";
 import { getAuthToken } from "@/lib/auth";
 import { useDocumentEngineSettings } from "@/lib/hooks/useDocumentEngineSettings";
 import { isVisionEngine } from "@/lib/document-engines";
@@ -208,6 +209,8 @@ export default function Home() {
 
     setParserLoading(true);
     setParserError(null);
+    setParseResult(null);
+    setParseRuns([]);
 
     try {
       const token = getAuthToken();
@@ -321,7 +324,9 @@ export default function Home() {
   }, [selectedFile]);
 
   const handleSelectParseRun = useCallback((runId: string) => {
-    const selectedRun = parseRuns.find((run) => run.run?.id === runId);
+    const selectedRun = parseRuns.find((run, index) => (
+      run.run?.id || `legacy-run-${index}`
+    ) === runId);
     if (selectedRun) setParseResult(selectedRun);
   }, [parseRuns]);
 
@@ -533,6 +538,8 @@ export default function Home() {
               <StoragePanel onNavigateToDetail={handleNavigateToParseDetail} />
             ) : activeMenu === "files" ? (
               <FilesPanel />
+            ) : activeMenu === "memory" ? (
+              <MemoryGuidePanel />
             ) : activeMenu === "evaluation" ? (
               <EvaluationPanel />
             ) : activeMenu === "parse-detail" && selectedParseResultId ? (
@@ -567,7 +574,7 @@ export default function Home() {
               </div>
             </div>
           ) : activeMenu === "parser" ? (
-            <div className="h-full grid grid-cols-1 gap-6 px-4 sm:px-6 lg:grid-cols-10 lg:gap-0 lg:px-10">
+            <div className="h-full grid grid-cols-1 gap-6 pr-4 sm:pr-6 lg:grid-cols-10 lg:gap-0 lg:pr-10">
               {/* Parser Left Panel */}
               <div className="h-full overflow-hidden lg:col-span-3 lg:border-r lg:border-border-subtle">
                 <ParserLeftPanel
@@ -588,7 +595,7 @@ export default function Home() {
               </div>
 
               {/* Parser Right Panel */}
-              <div className="h-full overflow-hidden lg:col-span-7 lg:pl-10">
+              <div className="h-full overflow-hidden pl-4 sm:pl-6 lg:col-span-7 lg:pl-10">
                 <ParserRightPanel
                   result={parseResult}
                   runs={parseRuns}

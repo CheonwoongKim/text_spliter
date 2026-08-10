@@ -5,6 +5,7 @@ export const APP_MENU_IDS = [
   "vectorstore",
   "evaluation",
   "files",
+  "memory",
   "settings",
   "mypage",
 ] as const;
@@ -31,7 +32,7 @@ export const APP_MENU_SECTIONS: ReadonlyArray<{
   {
     id: "resources",
     label: "Resources",
-    menuIds: ["files"],
+    menuIds: ["files", "memory"],
   },
 ];
 
@@ -45,6 +46,7 @@ export const APP_MENU_META: Record<
   vectorstore: { shortLabel: "Vectors", title: "Vector Store", breadcrumbRoot: "Workflow" },
   evaluation: { shortLabel: "Evaluate", title: "Evaluation", breadcrumbRoot: "Workflow" },
   files: { shortLabel: "Files", title: "Files", breadcrumbRoot: "Resources" },
+  memory: { shortLabel: "Memory", title: "Memory Guide", breadcrumbRoot: "Resources" },
   settings: { shortLabel: "Settings", title: "Settings", breadcrumbRoot: "Workspace" },
   mypage: { shortLabel: "My Page", title: "My Page", breadcrumbRoot: "Account" },
 };

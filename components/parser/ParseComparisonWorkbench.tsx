@@ -8,6 +8,7 @@ interface ParseComparisonWorkbenchProps {
   runs: ParseResponse[];
   selectedFile: File | null;
   onSelectRun?: (runId: string) => void;
+  sampleMode?: boolean;
 }
 
 type EvaluationCriterionId =
@@ -216,6 +217,7 @@ export default function ParseComparisonWorkbench({
   runs,
   selectedFile,
   onSelectRun,
+  sampleMode = false,
 }: ParseComparisonWorkbenchProps) {
   const runEntries = useMemo(
     () => runs.map((run, index) => ({ id: runId(run, index), run, index })),
@@ -338,7 +340,7 @@ export default function ParseComparisonWorkbench({
               <div>
                 <p className="text-2xs font-semibold text-card-foreground">Original</p>
                 <p className="text-2xs text-muted-foreground truncate mt-1">
-                  {selectedFile?.name || "Source file unavailable"}
+                  {selectedFile?.name || (sampleMode ? "product-brief.pdf" : "Source file unavailable")}
                 </p>
               </div>
               {selectedFile && (
@@ -354,6 +356,24 @@ export default function ParseComparisonWorkbench({
             ) : previewUrl && selectedFile?.type.startsWith("image/") ? (
               <div className="h-full min-h-[420px] flex items-center justify-center p-3">
                 <img src={previewUrl} alt={selectedFile.name} className="max-w-full max-h-[520px] object-contain" />
+              </div>
+            ) : sampleMode ? (
+              <div className="h-full min-h-[420px] p-6">
+                <div className="mx-auto max-w-[520px] rounded-lg border border-border bg-card p-6 shadow-sm">
+                  <p className="text-base font-semibold text-card-foreground">2026 Product Brief</p>
+                  <p className="mt-4 text-xs leading-5 text-card-foreground">
+                    Document processing converts the source file into structured text while
+                    preserving headings, paragraphs, and tables.
+                  </p>
+                  <div className="mt-6 grid grid-cols-2 border border-border text-2xs">
+                    <div className="bg-upload-zone px-3 py-2 font-medium text-card-foreground">Metric</div>
+                    <div className="border-l border-border bg-upload-zone px-3 py-2 font-medium text-card-foreground">Result</div>
+                    <div className="border-t border-border px-3 py-2 text-muted-foreground">Text accuracy</div>
+                    <div className="border-l border-t border-border px-3 py-2 text-card-foreground">98.4%</div>
+                    <div className="border-t border-border px-3 py-2 text-muted-foreground">Pages</div>
+                    <div className="border-l border-t border-border px-3 py-2 text-card-foreground">12</div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="h-full min-h-[420px] flex items-center justify-center p-8 text-center">

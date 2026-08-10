@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BrainCircuit,
   Boxes,
   ClipboardCheck,
   Database,
@@ -29,6 +30,7 @@ const MENU_ICONS = {
   vectorstore: Boxes,
   evaluation: ClipboardCheck,
   files: Folder,
+  memory: BrainCircuit,
 } satisfies Record<SidebarMenu, LucideIcon>;
 
 interface MenuButtonProps {

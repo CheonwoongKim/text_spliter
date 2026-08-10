@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowRight, CloudUpload, FileText, LoaderCircle, RotateCcw, X } from "lucide-react";
+import { ArrowRight, Check, CloudUpload, FileText, FolderOpen, LoaderCircle, RotateCcw, Settings, X } from "lucide-react";
 import { memo, useCallback, useEffect, useState } from "react";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { getAuthToken } from "@/lib/auth";
-import { getDocumentEngine, listDocumentEngines } from "@/lib/document-engines";
+import { listDocumentEngines } from "@/lib/document-engines";
 import { buildParserExperimentEngines } from "@/lib/parser-experiment";
 import {
   getParserFileTypeProfile,
@@ -61,15 +62,15 @@ function ParserLeftPanel({
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [selectedFileKey, setSelectedFileKey] = useState<string | null>(null);
   const [additionalExperimentEngines, setAdditionalExperimentEngines] = useState<DocumentEngineType[]>([]);
+  const additionalEngineOptions = documentEngines.filter(
+    (engine) => engine.engineType !== primaryEngine
+  );
+  const orderedAdditionalEngines = additionalEngineOptions
+    .filter((engine) => additionalExperimentEngines.includes(engine.engineType))
+    .map((engine) => engine.engineType);
   const experimentEngines = buildParserExperimentEngines(
     primaryEngine,
-    additionalExperimentEngines
-  );
-  const primaryEngineDefinition = getDocumentEngine(primaryEngine);
-  const availableAdditionalEngines = documentEngines.filter(
-    (engine) =>
-      engine.engineType !== primaryEngine
-      && !additionalExperimentEngines.includes(engine.engineType)
+    orderedAdditionalEngines
   );
   const acceptedFileProfile = getParserFileTypeProfile(experimentEngines);
   const selectedFileSupported = selectedFile
@@ -84,17 +85,14 @@ function ParserLeftPanel({
     );
   }, [primaryEngine]);
 
-  const addExperimentEngine = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    const engineType = event.target.value as DocumentEngineType;
-    if (!engineType || engineType === primaryEngine) return;
+  const toggleExperimentEngine = useCallback((
+    engineType: DocumentEngineType,
+    selected: boolean,
+  ) => {
     setAdditionalExperimentEngines((current) =>
-      current.includes(engineType) ? current : [...current, engineType]
-    );
-  }, [primaryEngine]);
-
-  const removeExperimentEngine = useCallback((engineType: DocumentEngineType) => {
-    setAdditionalExperimentEngines((current) =>
-      current.filter((candidate) => candidate !== engineType)
+      selected
+        ? current.includes(engineType) ? current : [...current, engineType]
+        : current.filter((candidate) => candidate !== engineType)
     );
   }, []);
 
@@ -172,7 +170,7 @@ function ParserLeftPanel({
 
   return (
     <div className="relative flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto py-6 pb-16 lg:pr-10">
+      <div className="min-h-0 flex-1 overflow-y-auto py-6 pb-6 pl-4 sm:pl-6 lg:pl-10 lg:pr-10">
         <section className="mb-10">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex gap-1 rounded-lg bg-muted p-1">
@@ -215,31 +213,32 @@ function ParserLeftPanel({
           <div className="h-parser-file-zone">
             {uploadMode === "upload" ? (
               selectedFile ? (
-                <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border">
-                  <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted px-3 py-3">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <svg className="h-4 w-4 shrink-0 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <span className="truncate text-xs font-medium text-card-foreground">
-                        {selectedFile.name}
-                      </span>
-                    </div>
-                    <button type="button" onClick={clearSelectedFile} className="text-xs text-muted-foreground transition-smooth hover:text-card-foreground">
-                      Clear
-                    </button>
-                  </div>
-                  <div className="flex min-h-0 flex-1 items-center gap-3 overflow-auto p-4">
-                    <FileText className="h-8 w-8 shrink-0 text-muted-foreground" strokeWidth={1} aria-hidden="true" />
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-medium text-card-foreground">
-                        {selectedFile.name}
-                      </p>
-                      <p className="mt-1 text-2xs text-muted-foreground">
-                        {selectedFile.type || "Unknown type"} · {(selectedFile.size / 1024).toFixed(2)} KB
-                        {selectedFileKey ? " · from storage" : ""}
-                      </p>
-                    </div>
+                <div className="relative flex h-full flex-col items-center justify-center gap-3 overflow-hidden
+                                rounded-lg border border-border bg-upload-zone px-10 text-center">
+                  <button
+                    type="button"
+                    onClick={clearSelectedFile}
+                    aria-label="Clear selected file"
+                    title="Clear selected file"
+                    className="absolute right-3 top-3 flex h-control-sm w-control-sm items-center justify-center
+                             rounded-lg text-muted-foreground transition-smooth hover:bg-muted
+                             hover:text-card-foreground focus-ring"
+                  >
+                    <X className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
+                  </button>
+                  <FileText
+                    className="h-6 w-6 shrink-0 text-muted-foreground"
+                    strokeWidth={1}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 max-w-full">
+                    <p className="truncate text-xs font-medium text-card-foreground">
+                      {selectedFile.name}
+                    </p>
+                    <p className="mt-1 text-2xs text-muted-foreground">
+                      {selectedFile.type || "Unknown type"} · {(selectedFile.size / 1024).toFixed(2)} KB
+                      {selectedFileKey ? " · from storage" : ""}
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -294,14 +293,18 @@ function ParserLeftPanel({
                     <LoaderCircle className="h-icon-md w-icon-md animate-spin text-muted-foreground" strokeWidth={1} aria-hidden="true" />
                   </div>
                 ) : storageFiles.length === 0 ? (
-                  <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-                    <svg className="h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                    </svg>
-                    <p className="text-xs text-muted-foreground">
-                      No files in storage.<br />Upload files in the Files page.
-                    </p>
-                  </div>
+                  <EmptyState
+                    className="flex-1"
+                    icon={(
+                      <FolderOpen
+                        className="h-6 w-6"
+                        strokeWidth={1}
+                        aria-hidden="true"
+                      />
+                    )}
+                    title="No files in storage"
+                    description="Upload files from the Files page to select them here."
+                  />
                 ) : (
                   <div className="flex-1 overflow-y-auto p-2">
                     {storageFiles.map((file) => {
@@ -345,9 +348,12 @@ function ParserLeftPanel({
             <button
               type="button"
               onClick={() => onOpenSettings(primaryEngine)}
-              className="shrink-0 text-xs font-medium text-card-foreground transition-smooth hover:text-muted-foreground"
+              aria-label="Engine settings"
+              title="Engine settings"
+              className="flex h-control-sm w-control-sm shrink-0 items-center justify-center rounded-lg
+                       text-card-foreground transition-smooth hover:bg-muted focus-ring"
             >
-              Engine settings
+              <Settings className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
             </button>
           </div>
 
@@ -368,18 +374,12 @@ function ParserLeftPanel({
           >
             {documentEngines.map((engine) => (
               <option key={engine.id} value={engine.engineType}>
-                {engine.kind === "vision" ? `Vision · ${engine.displayName}` : `Parser · ${engine.displayName}`}
+                {engine.displayName} ({persistedEngines.has(engine.engineType) ? "saved" : "default"})
               </option>
             ))}
           </select>
 
-          <p className="mt-2 text-2xs text-muted-foreground">
-            {primaryEngineDefinition.kind === "vision" ? "Vision model" : "Parser"}
-            {" · "}
-            {persistedEngines.has(primaryEngine) ? "Saved settings" : "Default settings"}
-          </p>
-
-          <div className="mt-6 border-t border-border-subtle pt-6">
+          <div className="mt-6">
             <div className="mb-3">
               <p className="text-xs font-medium text-card-foreground">
                 2. Additional engines <span className="font-normal text-muted-foreground">(optional)</span>
@@ -389,69 +389,48 @@ function ParserLeftPanel({
               </p>
             </div>
 
-            <select
-              value=""
-              onChange={addExperimentEngine}
-              disabled={loading || availableAdditionalEngines.length === 0}
-              aria-label="Add an additional engine"
-              className="h-control-xl w-full rounded-lg border border-border bg-card px-3 text-xs
-                       text-card-foreground transition-smooth focus-ring
-                       disabled:cursor-not-allowed disabled:opacity-disabled"
+            <div
+              role="group"
+              aria-label="Additional engines"
+              className="overflow-hidden rounded-lg border border-border"
             >
-              <option value="">
-                {availableAdditionalEngines.length === 0 ? "All engines added" : "Add an engine"}
-              </option>
-              {availableAdditionalEngines.map((engine) => (
-                <option key={engine.id} value={engine.engineType}>
-                  {engine.kind === "vision" ? `Vision · ${engine.displayName}` : `Parser · ${engine.displayName}`}
-                </option>
-              ))}
-            </select>
-
-            {additionalExperimentEngines.length > 0 && (
-              <div className="mt-2 space-y-2">
-                {additionalExperimentEngines.map((engineType) => {
-                  const engine = getDocumentEngine(engineType);
-                  return (
-                    <div
-                      key={engine.id}
-                      className="flex h-parser-engine-option items-center gap-3 rounded-lg border border-border bg-upload-zone px-3"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-medium text-card-foreground">
-                          {engine.displayName}
-                        </span>
-                        <span className="block truncate text-2xs text-muted-foreground">
-                          {engine.kind === "vision" ? "Vision model" : "Parser"} · {engine.provider}
-                        </span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => removeExperimentEngine(engine.engineType)}
+              {additionalEngineOptions.map((engine, index) => {
+                const selected = additionalExperimentEngines.includes(engine.engineType);
+                return (
+                  <label
+                    key={engine.id}
+                    className={`flex h-control-xl cursor-pointer items-center gap-3 px-3 transition-smooth
+                              hover:bg-muted ${index > 0 ? "border-t border-border" : ""}
+                              ${loading ? "cursor-not-allowed opacity-disabled" : ""}`}
+                  >
+                    <span className="relative h-4 w-4 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={(event) => toggleExperimentEngine(
+                          engine.engineType,
+                          event.target.checked,
+                        )}
                         disabled={loading}
-                        aria-label={`Remove ${engine.displayName}`}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground
-                                 transition-smooth hover:bg-muted hover:text-card-foreground focus-ring
-                                 disabled:cursor-not-allowed disabled:opacity-disabled"
-                      >
-                        <X className="h-4 w-4" strokeWidth={1} aria-hidden="true" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6 rounded-lg bg-upload-zone px-3 py-3">
-            <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-              Run order
-            </p>
-            <p className="mt-1 truncate text-xs text-card-foreground">
-              {experimentEngines
-                .map((engineType) => getDocumentEngine(engineType).displayName)
-                .join(" → ")}
-            </p>
+                        className="h-4 w-4 appearance-none rounded-lg border border-border bg-card
+                                 checked:border-surface-foreground checked:bg-surface-foreground
+                                 focus:outline-none focus-visible:border-surface-foreground"
+                      />
+                      {selected && (
+                        <Check
+                          className="pointer-events-none absolute inset-0 m-auto h-3 w-3 text-card"
+                          strokeWidth={1.5}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-xs text-card-foreground">
+                      {engine.displayName}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
           </div>
 
           {settingsLoading && (
@@ -472,8 +451,10 @@ function ParserLeftPanel({
         </section>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-card px-6 py-6">
-        <div className="flex items-center justify-between">
+      <div className="shrink-0">
+        <div className="w-full bg-card/90 shadow-sm backdrop-blur-sm">
+          <div className="h-px w-full bg-border" aria-hidden="true" />
+          <div className="flex items-center justify-between px-4 py-4 sm:px-6 lg:px-10">
           <button
             type="button"
             onClick={onReset}
@@ -518,6 +499,7 @@ function ParserLeftPanel({
               </>
             )}
           </button>
+          </div>
         </div>
       </div>
     </div>
