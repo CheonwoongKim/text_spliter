@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronRight, Settings, UserRound, type LucideIcon } from "lucide-react";
+import { ChevronRight, House, Settings, UserRound, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shared/Button";
 import {
   APP_MENU_META,
+  DEFAULT_APP_MENU,
   TOP_BAR_MENU_IDS,
   type AppMenu,
   type TopBarMenu,
@@ -28,21 +29,30 @@ export default function Header({ breadcrumbs, activeMenu, onMenuChange }: Header
             below the bar cost a line of vertical space on every screen. */}
         <nav aria-label="현재 위치" className="min-w-0">
           <ol className="flex min-w-0 items-center gap-2">
+            <li className="flex shrink-0 items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onMenuChange(DEFAULT_APP_MENU)}
+                aria-label="홈으로 이동"
+                title="홈"
+              >
+                <House className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              </Button>
+            </li>
             {breadcrumbs.map((breadcrumb, index) => {
               const isCurrent = index === breadcrumbs.length - 1;
 
               return (
                 <li key={`${breadcrumb}-${index}`} className="flex min-w-0 items-center gap-2">
-                  {index > 0 && (
-                    <ChevronRight
-                      className="h-3 w-3 shrink-0 text-muted-foreground"
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  )}
+                  <ChevronRight
+                    className="h-3 w-3 shrink-0 text-muted-foreground"
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
                   {isCurrent ? (
                     <h1
-                      className="truncate text-base font-semibold text-card-foreground"
+                      className="truncate text-2xs font-semibold text-card-foreground"
                       aria-current="page"
                     >
                       {breadcrumb}

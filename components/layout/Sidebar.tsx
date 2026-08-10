@@ -51,10 +51,9 @@ interface MenuButtonProps {
  * Selection is carried by weight as well as colour, so it survives for a reader
  * who cannot separate these two greys. Icon and label thicken together.
  *
- * Lucide strokes are expressed against a 24 unit viewBox, so a 20px icon
- * renders them at 0.83 of their nominal width. A stroke of 1 lands under a
- * device pixel and is antialiased toward the background, which lightens the
- * icon relative to the label beside it; 1.5 keeps the stroke at full strength.
+ * Lucide strokes are expressed against a 24 unit viewBox. At the compact 16px
+ * GNB size, a stroke of 1 lands under a device pixel and is antialiased toward
+ * the background; 1.5 keeps the resting stroke at one full pixel.
  */
 function MenuButton({ menu, activeMenu, onMenuChange }: MenuButtonProps) {
   const meta = APP_MENU_META[menu];
@@ -75,7 +74,7 @@ function MenuButton({ menu, activeMenu, onMenuChange }: MenuButtonProps) {
       title={meta.title}
     >
       <MenuIcon
-        className="mb-1 h-icon-md w-icon-md"
+        className="mb-1 h-icon-sm w-icon-sm"
         strokeWidth={isActive ? 2 : 1.5}
         aria-hidden="true"
       />
@@ -88,13 +87,16 @@ function MenuButton({ menu, activeMenu, onMenuChange }: MenuButtonProps) {
 
 function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
   return (
-    <aside className="flex w-sidebar flex-col items-center overflow-y-auto border-r border-border-subtle bg-card py-6">
+    <aside className="flex w-sidebar flex-col items-center border-r border-border-subtle bg-card">
       {/* Logo */}
-      <div className="mb-8">
-        <h1 className="text-card-foreground font-bold text-lg tracking-tight">BGK</h1>
+      <div className="flex h-topbar w-full shrink-0 items-center justify-center">
+        <h1 className="text-card-foreground font-bold text-base tracking-tight">BGK</h1>
       </div>
 
-      <nav className="flex min-h-0 flex-1 flex-col items-center" aria-label="주 메뉴">
+      <nav
+        className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto pb-6 pt-6"
+        aria-label="주 메뉴"
+      >
         {APP_MENU_SECTIONS.map((section, index) => (
           <Fragment key={section.id}>
             {index > 0 && (

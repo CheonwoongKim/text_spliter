@@ -115,13 +115,14 @@
   --ds-z-toast: 40;
 
   /* Reusable component dimensions */
+  --ds-icon-sm: 1rem;
   --ds-icon-md: 1.25rem;
   --ds-control-sm: 2rem;
   --ds-control-md: 2.25rem;
   --ds-control-lg: 2.5rem;
   --ds-control-xl: 3rem;
-  --ds-layout-topbar-height: 3.5rem;
-  --ds-layout-sidebar-width: 4.5rem;
+  --ds-layout-topbar-height: 3rem;
+  --ds-layout-sidebar-width: 4rem;
   --ds-layout-auth-width: 22.5rem;
   --ds-parser-file-zone-height: 12.5rem;
   --ds-parser-engine-option-height: 3.5rem;

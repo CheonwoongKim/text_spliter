@@ -2,7 +2,7 @@
 
 import { memo, useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/shared/Button";
-import { Folder } from "lucide-react";
+import { Download, FileText, Folder, Trash2 } from "lucide-react";
 import PagePanel from "@/components/shared/PagePanel";
 import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
@@ -15,12 +15,36 @@ interface FileItem {
   uploaded_at: string;
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const index = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${Math.round(bytes / Math.pow(k, index) * 100) / 100} ${sizes[index]}`;
+}
+
+function formatUploadDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function fileType(filename: string): string {
+  const extension = filename.split(".").pop();
+  return extension && extension !== filename ? extension.toUpperCase() : "파일";
+}
+
 const FilesPanel = memo(function FilesPanel() {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -75,21 +99,6 @@ const FilesPanel = memo(function FilesPanel() {
     fetchFiles();
   }, [fetchFiles]);
 
-  useEffect(() => {
-    const handleClickOutside = () => {
-      if (openMenuId !== null) {
-        setOpenMenuId(null);
-      }
-    };
-
-    if (openMenuId !== null) {
-      document.addEventListener('click', handleClickOutside);
-      return () => {
-        document.removeEventListener('click', handleClickOutside);
-      };
-    }
-  }, [openMenuId]);
-
   const handleFileSelect = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -140,7 +149,6 @@ const FilesPanel = memo(function FilesPanel() {
 
   const handleDelete = useCallback(
     async (filename: string) => {
-      setOpenMenuId(null);
       if (!confirm("Are you sure you want to delete this file?")) {
         return;
       }
@@ -175,12 +183,7 @@ const FilesPanel = memo(function FilesPanel() {
     [fetchFiles]
   );
 
-  const toggleMenu = useCallback((fileId: string) => {
-    setOpenMenuId(prev => prev === fileId ? null : fileId);
-  }, []);
-
   const handleDownload = useCallback(async (storageKey: string, filename: string) => {
-    setOpenMenuId(null);
     try {
       const token = getAuthToken();
       if (!token) {
@@ -259,14 +262,6 @@ const FilesPanel = memo(function FilesPanel() {
     }
   }, []);
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
-  };
-
   const filteredFiles = files.filter((file) =>
     file.filename.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -304,22 +299,26 @@ const FilesPanel = memo(function FilesPanel() {
   )];
 
   // Get files in current path (not in subfolders)
+  // A stored file must never disappear from the list. If its name cannot be
+  // recovered it is shown under its storage key rather than filtered out, so
+  // the row stays reachable for preview and deletion.
   const currentFiles = filteredFiles.filter(f => {
     const relativePath = currentPathString
       ? f.filename.slice(currentPathPrefix.length)
       : f.filename;
-    // File is in current directory if it doesn't contain '/'
-    return relativePath && !relativePath.includes('/');
-  }).map(file => ({
-    ...file,
-    displayName: currentPathString
+    return !relativePath.includes('/');
+  }).map(file => {
+    const relativePath = currentPathString
       ? file.filename.slice(currentPathPrefix.length)
-      : file.filename
-  }));
+      : file.filename;
+    return {
+      ...file,
+      displayName: relativePath || file.storage_key.split('/').pop() || "(이름 없는 파일)",
+    };
+  });
 
   return (
     <PagePanel
-      description="실험에 사용할 원본 문서를 올리고 관리합니다."
       toolbar={<>
         {/* Single Row: Breadcrumb, Search, Actions */}
         <div className="grid grid-cols-1 items-center gap-3 lg:grid-cols-3 lg:gap-6">
@@ -524,156 +523,124 @@ const FilesPanel = memo(function FilesPanel() {
         {loading && files.length === 0 ? (
           <PanelPlaceholder loading title="문서를 불러오는 중" />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {folders.length === 0 && currentFiles.length === 0 && (
-              <div className="col-span-full rounded-lg border border-dashed border-border bg-card p-8 text-center">
-                <Folder
-                  className="mx-auto mb-3 h-icon-md w-icon-md text-muted-foreground"
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                />
-                <p className="text-xs font-medium text-card-foreground">
-                  {files.length === 0 ? "아직 올린 문서가 없습니다" : "검색 결과가 없습니다"}
-                </p>
-                <p className="mt-1 text-2xs text-muted-foreground">
-                  {files.length === 0
-                    ? "문서를 올리면 파싱·청킹 실험의 원본으로 사용할 수 있습니다."
-                    : "검색어를 바꾸거나 상위 폴더로 이동해 보세요."}
-                </p>
-                {files.length === 0 && (
-                  <Button variant="primary" size="sm" className="mt-4" onClick={handleFileSelect}>
-                    문서 올리기
-                  </Button>
+          <div className="min-w-[720px] overflow-hidden rounded-lg border border-border bg-card">
+            <table className="w-full table-fixed">
+              <thead className="sticky top-0 z-navigation border-b border-border bg-muted">
+                <tr>
+                  <th className="w-auto px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    이름
+                  </th>
+                  <th className="w-28 px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    유형
+                  </th>
+                  <th className="w-28 px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    크기
+                  </th>
+                  <th className="w-48 px-4 py-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    업로드 일시
+                  </th>
+                  <th className="w-28 px-4 py-3 text-center text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    동작
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-subtle">
+                {folders.length === 0 && currentFiles.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center">
+                      <Folder
+                        className="mx-auto mb-3 h-icon-md w-icon-md text-muted-foreground"
+                        strokeWidth={1.5}
+                        aria-hidden="true"
+                      />
+                      <p className="text-xs font-medium text-card-foreground">
+                        {files.length === 0 ? "아직 올린 문서가 없습니다" : "검색 결과가 없습니다"}
+                      </p>
+                      <p className="mt-1 text-2xs text-muted-foreground">
+                        {files.length === 0
+                          ? "문서를 올리면 파싱·청킹 실험의 원본으로 사용할 수 있습니다."
+                          : "검색어를 바꾸거나 상위 폴더로 이동해 보세요."}
+                      </p>
+                      {files.length === 0 && (
+                        <Button variant="primary" size="sm" className="mt-4" onClick={handleFileSelect}>
+                          문서 올리기
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  <>
+                    {folders.map((folder) => (
+                      <tr key={`folder-${folder}`} className="transition-smooth hover:bg-muted">
+                        <td className="px-4 py-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="max-w-full justify-start px-0"
+                            onClick={() => setCurrentPath([...currentPath, folder])}
+                            title={folder}
+                          >
+                            <Folder className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                            <span className="truncate text-xs font-medium">{folder}</span>
+                          </Button>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">폴더</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">-</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">-</td>
+                        <td className="px-4 py-3 text-center text-xs text-muted-foreground">-</td>
+                      </tr>
+                    ))}
+                    {currentFiles.map((file) => (
+                      <tr key={`file-${file.id}`} className="transition-smooth hover:bg-muted">
+                        <td className="px-4 py-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="max-w-full justify-start px-0"
+                            onClick={() => handlePreview(file)}
+                            title={file.filename}
+                          >
+                            <FileText className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                            <span className="truncate text-xs font-medium">{file.displayName}</span>
+                          </Button>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {fileType(file.displayName)}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {formatFileSize(file.file_size)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
+                          {formatUploadDate(file.uploaded_at)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDownload(file.storage_key, file.filename)}
+                              aria-label={`${file.displayName} 다운로드`}
+                              title="다운로드"
+                            >
+                              <Download className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                            </Button>
+                            <Button
+                              variant="dangerGhost"
+                              size="icon"
+                              onClick={() => handleDelete(file.storage_key)}
+                              aria-label={`${file.displayName} 삭제`}
+                              title="삭제"
+                            >
+                              <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </>
                 )}
-              </div>
-            )}
-            {/* Folder Cards */}
-            {folders.map((folder) => (
-              <div
-                key={folder}
-                onClick={() => setCurrentPath([...currentPath, folder])}
-                className="bg-card border border-border rounded-lg p-4 hover:bg-muted hover:border-border-darkest transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Folder Icon */}
-                  <div className="flex-shrink-0 w-10 h-10 bg-upload-zone rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-card-foreground"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                      />
-                    </svg>
-                  </div>
-
-                  {/* Folder Info */}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-card-foreground truncate" title={folder}>
-                      {folder}
-                    </p>
-                    <p className="text-2xs text-muted-foreground mt-1">Folder</p>
-                  </div>
-
-                  {/* Arrow Icon */}
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="w-4 h-4 text-muted-foreground group-hover:text-card-foreground transition-smooth"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* File Cards */}
-            {currentFiles.map((file) => (
-              <div
-                key={file.id}
-                onClick={() => handlePreview(file)}
-                className="bg-card border border-border rounded-lg p-4 hover:bg-muted hover:border-border-darkest transition-all group cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  {/* File Icon */}
-                  <div className="flex-shrink-0 w-10 h-10 bg-upload-zone rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-card-foreground"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-
-                  {/* File Info */}
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className="text-xs font-medium text-card-foreground truncate"
-                      title={file.filename}
-                    >
-                      {file.displayName}
-                    </p>
-                    <p className="text-2xs text-muted-foreground mt-1">
-                      {formatFileSize(file.file_size)}
-                    </p>
-                  </div>
-
-                  {/* More Button */}
-                  <div className="relative flex-shrink-0">
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleMenu(file.id); }} title="더 보기">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                      </svg>
-                    </Button>
-
-                    {/* Dropdown Menu */}
-                    {openMenuId === file.id && (
-                      <div className="absolute right-0 top-full mt-1 w-40 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-dropdown">
-                        <button
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleDownload(file.storage_key, file.filename);
-                          }}
-                          className="w-full px-4 py-3 text-left text-xs text-card-foreground hover:bg-muted transition-smooth flex items-center gap-2"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                          다운로드
-                        </button>
-                        <button
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleDelete(file.storage_key);
-                          }}
-                          className="w-full px-4 py-3 text-left text-xs text-danger hover:bg-danger-surface transition-smooth flex items-center gap-2"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          삭제
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

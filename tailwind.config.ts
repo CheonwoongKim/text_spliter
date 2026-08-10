@@ -138,6 +138,7 @@ const config: Config = {
         "10": "var(--ds-space-10)",
         "12": "var(--ds-space-12)",
         "16": "var(--ds-space-16)",
+        "icon-sm": "var(--ds-icon-sm)",
         "icon-md": "var(--ds-icon-md)",
         "control-sm": "var(--ds-control-sm)",
         "control-md": "var(--ds-control-md)",

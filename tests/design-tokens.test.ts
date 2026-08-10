@@ -36,9 +36,10 @@ test("Korean-first typography uses readable line height and neutral tracking", (
   // IBM Plex Sans KR already sets Hangul tightly; see typography-metrics.test.ts.
   assert.match(tokens, /--ds-letter-spacing-normal: 0em/);
   assert.match(tokens, /--ds-letter-spacing-mono: 0/);
+  assert.match(tokens, /--ds-icon-sm: 1rem/);
   assert.match(tokens, /--ds-icon-md: 1\.25rem/);
-  assert.match(tokens, /--ds-layout-topbar-height: 3\.5rem/);
-  assert.match(tokens, /--ds-layout-sidebar-width: 4\.5rem/);
+  assert.match(tokens, /--ds-layout-topbar-height: 3rem/);
+  assert.match(tokens, /--ds-layout-sidebar-width: 4rem/);
   assert.match(tokens, /--ds-layout-auth-width: 22\.5rem/);
   assert.match(tokens, /--ds-parser-file-zone-height: 12\.5rem/);
   assert.match(tokens, /--ds-parser-engine-option-height: 3\.5rem/);

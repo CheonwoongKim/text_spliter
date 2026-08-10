@@ -78,7 +78,7 @@ function renderedStrokePx(strokeWidth: number, iconPx: number): number {
 }
 
 test("navigation icons draw at a full pixel or more", () => {
-  const iconRem = tokens.match(/--ds-icon-md:\s*([\d.]+)rem/);
+  const iconRem = tokens.match(/--ds-icon-sm:\s*([\d.]+)rem/);
   assert.ok(iconRem, "the navigation icon size must be a rem token");
   const iconPx = Number(iconRem[1]) * 16;
 

@@ -67,13 +67,13 @@ test("an empty list keeps its own structure instead of being replaced", () => {
 
   assert.match(
     files,
-    /grid grid-cols-1[\s\S]{0,400}col-span-full/,
-    "the file grid stays and the notice sits inside it",
+    /<table className="w-full table-fixed">[\s\S]*<td colSpan=\{5\}/,
+    "the file table keeps its columns and the notice sits inside it",
   );
   assert.doesNotMatch(
     files,
     /files\.length === 0 \? \(\s*<div className="flex flex-col items-center/,
-    "an empty file list must not swap the grid out for a centred block",
+    "an empty file list must not swap the table out for a centred block",
   );
 
   assert.match(tables, /<td colSpan=\{colSpan\}/, "the table keeps its columns when empty");

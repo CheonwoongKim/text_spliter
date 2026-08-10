@@ -34,8 +34,10 @@ test("the page heading is declared once, in the top bar", () => {
     /<h1/,
     "the last breadcrumb already names the page; repeating it costs a line everywhere",
   );
-  assert.match(header, /<h1[\s\S]{0,120}text-base font-semibold/, "the top bar carries it");
+  assert.match(header, /<h1[\s\S]{0,120}text-2xs font-semibold/, "the top bar carries it at 11px");
   assert.match(header, /aria-current="page"/);
+  assert.match(header, /<House[\s\S]{0,100}aria-hidden="true"/, "breadcrumbs begin with home");
+  assert.match(header, /onMenuChange\(DEFAULT_APP_MENU\)/, "home returns to the default workspace");
 });
 
 test("a page with nothing of its own renders no second header", () => {

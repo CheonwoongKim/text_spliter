@@ -3,6 +3,7 @@ import 'server-only';
 import { createHash } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { FILE_UPLOAD_CONFIG } from '@/lib/constants';
+import { originalNameFromStoredName, storedNameFromFileName } from '@/lib/document-name';
 import { DOCUMENT_LIST_PAGE_SIZE, DOCUMENTS_BUCKET } from '@/lib/storage-config';
 import { ValidationError } from '@/lib/validation';
 
@@ -14,20 +15,6 @@ export interface StoredDocument {
   contentType: string;
   createdAt: string;
   updatedAt: string;
-}
-
-function safeFileName(fileName: string): string {
-  const sanitized = fileName
-    .normalize('NFKC')
-    .replace(/[\\/\u0000-\u001f\u007f]/g, '_')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return (sanitized || 'document').slice(0, 180);
-}
-
-function originalNameFromStoredName(name: string): string {
-  return /^[a-f0-9]{64}-/.test(name) ? name.slice(65) : name;
 }
 
 export function assertUserDocumentKey(key: string, userId: string): string {
@@ -58,7 +45,7 @@ export async function uploadDocument(
 
   const bytes = Buffer.from(await file.arrayBuffer());
   const hash = createHash('sha256').update(bytes).digest('hex');
-  const key = `${userId}/${hash}-${safeFileName(file.name)}`;
+  const key = `${userId}/${hash}-${storedNameFromFileName(file.name)}`;
   const contentType = file.type || 'application/octet-stream';
   const { error } = await supabase.storage.from(DOCUMENTS_BUCKET).upload(key, bytes, {
     contentType,
@@ -118,7 +105,4 @@ export async function listUserDocuments(
   return documents;
 }
 
-export function fileNameFromDocumentKey(key: string): string {
-  const storedName = key.split('/').pop() || key;
-  return originalNameFromStoredName(storedName);
-}
+export { fileNameFromDocumentKey } from '@/lib/document-name';
