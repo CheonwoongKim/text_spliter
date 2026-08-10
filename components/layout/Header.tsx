@@ -24,26 +24,34 @@ export default function Header({ breadcrumbs, activeMenu, onMenuChange }: Header
   return (
     <header className="h-topbar border-b border-border-subtle bg-card">
       <div className="h-full px-4 sm:px-6 lg:px-10 flex items-center justify-between">
-        <nav aria-label="Breadcrumb">
-          <ol className="flex items-center gap-2 text-2xs font-normal">
+        {/* The last crumb is the page, so it is the page heading. Repeating it
+            below the bar cost a line of vertical space on every screen. */}
+        <nav aria-label="현재 위치" className="min-w-0">
+          <ol className="flex min-w-0 items-center gap-2">
             {breadcrumbs.map((breadcrumb, index) => {
               const isCurrent = index === breadcrumbs.length - 1;
 
               return (
-                <li key={`${breadcrumb}-${index}`} className="flex items-center gap-2">
+                <li key={`${breadcrumb}-${index}`} className="flex min-w-0 items-center gap-2">
                   {index > 0 && (
                     <ChevronRight
-                      className="h-3 w-3 text-subdued"
+                      className="h-3 w-3 shrink-0 text-muted-foreground"
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />
                   )}
-                  <span
-                    className={isCurrent ? "text-card-foreground" : "text-subdued"}
-                    aria-current={isCurrent ? "page" : undefined}
-                  >
-                    {breadcrumb}
-                  </span>
+                  {isCurrent ? (
+                    <h1
+                      className="truncate text-base font-semibold text-card-foreground"
+                      aria-current="page"
+                    >
+                      {breadcrumb}
+                    </h1>
+                  ) : (
+                    <span className="shrink-0 text-2xs font-normal text-muted-foreground">
+                      {breadcrumb}
+                    </span>
+                  )}
                 </li>
               );
             })}

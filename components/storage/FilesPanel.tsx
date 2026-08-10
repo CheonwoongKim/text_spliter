@@ -2,6 +2,7 @@
 
 import { memo, useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/shared/Button";
+import { Folder } from "lucide-react";
 import PagePanel from "@/components/shared/PagePanel";
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 
@@ -317,30 +318,34 @@ const FilesPanel = memo(function FilesPanel() {
 
   return (
     <PagePanel
-      title="문서"
       description="실험에 사용할 원본 문서를 올리고 관리합니다."
       toolbar={<>
         {/* Single Row: Breadcrumb, Search, Actions */}
         <div className="grid grid-cols-1 items-center gap-3 lg:grid-cols-3 lg:gap-6">
           {/* Left: Breadcrumb Navigation */}
-          <nav className="flex items-center gap-2 text-xs">
-            <button
-              onClick={() => setCurrentPath([])}
-              className="text-muted-foreground hover:text-card-foreground transition-smooth"
-            >
-              Home
-            </button>
+          {/* A folder path, not the app's location. The icon and the slashes
+              keep it from reading as a second copy of the top bar breadcrumb. */}
+          <nav className="flex min-w-0 items-center gap-1" aria-label="폴더 경로">
+            <Folder
+              className="mr-1 h-4 w-4 shrink-0 text-muted-foreground"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
+            <Button variant="ghost" size="sm" className="px-1 font-mono" onClick={() => setCurrentPath([])}>
+              /
+            </Button>
             {currentPath.map((folder, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-                <button
+              <div key={idx} className="flex min-w-0 items-center gap-1">
+                <span className="shrink-0 font-mono text-2xs text-muted-foreground" aria-hidden="true">/</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="min-w-0 px-1"
                   onClick={() => setCurrentPath(currentPath.slice(0, idx + 1))}
-                  className="text-card-foreground hover:text-card-foreground transition-smooth font-medium"
+                  aria-current={idx === currentPath.length - 1 ? "location" : undefined}
                 >
-                  {folder}
-                </button>
+                  <span className="truncate">{folder}</span>
+                </Button>
               </div>
             ))}
           </nav>
@@ -373,7 +378,7 @@ const FilesPanel = memo(function FilesPanel() {
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-card-foreground rounded-sm transition-smooth"
-                title="Clear search"
+                title="검색어 지우기"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -650,7 +655,7 @@ const FilesPanel = memo(function FilesPanel() {
 
                   {/* More Button */}
                   <div className="relative flex-shrink-0">
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleMenu(file.id); }} title="More options">
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleMenu(file.id); }} title="더 보기">
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                       </svg>

@@ -7,18 +7,20 @@ import { memo, type ReactNode } from "react";
  *
  * Each panel used to declare its own frame, and they drifted: three pages used
  * `<header>`, five a bare `<div>`, two nothing at all, and the same page title
- * appeared at three different sizes. That inconsistency is invisible on any one
- * screen and obvious the moment a user moves between them.
+ * appeared at three different sizes.
  *
- * The frame is decided here so a page only supplies its content.
+ * The page heading lives in the top bar, where the last breadcrumb already
+ * names the page. Repeating it here cost a line of vertical space on every
+ * screen of a dense workbench, so this shell carries only what a page adds:
+ * a sentence about the page, its actions, and its toolbar. When a page has
+ * none of those, the header does not render at all.
  */
 
 /** One gutter for every page, so panels line up when a user switches menus. */
 const PAGE_GUTTER = "px-4 sm:px-6 lg:px-10";
 
 interface PagePanelProps {
-  title: string;
-  /** One line on what the page is for. Omit when the title says everything. */
+  /** One line on what the page is for. Omit when the menu name says enough. */
   description?: string;
   /** Controls that act on the page as a whole. */
   actions?: ReactNode;
@@ -32,7 +34,6 @@ interface PagePanelProps {
 }
 
 function PagePanel({
-  title,
   description,
   actions,
   toolbar,
@@ -42,18 +43,21 @@ function PagePanel({
 }: PagePanelProps) {
   return (
     <div className="flex h-full flex-col bg-surface">
-      <header className={`shrink-0 border-b border-border-subtle bg-card py-4 ${PAGE_GUTTER}`}>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-base font-semibold text-card-foreground">{title}</h1>
-            {description && (
-              <p className="mt-1 text-2xs text-muted-foreground">{description}</p>
-            )}
-          </div>
-          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-        </div>
-        {toolbar && <div className="mt-4">{toolbar}</div>}
-      </header>
+      {(description || actions || toolbar) && (
+        <header className={`shrink-0 border-b border-border-subtle bg-card py-3 ${PAGE_GUTTER}`}>
+          {(description || actions) && (
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              {description && (
+                <p className="min-w-0 text-2xs text-muted-foreground">{description}</p>
+              )}
+              {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+            </div>
+          )}
+          {toolbar && (
+            <div className={description || actions ? "mt-3" : ""}>{toolbar}</div>
+          )}
+        </header>
+      )}
 
       <div
         className={`min-h-0 flex-1 ${bodyScroll === "auto" ? "overflow-y-auto" : "overflow-hidden"} ${

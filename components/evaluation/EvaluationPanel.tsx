@@ -517,7 +517,6 @@ export default function EvaluationPanel() {
 
   return (
     <PagePanel
-      title="답변 평가"
       description="골든셋 기준으로 검색 근거와 생성된 답변의 품질을 측정합니다."
       actions={<>
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -626,7 +625,7 @@ export default function EvaluationPanel() {
                     <p className="text-2xs text-muted-foreground mt-1">{versionCases.length} total · {selectedCaseIds.size} selected</p>
                   </div>
                   {selectedVersion?.status === "draft" && (
-                    <Button variant="soft" size="icon" className="text-base" onClick={() => setSelectedCaseId(NEW_CASE_ID)} title="Add case">+</Button>
+                    <Button variant="soft" size="icon" className="text-base" onClick={() => setSelectedCaseId(NEW_CASE_ID)} title="케이스 추가">+</Button>
                   )}
                 </div>
                 {!!versionCases.length && (
@@ -718,7 +717,7 @@ export default function EvaluationPanel() {
               <label className="block md:col-span-2"><span className="block text-2xs font-medium text-muted-foreground mb-2">Run name</span><Input fieldSize="lg" value={runName} onChange={(event) => setRunName(event.target.value)} disabled={executing}/></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">스키마</span><Select value={runSchema} onChange={(event) => { setRunSchema(event.target.value); setRunTable(schemas.find((schema) => schema.name === event.target.value)?.tables[0]?.name || ""); }} disabled={executing}>{schemas.map((schema) => <option key={schema.name} value={schema.name}>{schema.name}</option>)}</Select></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Vector collection</span><Select value={runTable} onChange={(event) => setRunTable(event.target.value)} disabled={executing}><option value="">Select collection</option>{schemas.find((schema) => schema.name === runSchema)?.tables.map((table) => <option key={table.name} value={table.name}>{table.name} · {table.rowCount} rows</option>)}</Select></label>
-              <div className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">임베딩</span><div title="Fixed by the selected collection" className="flex h-10 items-center px-3 border border-border rounded-lg bg-muted text-xs text-card-foreground">{describeEmbeddingModel(embeddingModel, embeddingDimensions)}</div></div>
+              <div className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">임베딩</span><div title="선택한 컬렉션이 결정합니다" className="flex h-10 items-center px-3 border border-border rounded-lg bg-muted text-xs text-card-foreground">{describeEmbeddingModel(embeddingModel, embeddingDimensions)}</div></div>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">답변 모델</span><Select value={generationModel} onChange={(event) => setGenerationModel(event.target.value as RagGenerationModel)} disabled={executing}><option value="gpt-5.6-terra">GPT-5.6 Terra</option><option value="gpt-5.6-sol">GPT-5.6 Sol</option><option value="gpt-5.6-luna">GPT-5.6 Luna</option></Select></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">추론 강도</span><Select value={reasoningEffort} onChange={(event) => setReasoningEffort(event.target.value as RagReasoningEffort)} disabled={executing}><option value="none">None</option><option value="low">낮음</option><option value="medium">보통</option><option value="high">높음</option></Select></label>
               <label className="block"><span className="block text-2xs font-medium text-muted-foreground mb-2">Top K</span><Input fieldSize="lg" type="number" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} disabled={executing}/></label>

@@ -50,7 +50,6 @@ export default function SettingsPanel({
 }: SettingsPanelProps) {
   return (
     <PagePanel
-      title="설정"
       description="연결 정보와 문서 파서·Vision 모델 실행 프로필을 한 곳에서 관리합니다."
       toolbar={
         <TabBar

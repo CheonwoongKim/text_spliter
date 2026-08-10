@@ -24,12 +24,28 @@ function source(path: string): string {
   return readFileSync(path, "utf8");
 }
 
-test("the shell decides the frame, so a page cannot redeclare it", () => {
+test("the page heading is declared once, in the top bar", () => {
   const shell = source(SHELL);
+  const header = source("components/layout/Header.tsx");
 
   assert.match(shell, /px-4 sm:px-6 lg:px-10/, "one gutter is declared for every page");
-  assert.match(shell, /<h1 className="text-base font-semibold/, "one page title size");
-  assert.match(shell, /<header/, "the page heading is a landmark");
+  assert.doesNotMatch(
+    shell,
+    /<h1/,
+    "the last breadcrumb already names the page; repeating it costs a line everywhere",
+  );
+  assert.match(header, /<h1[\s\S]{0,120}text-base font-semibold/, "the top bar carries it");
+  assert.match(header, /aria-current="page"/);
+});
+
+test("a page with nothing of its own renders no second header", () => {
+  const shell = source(SHELL);
+
+  assert.match(
+    shell,
+    /\(description \|\| actions \|\| toolbar\) && \(/,
+    "an empty header bar is just a divider taking up room",
+  );
 });
 
 test("menu pages are framed by the shell rather than their own markup", () => {
@@ -39,8 +55,13 @@ test("menu pages are framed by the shell rather than their own markup", () => {
     assert.match(panel, /<PagePanel/, `${path} must be framed by the shell`);
     assert.doesNotMatch(
       panel,
-      /<h1 className/,
-      `${path} declares its own page title; the shell owns it`,
+      /<h1/,
+      `${path} declares its own page title; the top bar owns it`,
+    );
+    assert.doesNotMatch(
+      panel,
+      /<PagePanel[^>]*\n\s*title="/,
+      `${path} passes a title to the shell, which no longer renders one`,
     );
     assert.doesNotMatch(
       panel,
