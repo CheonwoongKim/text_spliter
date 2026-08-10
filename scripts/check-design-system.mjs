@@ -90,21 +90,21 @@ const COMPONENT_BUDGETS = [
   {
     name: "hand-rolled button",
     pattern: /<button\b/g,
-    budget: 123,
+    budget: 119,
     guidance: "Use <Button> from components/shared. See docs/DESIGN_SYSTEM.md.",
     exempt: ["components/shared/Button.tsx"],
   },
   {
     name: "hand-rolled text input",
     pattern: /<input\b/g,
-    budget: 47,
+    budget: 37,
     guidance: "Use the field primitives in components/shared/FormFields.tsx.",
     exempt: ["components/shared/FormFields.tsx"],
   },
   {
     name: "hand-rolled select",
     pattern: /<select\b/g,
-    budget: 30,
+    budget: 27,
     guidance: "Use the field primitives in components/shared/FormFields.tsx.",
     exempt: ["components/shared/FormFields.tsx"],
   },
@@ -117,10 +117,10 @@ const COMPONENT_BUDGETS = [
   },
   {
     name: "parallel style constant",
-    pattern: /evaluationControlStyles/g,
-    budget: 3,
-    guidance: "A second style system defeats the first. Migrate to shared primitives.",
-    exempt: ["components/evaluation/controlStyles.ts"],
+    pattern: /ControlStyles|controlStyles/g,
+    budget: 0,
+    guidance: "A second style system defeats the first. Compose the shared primitives instead.",
+    exempt: [],
   },
 ];
 

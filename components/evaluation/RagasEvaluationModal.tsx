@@ -1,6 +1,6 @@
 "use client";
 
-import { evaluationControlStyles as styles } from "@/components/evaluation/controlStyles";
+import { Select } from "@/components/shared/FormFields";
 import { Button } from "@/components/shared/Button";
 import type { EvaluationRun, RagGenerationModel, RagasMetricKey } from "@/lib/types";
 
@@ -74,11 +74,11 @@ export default function RagasEvaluationModal({
 
         <label className="block mt-4">
           <span className="block text-2xs font-medium text-muted-foreground mb-2">Evaluator model</span>
-          <select value={model} onChange={(event) => onModelChange(event.target.value as RagGenerationModel)} disabled={executing} className={styles.field}>
+          <Select fieldSize="lg" value={model} onChange={(event) => onModelChange(event.target.value as RagGenerationModel)} disabled={executing}>
             <option value="gpt-5.6-terra" disabled={health ? !health.allowedModels.includes("gpt-5.6-terra") : false}>GPT-5.6 Terra · balanced</option>
             <option value="gpt-5.6-sol" disabled={health ? !health.allowedModels.includes("gpt-5.6-sol") : false}>GPT-5.6 Sol · strongest</option>
             <option value="gpt-5.6-luna" disabled={health ? !health.allowedModels.includes("gpt-5.6-luna") : false}>GPT-5.6 Luna · fastest</option>
-          </select>
+          </Select>
         </label>
 
         <fieldset className="mt-4" disabled={executing}>
