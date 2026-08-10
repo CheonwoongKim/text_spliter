@@ -566,7 +566,7 @@ export default function MemoryGuidePanel() {
                   <tr key={row[0]}>
                     {row.map((cell, index) => (
                       <td
-                        key={`${row[0]}-${cell}`}
+                        key={`${row[0]}-${index}`}
                         className={`whitespace-nowrap px-4 py-3 ${index === 0 ? "font-medium text-card-foreground" : "text-muted-foreground"}`}
                       >
                         {cell}
