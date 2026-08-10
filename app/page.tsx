@@ -13,6 +13,7 @@ import SettingsPanel, { type SettingsSection } from "@/components/settings/Setti
 import VectorStoreLeftPanel from "@/components/vectorstore/VectorStoreLeftPanel";
 import AskWorkspace from "@/components/vectorstore/AskWorkspace";
 import VectorStoreRightPanel from "@/components/vectorstore/VectorStoreRightPanel";
+import SplitWorkspace from "@/components/shared/SplitWorkspace";
 import StoragePanel from "@/components/storage/StoragePanel";
 import FilesPanel from "@/components/storage/FilesPanel";
 import ParseResultDetailPanel from "@/components/parser/ParseResultDetailPanel";
@@ -543,9 +544,11 @@ export default function Home() {
                 />
               </div>
             ) : activeMenu === "vectorstore" ? (
-            <div className="h-full grid grid-cols-1 lg:grid-cols-10">
-              {/* VectorStore Left Panel */}
-              <div className="h-full overflow-hidden lg:col-span-2">
+            <SplitWorkspace
+              settingsSpan={2}
+              settingsLabel="컬렉션 목록"
+              resultLabel="컬렉션 데이터"
+              settings={
                 <VectorStoreLeftPanel
                   config={vectorStoreConfig}
                   schemas={schemas}
@@ -553,10 +556,8 @@ export default function Home() {
                   onConfigChange={handleVectorStoreConfigChange}
                   onRefresh={handleRefreshSchemas}
                 />
-              </div>
-
-              {/* VectorStore Right Panel */}
-              <div className="h-full overflow-hidden lg:col-span-8">
+              }
+              result={
                 <VectorStoreRightPanel
                   selectedSchema={vectorStoreConfig.selectedSchema}
                   selectedTable={vectorStoreConfig.selectedTable}
@@ -564,12 +565,13 @@ export default function Home() {
                   loading={vectorLoading}
                   onRefresh={handleRefreshTableData}
                 />
-              </div>
-            </div>
+              }
+            />
           ) : activeMenu === "parser" ? (
-            <div className="h-full grid grid-cols-1 gap-6 pr-4 sm:pr-6 lg:grid-cols-10 lg:gap-0 lg:pr-10">
-              {/* Parser Left Panel */}
-              <div className="h-full overflow-hidden lg:col-span-3 lg:border-r lg:border-border-subtle">
+            <SplitWorkspace
+              settingsLabel="파싱 설정"
+              resultLabel="파싱 결과"
+              settings={
                 <ParserLeftPanel
                   primaryEngine={primaryParserEngine}
                   engineConfigs={parserSettings.savedConfigs}
@@ -585,10 +587,8 @@ export default function Home() {
                   onParse={handleParse}
                   onReset={handleParserReset}
                 />
-              </div>
-
-              {/* Parser Right Panel */}
-              <div className="h-full overflow-hidden pl-4 sm:pl-6 lg:col-span-7 lg:pl-10">
+              }
+              result={
                 <ParserRightPanel
                   result={parseResult}
                   runs={parseRuns}
@@ -603,12 +603,13 @@ export default function Home() {
                   onClearRuns={handleClearParseRuns}
                   onUseInSplitter={handleUseRunInSplitter}
                 />
-              </div>
-            </div>
+              }
+            />
           ) : (
-            <div className="h-full grid grid-cols-1 gap-6 px-4 sm:px-6 lg:grid-cols-10 lg:gap-0 lg:px-10">
-              {/* Left Panel */}
-              <div className="h-full overflow-hidden lg:col-span-3 lg:border-r lg:border-border-subtle">
+            <SplitWorkspace
+              settingsLabel="청킹 설정"
+              resultLabel="청킹 결과"
+              settings={
                 <LeftPanel
                   text={splitter.text}
                   config={splitter.config}
@@ -622,10 +623,8 @@ export default function Home() {
                   handoff={splitterSourceHandoff}
                   structureSplitAvailable={splitter.structureSplitAvailable}
                 />
-              </div>
-
-              {/* Right Panel */}
-              <div className="h-full overflow-hidden lg:col-span-7 lg:pl-10">
+              }
+              result={
                 <RightPanel
                   result={splitter.result}
                   loading={splitter.loading}
@@ -639,8 +638,8 @@ export default function Home() {
                   onSelectRun={splitter.selectRun}
                   onClearRuns={splitter.clearRuns}
                 />
-              </div>
-            </div>
+              }
+            />
           )}
           </div>
         </ErrorBoundary>

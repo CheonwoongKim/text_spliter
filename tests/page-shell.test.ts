@@ -50,6 +50,27 @@ test("menu pages are framed by the shell rather than their own markup", () => {
   }
 });
 
+test("the pipeline stages share one two-column frame", () => {
+  const split = source("components/shared/SplitWorkspace.tsx");
+  const page = source("app/page.tsx");
+
+  assert.match(split, /aria-label=\{settingsLabel\}/, "the settings column is a landmark");
+  assert.match(split, /aria-label=\{resultLabel\}/, "so the result can be reached directly");
+  assert.match(split, /<aside/);
+  assert.match(split, /<section/);
+
+  assert.equal(
+    [...page.matchAll(/<SplitWorkspace/g)].length,
+    3,
+    "parsing, chunking, and indexing all use it",
+  );
+  assert.doesNotMatch(
+    page,
+    /grid-cols-1 lg:grid-cols-10/,
+    "the page must not declare the split grid itself any more",
+  );
+});
+
 test("the segmented switch is shared and announces selection", () => {
   const tabs = source("components/shared/TabBar.tsx");
 
