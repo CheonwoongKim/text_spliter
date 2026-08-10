@@ -1,6 +1,7 @@
 "use client";
 
 import { Boxes, Check, FileText, LoaderCircle, Save } from "lucide-react";
+import TabBar from "@/components/shared/TabBar";
 import { Button } from "@/components/shared/Button";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useAuthFetch } from "@/lib/hooks/useAuthFetch";
@@ -188,30 +189,15 @@ const RightPanel = memo(function RightPanel({
 
       {result && workspaceMode === "detail" && (
         <div className="mb-3">
-          <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
-            <button
-              type="button"
-              onClick={() => onViewModeChange("card")}
-              className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
-                viewMode === "card"
-                  ? "bg-card text-card-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-surface-foreground"
-              }`}
-            >
-              Chunks
-            </button>
-            <button
-              type="button"
-              onClick={() => onViewModeChange("json")}
-              className={`rounded-sm px-3 py-1 text-2xs font-medium transition-smooth ${
-                viewMode === "json"
-                  ? "bg-card text-card-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-surface-foreground"
-              }`}
-            >
-              JSON
-            </button>
-          </div>
+          <TabBar
+            label="보기 전환"
+            value={viewMode}
+            onChange={onViewModeChange}
+            options={[
+            { value: "card", label: "Chunks" },
+            { value: "json", label: "JSON" },
+          ]}
+          />
         </div>
       )}
 
