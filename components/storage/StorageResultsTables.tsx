@@ -33,11 +33,24 @@ function TableLoadingRow({ colSpan }: { colSpan: number }) {
   );
 }
 
-function TableEmptyRow({ colSpan, message }: { colSpan: number; message: string }) {
+/**
+ * The table keeps its header and columns when it has no rows, so the shape of
+ * what will appear stays visible and the layout does not jump once the first
+ * result lands.
+ */
+function TableEmptyRow({
+  colSpan,
+  message,
+  description,
+}: {
+  colSpan: number;
+  message: string;
+  description?: string;
+}) {
   return (
     <tr>
       <td colSpan={colSpan} className="h-96">
-        <PanelPlaceholder icon={Archive} title={message} />
+        <PanelPlaceholder icon={Archive} title={message} description={description} />
       </td>
     </tr>
   );
@@ -83,7 +96,11 @@ export function ParseResultsTable({
             {loading && results.length === 0 ? (
               <TableLoadingRow colSpan={7} />
             ) : results.length === 0 ? (
-              <TableEmptyRow colSpan={7} message="No saved parse results yet" />
+              <TableEmptyRow
+                colSpan={7}
+                message="저장된 파싱 결과가 없습니다"
+                description="파싱 화면에서 결과를 저장하면 여기에서 다시 열어보고 비교할 수 있습니다."
+              />
             ) : (
               results.map((result) => (
                 <tr key={result.id} className="transition-smooth hover:bg-muted">
@@ -163,7 +180,11 @@ export function SplitResultsTable({
             {loading && results.length === 0 ? (
               <TableLoadingRow colSpan={8} />
             ) : results.length === 0 ? (
-              <TableEmptyRow colSpan={8} message="No saved split results yet" />
+              <TableEmptyRow
+                colSpan={8}
+                message="저장된 청킹 결과가 없습니다"
+                description="청킹 화면에서 Save를 누르면 여기에 쌓이고, 벡터 인덱스로 올릴 수 있습니다."
+              />
             ) : (
               results.map((result) => (
                 <tr key={result.id} className="transition-smooth hover:bg-muted">

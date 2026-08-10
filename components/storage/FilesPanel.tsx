@@ -4,6 +4,7 @@ import { memo, useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/shared/Button";
 import { Folder } from "lucide-react";
 import PagePanel from "@/components/shared/PagePanel";
+import PanelPlaceholder from "@/components/shared/PanelPlaceholder";
 import { getAuthToken, handleUnauthorized } from "@/lib/auth";
 
 interface FileItem {
@@ -521,52 +522,31 @@ const FilesPanel = memo(function FilesPanel() {
       {/* Content */}
       <div className="flex-1 overflow-auto px-4 py-6 sm:px-6 lg:px-10">
         {loading && files.length === 0 ? (
-          <div className="flex items-center justify-center h-96">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-surface-foreground"></div>
-          </div>
-        ) : files.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-96">
-            <svg
-              className="h-12 w-12 text-muted-foreground mb-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1}
-                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-              />
-            </svg>
-            <p className="text-xs text-muted-foreground mb-2">No files uploaded yet</p>
-            <button
-              onClick={handleFileSelect}
-              className="text-xs text-card-foreground hover:text-muted-foreground transition-smooth"
-            >
-              Upload your first file
-            </button>
-          </div>
-        ) : filteredFiles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-96">
-            <svg
-              className="h-12 w-12 text-muted-foreground mb-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <p className="text-xs text-muted-foreground mb-2">No files found</p>
-            <p className="text-2xs text-muted-foreground">Try adjusting your search</p>
-          </div>
+          <PanelPlaceholder loading title="문서를 불러오는 중" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {folders.length === 0 && filteredFiles.length === 0 && (
+              <div className="col-span-full rounded-lg border border-dashed border-border bg-card p-8 text-center">
+                <Folder
+                  className="mx-auto mb-3 h-icon-md w-icon-md text-muted-foreground"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+                <p className="text-xs font-medium text-card-foreground">
+                  {files.length === 0 ? "아직 올린 문서가 없습니다" : "검색 결과가 없습니다"}
+                </p>
+                <p className="mt-1 text-2xs text-muted-foreground">
+                  {files.length === 0
+                    ? "문서를 올리면 파싱·청킹 실험의 원본으로 사용할 수 있습니다."
+                    : "검색어를 바꾸거나 상위 폴더로 이동해 보세요."}
+                </p>
+                {files.length === 0 && (
+                  <Button variant="primary" size="sm" className="mt-4" onClick={handleFileSelect}>
+                    문서 올리기
+                  </Button>
+                )}
+              </div>
+            )}
             {/* Folder Cards */}
             {folders.map((folder) => (
               <div

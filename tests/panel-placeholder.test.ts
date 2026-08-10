@@ -55,3 +55,35 @@ test("placeholders tell the reader what to do next", () => {
   assert.match(splitter, /description=\{loading[\s\S]{0,200}분할기를 골라 실행/);
   assert.match(vectors, /Send to VDB/, "an empty collection names the step that fills it");
 });
+
+/**
+ * An empty list should still look like the list. Replacing the whole view with
+ * a centred message hides the shape of what will appear and makes the layout
+ * jump the moment the first row lands.
+ */
+test("an empty list keeps its own structure instead of being replaced", () => {
+  const files = readFileSync("components/storage/FilesPanel.tsx", "utf8");
+  const tables = readFileSync("components/storage/StorageResultsTables.tsx", "utf8");
+
+  assert.match(
+    files,
+    /grid grid-cols-1[\s\S]{0,400}col-span-full/,
+    "the file grid stays and the notice sits inside it",
+  );
+  assert.doesNotMatch(
+    files,
+    /files\.length === 0 \? \(\s*<div className="flex flex-col items-center/,
+    "an empty file list must not swap the grid out for a centred block",
+  );
+
+  assert.match(tables, /<td colSpan=\{colSpan\}/, "the table keeps its columns when empty");
+});
+
+test("empty lists name the step that fills them", () => {
+  const tables = readFileSync("components/storage/StorageResultsTables.tsx", "utf8");
+  const files = readFileSync("components/storage/FilesPanel.tsx", "utf8");
+
+  assert.match(tables, /파싱 화면에서 결과를 저장하면/);
+  assert.match(tables, /청킹 화면에서 Save를 누르면/);
+  assert.match(files, /문서를 올리면 파싱·청킹 실험의 원본으로/);
+});
