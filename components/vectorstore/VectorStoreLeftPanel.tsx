@@ -1,6 +1,8 @@
 "use client";
 
 import { memo, useCallback, useEffect, useState } from "react";
+import StatusMessage from "@/components/shared/StatusMessage";
+import Modal from "@/components/shared/Modal";
 import { Button } from "@/components/shared/Button";
 import type { VectorStoreConfig, DatabaseSchema } from "@/lib/types";
 import { getAuthToken } from "@/lib/auth";
@@ -333,26 +335,27 @@ function VectorStoreLeftPanel({
         )}
       </div>
 
-      {/* Create Table Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-base font-medium text-card-foreground mb-4">
-              Create Vector Collection
-            </h3>
-
-            {message && (
-              <div
-                className={`mb-4 p-3 rounded-lg text-xs ${
-                  message.type === 'success'
-                    ? 'bg-success-surface text-success border border-success-border'
-                    : 'bg-danger-surface text-danger border border-danger-border'
-                }`}
-              >
-                {message.text}
-              </div>
-            )}
-
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => { setShowCreateModal(false); setNewTableName(""); setMessage(null); }}
+        title="벡터 컬렉션 만들기"
+        size="sm"
+        footer={<>
+          <Button variant="ghost" size="md" disabled={creating}
+            onClick={() => { setShowCreateModal(false); setNewTableName(""); setMessage(null); }}>
+            Cancel
+          </Button>
+          <Button variant="primary" size="md" isLoading={creating}
+            disabled={creating || !newTableName.trim()} onClick={handleCreateTable}>
+            {creating ? "Creating..." : "Create Collection"}
+          </Button>
+        </>}
+      >
+        {message && (
+          <StatusMessage tone={message.type === "success" ? "success" : "danger"}>
+            {message.text}
+          </StatusMessage>
+        )}
             <div className="space-y-4">
               <div>
                 <label className="block text-2xs font-medium text-card-foreground mb-2">
@@ -410,56 +413,29 @@ function VectorStoreLeftPanel({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setNewTableName("");
-                  setMessage(null);
-                }}
-                disabled={creating}
-                className="px-4 py-2 text-xs text-muted-foreground hover:text-card-foreground
-                         disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateTable}
-                disabled={creating || !newTableName.trim()}
-                className="px-4 py-2 text-xs bg-surface-foreground text-surface rounded-lg
-                         hover:opacity-hover disabled:opacity-50 disabled:cursor-not-allowed
-                         transition-smooth flex items-center gap-2"
-              >
-                {creating && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-surface"></div>
-                )}
-                {creating ? 'Creating...' : 'Create Collection'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
-      {/* Delete Table Modal */}
-      {showDeleteModal && tableToDelete && (
-        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-base font-medium text-card-foreground mb-4">
-              Delete Collection
-            </h3>
-
-            {message && (
-              <div
-                className={`mb-4 p-3 rounded-lg text-xs ${
-                  message.type === 'success'
-                    ? 'bg-success-surface text-success border border-success-border'
-                    : 'bg-danger-surface text-danger border border-danger-border'
-                }`}
-              >
-                {message.text}
-              </div>
-            )}
-
+      <Modal
+        isOpen={Boolean(showDeleteModal && tableToDelete)}
+        onClose={() => { setShowDeleteModal(false); setTableToDelete(null); setMessage(null); }}
+        title="컬렉션 삭제"
+        size="sm"
+        footer={<>
+          <Button variant="ghost" size="md" disabled={deleting}
+            onClick={() => { setShowDeleteModal(false); setTableToDelete(null); setMessage(null); }}>
+            Cancel
+          </Button>
+          <Button variant="danger" size="md" isLoading={deleting} disabled={deleting}
+            onClick={handleDeleteTableConfirm}>
+            {deleting ? "Deleting..." : "Delete Collection"}
+          </Button>
+        </>}
+      >
+        {message && (
+          <StatusMessage tone={message.type === "success" ? "success" : "danger"}>
+            {message.text}
+          </StatusMessage>
+        )}
             <div className="space-y-4">
               <div className="bg-danger-surface border border-danger-border rounded-lg p-4">
                 <p className="text-xs text-card-foreground">
@@ -471,35 +447,7 @@ function VectorStoreLeftPanel({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setTableToDelete(null);
-                  setMessage(null);
-                }}
-                disabled={deleting}
-                className="px-4 py-2 text-xs text-muted-foreground hover:text-card-foreground
-                         disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteTableConfirm}
-                disabled={deleting}
-                className="px-4 py-2 text-xs bg-danger-action text-danger-action-foreground rounded-lg
-                         hover:bg-danger-action/80 disabled:opacity-50 disabled:cursor-not-allowed
-                         transition-smooth flex items-center gap-2"
-              >
-                {deleting && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-danger-action-foreground"></div>
-                )}
-                {deleting ? 'Deleting...' : 'Delete Collection'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 }
