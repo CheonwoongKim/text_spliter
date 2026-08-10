@@ -59,10 +59,14 @@ function PagePanel({
         </header>
       )}
 
+      {/* `hidden` means the body manages its own scrolling, which its child does
+          with `flex-1`. That only works if this element is the flex container,
+          otherwise the child sizes to its content, overflows a fixed-height
+          parent, and gets clipped with no way to scroll to the rest. */}
       <div
-        className={`min-h-0 flex-1 ${bodyScroll === "auto" ? "overflow-y-auto" : "overflow-hidden"} ${
-          bleed ? "" : `py-6 ${PAGE_GUTTER}`
-        }`}
+        className={`min-h-0 flex-1 ${
+          bodyScroll === "auto" ? "overflow-y-auto" : "flex flex-col overflow-hidden"
+        } ${bleed ? "" : `py-6 ${PAGE_GUTTER}`}`}
       >
         {children}
       </div>

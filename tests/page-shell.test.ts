@@ -71,6 +71,29 @@ test("menu pages are framed by the shell rather than their own markup", () => {
   }
 });
 
+/**
+ * A body that hides its own overflow is saying "my child scrolls". The child
+ * does that with flex-1, which is inert unless this element is the flex
+ * container — and then the child sizes to its content, overflows a fixed-height
+ * parent, and is clipped with no way to reach the rest.
+ */
+test("a body that delegates scrolling is a flex container", () => {
+  const shell = source(SHELL);
+
+  assert.match(
+    shell,
+    /bodyScroll === "auto" \? "overflow-y-auto" : "flex flex-col overflow-hidden"/,
+    "a flex-1 child needs a flex parent or its height collapses to content",
+  );
+
+  // Every page that delegates scrolling relies on this.
+  for (const path of MENU_PANELS) {
+    const panel = source(path);
+    if (!/bodyScroll="hidden"/.test(panel)) continue;
+    assert.match(panel, /<PagePanel/, `${path} must be framed by the shell`);
+  }
+});
+
 test("the pipeline stages share one two-column frame", () => {
   const split = source("components/shared/SplitWorkspace.tsx");
   const page = source("app/page.tsx");

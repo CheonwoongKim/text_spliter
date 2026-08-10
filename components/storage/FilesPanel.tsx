@@ -525,7 +525,7 @@ const FilesPanel = memo(function FilesPanel() {
           <PanelPlaceholder loading title="문서를 불러오는 중" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {folders.length === 0 && filteredFiles.length === 0 && (
+            {folders.length === 0 && currentFiles.length === 0 && (
               <div className="col-span-full rounded-lg border border-dashed border-border bg-card p-8 text-center">
                 <Folder
                   className="mx-auto mb-3 h-icon-md w-icon-md text-muted-foreground"
